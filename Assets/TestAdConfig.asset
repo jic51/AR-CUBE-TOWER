@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 951c4a5dcdd1e49718d35eea6622a09a, type: 3}
+  m_Name: TestAdConfig
+  m_EditorClassIdentifier: Layered.ARAdSystem::Layered.ARAdSystem.ARAdConfig
+  adId: ad_000
+  nombreMarca: Mi Marca
+  tipoContenido: 0
+  texturaImagen: {fileID: 2800000, guid: 3bb5ab32fb5f246b9820184276dfaf21, type: 3}
+  videoClip: {fileID: 0}
+  prefab3D: {fileID: 0}
+  tamanoQuad: {x: 1.5, y: 0.85}
+  distanciaSpawn: 2
+  alturaOffset: 0.3
+  audioClip: {fileID: 0}
+  volumenAudio: 0.8
+  direccion: 0
+  textoInstruccion: "Gira el tel\xE9fono para descubrir el anuncio"
+  duracionAntesDeSkipSegundos: 5
+  duracionMaximaSegundos: 15
+  textoCTA: "Saber m\xE1s"
+  urlCTA: WWW.DENTACCEPT.COM
+  monedasRecompensaCompleto: 50
+  monedasRecompensaSkip: 0

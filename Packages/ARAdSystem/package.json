@@ -1,0 +1,26 @@
+{
+  "name": "com.layered.aradsystem",
+  "version": "1.0.0",
+  "displayName": "LAYERED AR Ads SDK",
+  "description": "Spatial AR advertising for Unity games. Show immersive AR ad breaks with image, video and 3D content. Developed by LAYERED.",
+  "unity": "6000.0",
+  "unityRelease": "0f1",
+  "documentationUrl": "https://docs.layered.ar/adsdk",
+  "changelogUrl": "https://docs.layered.ar/adsdk/changelog",
+  "licensesUrl": "https://layered.ar/license",
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.6"
+  },
+  "keywords": [
+    "ar",
+    "advertising",
+    "arfoundation",
+    "spatial",
+    "monetization"
+  ],
+  "author": {
+    "name": "LAYERED",
+    "email": "sdk@layered.ar",
+    "url": "https://layered.ar"
+  }
+}
