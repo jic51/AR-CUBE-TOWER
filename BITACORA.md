@@ -4,6 +4,7 @@ Registro de trabajo del proyecto. Se actualiza al cierre de cada sesión.
 
 **Repositorio:** https://github.com/jic51/AR-CUBE-TOWER
 **Stack:** Unity 6.0.3 · ARFoundation 6.3.2 · URP 17.0 · Android
+**Guía de pruebas en dispositivo:** [`COMO-PROBAR-EN-EL-TELEFONO.md`](COMO-PROBAR-EN-EL-TELEFONO.md) — pasos concretos, sin consola
 
 ---
 
