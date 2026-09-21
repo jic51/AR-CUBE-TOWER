@@ -49,7 +49,40 @@ Elige la forma que ya uses:
 git pull
 ```
 
-Debe aparecer un texto que mencione `ProjectSettings.asset`. Si en cambio sale un mensaje de error o algo sobre *conflict*, **detente ahí y manda ese texto** — no sigas.
+Debe aparecer un texto que mencione `ProjectSettings.asset`. Si sale un mensaje de error, busca tu caso abajo.
+
+#### Si sale «Your local changes would be overwritten by merge»
+
+El mensaje completo se parece a este:
+
+```
+error: Your local changes to the following files would be overwritten by merge:
+        ProjectSettings/ProjectSettings.asset
+Please commit your changes or stash them before you merge.
+Aborting
+```
+
+**Qué significa:** Unity reescribió la configuración del proyecto en esta computadora, y git no quiere borrar ese trabajo sin permiso. No es un fallo, es una protección.
+
+**Qué hacer.** Primero asegúrate de que Unity esté cerrado de verdad — si sigue abierto, volverá a escribir el archivo y estaremos igual. Después, en la misma terminal:
+
+```
+git stash
+```
+
+Esto guarda los cambios locales en un cajón aparte y deja la carpeta limpia. **No se borra nada:** siguen recuperables. Ahora sí:
+
+```
+git pull
+```
+
+Para ver qué fue lo que se guardó en el cajón:
+
+```
+git stash show -p
+```
+
+Y si algún día hiciera falta recuperarlo, `git stash pop` lo devuelve.
 
 ### Paso 3 — Abrir Unity y comprobar que el cambio llegó
 

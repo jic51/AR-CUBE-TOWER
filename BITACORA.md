@@ -229,7 +229,19 @@ adb.exe: failed to install AR CUBE PILE.apk: Failure
 
 **Las dos cosas que confirma el log**
 
-1. **El cambio de ID no llegó a la máquina de desarrollo.** El log nombra `com.unity.jc.ARTowerGame`, no `io.github.jic51.arcubetower`. Unity compiló con el identificador viejo, así que el commit `f5102bc` o no se trajo con `git pull`, o se trajo con Unity abierto y Unity reescribió `ProjectSettings` desde memoria. Un detalle apunta en la misma dirección: el APK se llama `AR CUBE PILE.apk` mientras el repo tiene `productName: AR_Tower_Game`.
+1. **El cambio de ID no llegó a la máquina de desarrollo.** El log nombra `com.unity.jc.ARTowerGame`, no `io.github.jic51.arcubetower`. Unity compiló con el identificador viejo. Un detalle apuntaba en la misma dirección: el APK se llama `AR CUBE PILE.apk` mientras el repo tiene `productName: AR_Tower_Game`.
+
+   **Causa confirmada ese mismo día.** Al intentar el `git pull`, git lo rechazó:
+
+   ```
+   Updating 681e1cc..a23667f
+   error: Your local changes to the following files would be overwritten by merge:
+           ProjectSettings/ProjectSettings.asset
+   ```
+
+   Dos cosas quedan probadas. La máquina estaba en `681e1cc` —trajo el primer commit del día pero nunca `f5102bc`, el del cambio de ID— y **Unity había reescrito `ProjectSettings.asset` localmente**, dejando cambios sin registrar que bloqueaban la actualización. Es la segunda de las dos causas que se habían planteado, y confirma que la regla de cerrar Unity antes del pull no era una precaución teórica.
+
+   Salida aplicada: `git stash` para apartar lo que escribió Unity —recuperable, no borrado— y después `git pull`.
 2. **`signatures do not match`** — la app instalada se firmó con una debug keystore que ya no es la de esta máquina. Android nunca permite actualizar una app con una firma distinta, por diseño: es la garantía de que nadie pueda suplantar una app ajena. No hay forma de reconciliarlo; la app vieja **hay que desinstalarla**.
 
 **Por qué esto importa más de lo que parece**
