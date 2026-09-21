@@ -100,6 +100,43 @@ public class EconomiaManager : MonoBehaviour
 
     public bool TieneMonedas(int cantidad) => (Datos?.monedas ?? 0) >= cantidad;
 
+    // ── RECOMPENSA POR ANUNCIOS (decreciente) ────────────────────────────────
+
+    // Porcentaje de la recompensa base según cuántos anuncios lleva el jugador
+    // hoy. El último valor se aplica a todos los anuncios siguientes.
+    private static readonly float[] FactorRecompensaAd = { 1.00f, 0.70f, 0.40f, 0.20f };
+
+    /// <summary>
+    /// Convierte la recompensa base de un anuncio en la recompensa efectiva,
+    /// aplicando decrecimiento dentro del mismo día. Con una base de 50 monedas:
+    /// 1.º anuncio 50, 2.º 35, 3.º 20, 4.º y siguientes 10.
+    ///
+    /// Llamar UNA sola vez por anuncio completado: incrementa el contador diario.
+    /// </summary>
+    public int CalcularRecompensaAd(int monedasBase)
+    {
+        if (monedasBase <= 0) return 0;
+
+        var d = Datos;
+        if (d == null) return monedasBase;
+
+        string hoy = DateTime.Now.ToString("yyyy-MM-dd");
+        if (d.ultimoDiaAds != hoy)
+        {
+            d.ultimoDiaAds = hoy;
+            d.adsVistosHoy = 0;
+        }
+
+        int   indice = Mathf.Min(d.adsVistosHoy, FactorRecompensaAd.Length - 1);
+        float factor = FactorRecompensaAd[indice];
+
+        d.adsVistosHoy++;
+        SaveSystem.Guardar(d);
+
+        // Mínimo 1 moneda: un anuncio visto nunca debe recompensar con nada
+        return Mathf.Max(1, Mathf.RoundToInt(monedasBase * factor));
+    }
+
     // ── GEMAS ────────────────────────────────────────────────────────────────
 
     public bool GastarGemas(int cantidad)

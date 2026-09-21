@@ -91,6 +91,12 @@ namespace Layered.ARAdSystem
         private const float DotMinimo        = 0.92f;
         private const float OffsetFrameAtras = 0.03f;
 
+        // Segundos máximos esperando a que el usuario apunte en la dirección pedida.
+        // Al agotarse, el ad spawnea frente a la cámara igualmente: el usuario puede
+        // estar acostado, contra una pared o con el tracking AR degradado, y el break
+        // nunca debe quedar bloqueado sin salida.
+        private const float SegundosMaxEspera = 8f;
+
         // ── Unity ──────────────────────────────────────────────────────────────
 
         void Awake()
@@ -154,6 +160,7 @@ namespace Layered.ARAdSystem
             botonSkip.gameObject.SetActive(false);
             if (textoTimerSkip != null) textoTimerSkip.gameObject.SetActive(false);
 
+            // Valor provisional; se reinicia en el spawn, cuando el ad se hace visible.
             _tiempoInicio       = Time.unscaledTime;
             _esperandoDireccion = true;
             _guiaActiva         = false;
@@ -263,6 +270,12 @@ namespace Layered.ARAdSystem
             // 3. Spawnar ad + frame en AR
             SpawnObjetoAR();
 
+            // El reloj del anuncio arranca AQUÍ, no en Iniciar(): la duración
+            // contratada por el anunciante es tiempo con el ad visible. Si el reloj
+            // corriera durante la espera de dirección, un usuario que tarda en apuntar
+            // cerraría el break al instante y se reportaría como impresión completa.
+            _tiempoInicio = Time.unscaledTime;
+
             // Activar guía dinámica: a partir de aquí, ActualizarGuia() en Update()
             // se encarga de mostrar/ocultar texto y flecha automáticamente
             _guiaActiva = true;
@@ -301,10 +314,22 @@ namespace Layered.ARAdSystem
                                               _config.adId));
         }
 
+        /// <summary>
+        /// Espera a que el usuario apunte en la dirección configurada, con un tope
+        /// de SegundosMaxEspera. Si no lo consigue a tiempo, el ad spawnea igualmente
+        /// frente a la cámara — el break jamás debe quedarse esperando indefinidamente.
+        /// </summary>
         IEnumerator EsperarDireccion()
         {
-            while (_esperandoDireccion)
+            float espera = 0f;
+
+            while (_esperandoDireccion && espera < SegundosMaxEspera && !_finalizado)
             {
+                espera += Time.unscaledDeltaTime;
+
+                // La cámara puede desaparecer si se recarga la escena durante el break
+                if (_camara == null) break;
+
                 Vector3 camFwd = _camara.forward;
                 camFwd.y = 0f;
                 camFwd.Normalize();
@@ -323,6 +348,9 @@ namespace Layered.ARAdSystem
                 }
                 yield return null;
             }
+
+            // Salida garantizada: por dirección alcanzada o por timeout.
+            _esperandoDireccion = false;
             // No ocultar texto/flecha aquí → la guía dinámica toma el control al activarse
         }
 

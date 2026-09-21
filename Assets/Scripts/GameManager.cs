@@ -83,6 +83,16 @@ public class GameManager : MonoBehaviour
 
     private int _derrotasConsecutivas = 0;
 
+    // Watchdog del AR Break: garantiza que el juego se recupere aunque el SDK
+    // no devuelva el callback. _adResuelto evita que callback y watchdog
+    // actúen los dos sobre el mismo break.
+    private const float SegundosMaxAd = 45f;
+    private bool _adResuelto = true;
+
+    // True si ya se mostró un anuncio en esta partida. Evita encadenar dos
+    // anuncios seguidos cuando el jugador salta el del rescate y cae al GameOver.
+    private bool _adMostradoEstaPartida = false;
+
     // ── Configuración ─────────────────────────────────────────────────────────
     [Header("Configuración Juego")]
     public float tiempoLimite     = 60.0f;
@@ -181,7 +191,10 @@ public class GameManager : MonoBehaviour
         if (saltarDirectoASetup)
         {
             saltarDirectoASetup = false;
-            CambiarEstado(EstadoJuego.Setup);
+            // Reintentar y "siguiente nivel" recargan la escena y entran por aquí:
+            // también tienen que pasar por el control de vidas.
+            if (HayVidasParaJugar()) CambiarEstado(EstadoJuego.Setup);
+            else                     CambiarEstado(EstadoJuego.Menu);
         }
         else
         {
@@ -303,6 +316,10 @@ public class GameManager : MonoBehaviour
 
     public void IniciarPartida(Transform plataforma)
     {
+        // La vida se cobra aquí: la partida arranca de verdad en este punto.
+        // El control de disponibilidad ya se hizo en BotonIrASetup().
+        EconomiaManager.Instance?.GastarVida();
+
         basePlataforma          = plataforma;
         alturaInicialPlataforma = plataforma.position.y;
         pozoTargetY         = plataforma.position.y;
@@ -313,6 +330,7 @@ public class GameManager : MonoBehaviour
         cubosUsados              = 0;
         alturaMaxima             = 0;
         yaUsoRescate             = false;
+        _adMostradoEstaPartida   = false;
         metaAlcanzadaMostrada    = false;
         CuboInteligente.comboConsecutivo = 0;
 
@@ -621,8 +639,15 @@ public class GameManager : MonoBehaviour
         ComodinesManager.Instance?.MostrarPanel(false);
         Time.timeScale = 0; // pausa física y timer — el ad usa unscaledTime, no se afecta
 
+        _adResuelto            = false;
+        _adMostradoEstaPartida = true;
+        StartCoroutine(WatchdogRescate(SegundosMaxAd));
+
         LayeredAds.MostrarBreak(resultado =>
         {
+            if (_adResuelto) return;   // el watchdog ya resolvió este break
+            _adResuelto = true;
+
             Time.timeScale = 1; // restaurar tiempo antes de cualquier otra acción
 
             if (resultado.vioCompleto || resultado.hizoClic)
@@ -632,14 +657,35 @@ public class GameManager : MonoBehaviour
                 if (miGrua != null) miGrua.ActivarGrúa();
                 CambiarEstado(EstadoJuego.Jugando); // restaura header + comodines
 
-                if (resultado.monedasRecomendadas > 0)
-                    EconomiaManager.Instance?.GanarMonedas(resultado.monedasRecomendadas);
+                int monedas = EconomiaManager.Instance?.CalcularRecompensaAd(resultado.monedasRecomendadas) ?? 0;
+                if (monedas > 0) EconomiaManager.Instance?.GanarMonedas(monedas);
             }
             else
             {
                 MostrarGameOver(alturaMaxima >= metaAlturaNivel);
             }
         });
+    }
+
+    /// <summary>
+    /// Watchdog del anuncio de rescate. Si el break no responde, concedemos el
+    /// rescate al jugador: el fallo es nuestro, no suyo, y dejarle en GameOver
+    /// tras pedirle que viera un anuncio sería castigarle por un bug.
+    /// </summary>
+    IEnumerator WatchdogRescate(float segundos)
+    {
+        yield return new WaitForSecondsRealtime(segundos);
+
+        if (_adResuelto) yield break;
+        _adResuelto = true;
+
+        Debug.LogWarning("[GameManager] El AR Break de rescate no respondió. Concediendo el rescate.");
+
+        Time.timeScale = 1;
+        yaUsoRescate   = true;
+        tiempoRestante = 30f;
+        if (miGrua != null) miGrua.ActivarGrúa();
+        CambiarEstado(EstadoJuego.Jugando);
     }
 
     // ── Mostrar resultado final ───────────────────────────────────────────────
@@ -660,33 +706,24 @@ public class GameManager : MonoBehaviour
         if (panelJuegoHUD) panelJuegoHUD.SetActive(false);
 
         // ── AR Ad Break automático (cada N derrotas) ──────────────────────────
-        if (!gano && adCadaNDerrotas > 0)
+        // Decidimos aquí si toca anuncio, pero NO retornamos: la economía y el
+        // guardado de la partida tienen que ejecutarse siempre. Solo se difiere
+        // la aparición del panel de GameOver hasta que el anuncio termine.
+        bool mostrarAd = false;
+
+        if (!gano && adCadaNDerrotas > 0 && !_adMostradoEstaPartida)
         {
             _derrotasConsecutivas++;
             if (_derrotasConsecutivas >= adCadaNDerrotas && LayeredAds.EstaListo())
             {
                 _derrotasConsecutivas = 0;
-
-                // Pantalla limpia para el ad: sin paneles ni header superpuestos
-                PlayerHeaderUI.Mostrar(false);
-                if (panelJuegoHUD) panelJuegoHUD.SetActive(false);
-                Time.timeScale = 0; // pausa física durante el ad
-
-                LayeredAds.MostrarBreak(resultado =>
-                {
-                    Time.timeScale = 1;
-                    if (resultado.monedasRecomendadas > 0)
-                        EconomiaManager.Instance?.GanarMonedas(resultado.monedasRecomendadas);
-                    // Ahora sí mostrar GameOver con header visible
-                    PlayerHeaderUI.Mostrar(true);
-                    if (panelGameOver) panelGameOver.SetActive(true);
-                });
-                return;
+                mostrarAd = true;
             }
         }
         if (gano) _derrotasConsecutivas = 0;
 
-        if (panelGameOver) panelGameOver.SetActive(true);
+        // Si toca anuncio el panel aparece después, al terminar el break
+        if (!mostrarAd && panelGameOver) panelGameOver.SetActive(true);
 
         // Estado final
         if (textoEstadoFinal)
@@ -778,8 +815,14 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            // La vida ya se cobró al iniciar la partida (IniciarPartida).
+            // El escudo no evita el cobro: lo compensa devolviendo la vida.
             bool tieneEscudo = ComodinesManager.Instance?.ConsumeEscudo() ?? false;
-            if (!tieneEscudo) EconomiaManager.Instance?.GastarVida();
+            if (tieneEscudo)
+            {
+                EconomiaManager.Instance?.GanarVida(1);
+                MensajeFlotante.Mostrar("Shield saved your life!", new Color(0.30f, 0.80f, 1f), 2f);
+            }
         }
 
         if (textoMonedasGanadas)
@@ -803,11 +846,94 @@ public class GameManager : MonoBehaviour
                                 LevelManager.NivelSeleccionado + 1 < LevelManager.Instance.niveles.Length;
             botonSiguienteNivel.SetActive(gano && haySiguiente);
         }
+
+        // ── Anuncio diferido ──────────────────────────────────────────────────
+        // La partida ya está contabilizada, guardada y con el panel preparado.
+        // El anuncio se muestra ahora sobre pantalla limpia y, al terminar,
+        // revela el panel de GameOver.
+        if (mostrarAd) MostrarAdTrasGameOver();
+    }
+
+    // ── Anuncio posterior al GameOver ─────────────────────────────────────────
+
+    /// <summary>
+    /// Muestra el AR Break sobre pantalla limpia y revela el GameOver al terminar.
+    /// Incluye un watchdog: si el SDK no devuelve el callback (error interno,
+    /// tracking perdido), el juego se recupera solo en lugar de quedarse congelado.
+    /// </summary>
+    void MostrarAdTrasGameOver()
+    {
+        PlayerHeaderUI.Mostrar(false);
+        if (panelJuegoHUD)  panelJuegoHUD.SetActive(false);
+        if (panelGameOver)  panelGameOver.SetActive(false);
+        Time.timeScale = 0;
+
+        _adResuelto = false;
+        StartCoroutine(WatchdogAd(SegundosMaxAd));
+
+        LayeredAds.MostrarBreak(resultado =>
+        {
+            if (_adResuelto) return;   // el watchdog ya cerró el break
+            _adResuelto = true;
+
+            int monedas = EconomiaManager.Instance?.CalcularRecompensaAd(resultado.monedasRecomendadas) ?? 0;
+            if (monedas > 0) EconomiaManager.Instance?.GanarMonedas(monedas);
+
+            CerrarAdYMostrarGameOver();
+        });
+    }
+
+    /// <summary>
+    /// Red de seguridad: si pasados N segundos el break no ha devuelto callback,
+    /// restauramos el juego por nuestra cuenta. Sin esto, un fallo del SDK deja
+    /// Time.timeScale en 0 y la partida injugable.
+    /// </summary>
+    IEnumerator WatchdogAd(float segundos)
+    {
+        yield return new WaitForSecondsRealtime(segundos);
+
+        if (_adResuelto) yield break;
+        _adResuelto = true;
+
+        Debug.LogWarning("[GameManager] El AR Break no respondió a tiempo. Recuperando el juego.");
+        CerrarAdYMostrarGameOver();
+    }
+
+    void CerrarAdYMostrarGameOver()
+    {
+        Time.timeScale = 1;
+        PlayerHeaderUI.Mostrar(true);
+        if (panelGameOver) panelGameOver.SetActive(true);
     }
 
     // ── Botones ───────────────────────────────────────────────────────────────
 
-    public void BotonIrASetup()     => CambiarEstado(EstadoJuego.Setup);
+    /// <summary>
+    /// Punto de entrada único a una partida. Comprueba que el jugador tenga vidas
+    /// antes de dejarle entrar al setup AR.
+    /// La vida NO se descuenta aquí sino en IniciarPartida(), cuando la partida
+    /// arranca de verdad: si el jugador abandona durante el setup no pierde nada.
+    /// </summary>
+    public void BotonIrASetup()
+    {
+        if (!HayVidasParaJugar()) return;
+        CambiarEstado(EstadoJuego.Setup);
+    }
+
+    /// <summary>
+    /// True si el jugador puede empezar una partida. Si no le quedan vidas, avisa
+    /// y le abre la tienda en la pestaña de vidas.
+    /// </summary>
+    bool HayVidasParaJugar()
+    {
+        var eco = EconomiaManager.Instance;
+        if (eco == null) return true;   // sin economía cargada no bloqueamos el juego
+        if (eco.TieneVidas()) return true;
+
+        MensajeFlotante.Mostrar("No lives left!", new Color(0.91f, 0.27f, 0.27f), 2f);
+        TiendaManager.Instance?.AbrirTiendaVidas();
+        return false;
+    }
     public void BotonPausar()       => CambiarEstado(EstadoJuego.Pausa);
     public void BotonReanudar()     => CambiarEstado(EstadoJuego.Jugando);
 

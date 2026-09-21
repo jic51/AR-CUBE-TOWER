@@ -102,7 +102,11 @@ namespace Layered.ARAdSystem
 
             if (s_ocupado)
             {
-                Debug.LogWarning("[LayeredAds] Ya hay un break activo. Ignora la llamada.");
+                // El callback DEBE invocarse siempre (contrato documentado arriba).
+                // Si no lo hacemos, el juego que puso Time.timeScale = 0 antes de
+                // llamarnos se queda congelado para siempre.
+                Debug.LogWarning("[LayeredAds] Ya hay un break activo. Se ignora la llamada.");
+                onFinalizacion?.Invoke(ARAdResult.Error("ocupado"));
                 return;
             }
 

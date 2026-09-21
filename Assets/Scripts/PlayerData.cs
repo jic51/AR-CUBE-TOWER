@@ -27,6 +27,12 @@ public class PlayerData
     // ── Daily bonus ──────────────────────────────────────────────────────────
     public string ultimoDiaJugado; // "yyyy-MM-dd" — para el bonus diario
 
+    // ── Anuncios ─────────────────────────────────────────────────────────────
+    // La recompensa por anuncio decrece dentro del mismo día: ver anuncios en
+    // bucle deja de ser rentable sin penalizar al jugador ocasional.
+    public string ultimoDiaAds;  // "yyyy-MM-dd" — resetea el contador cada día
+    public int    adsVistosHoy;
+
     // ────────────────────────────────────────────────────────────────────────
     public PlayerData()
     {
@@ -44,5 +50,7 @@ public class PlayerData
 
         comodinesInventario         = new int[4] { 1, 0, 0, 0 };
         ultimoDiaJugado             = "";
+        ultimoDiaAds                = "";
+        adsVistosHoy                = 0;
     }
 }
