@@ -59,7 +59,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 ### Pendiente — Seguridad
 
-24 hallazgos totales (19 de la auditoría + 5 nuevos del 2026-09-21). De ellos, 5 están resueltos en código (1, 2, 3, 5, 17), 3 cerrados como riesgo asumido (7, 14, N1) y 1 es informativo (N5): **quedan 15 abiertos**, y el hallazgo 4 es el único que todavía bloquea el lanzamiento. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
+25 hallazgos totales (19 de la auditoría + 6 nuevos del 2026-09-21). De ellos, 5 están resueltos en código (1, 2, 3, 5, 17), 3 cerrados como riesgo asumido (7, 14, N1) y 1 es informativo (N5): **quedan 16 abiertos**, y el hallazgo 4 es el único que todavía bloquea el lanzamiento. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
 
 #### Bloqueantes
 
@@ -104,6 +104,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | **N3** | El hallazgo 8 es peor de lo listado: además de que `GameManager.cs:144-148` desactiva la oclusión en runtime, **no hay ni un solo `AROcclusionManager` en la escena** (0 ocurrencias en `ARTowerGame.unity`). Es decir, `m_Depth: 0` (*Required*) está recortando el catálogo de dispositivos a cambio de una función que el juego no usa en ninguna parte. Cambiarlo a *Optional* no rompe nada | `AR Core Settings.asset` | Medio |
 | **N4** | El hallazgo 9 estaba parcialmente mal: **`stripEngineCode: 1` ya está activo**. Lo que de verdad falta, leído del asset: `AndroidTargetSdkVersion: 0` (Automatic), `AndroidMinifyRelease: 0` (sin R8) y `androidUseCustomKeystore: 0` (firma con la keystore de debug). El ID de aplicación y el `companyName` **ya quedaron resueltos** el 2026-09-21 — ver *Decisión: identificador de la aplicación* | `ProjectSettings.asset:184-189,292,298` | Alto — parcialmente resuelto |
 | **N5** | No existe ningún `AndroidManifest.xml` propio en el repo: Unity genera el suyo en cada build. No es un fallo, pero conviene saberlo antes de la ficha de Play, porque declarar permisos a mano exigirá crear uno en `Assets/Plugins/Android/` | — | Informativo |
+| **N6** | **El proyecto vive dentro de OneDrive** (`C:\Users\remod\OneDrive\Documents\JoseCastro\APPS\AR-CUBE-TOWER`), según la ruta del APK en el log del 2026-09-21. Unity y la sincronización en la nube se llevan mal: OneDrive intenta subir `Library/` y `Temp/` —decenas de miles de archivos que Unity reescribe constantemente—, lo que provoca bloqueos de archivo a media compilación, importaciones corruptas y builds más lentos. Que un build haya tardado 20 minutos encaja. **Recomendación:** mover el proyecto a una ruta local fuera de OneDrive (`C:\Dev\AR-CUBE-TOWER`); el respaldo real ya lo da GitHub. Si se prefiere no moverlo, excluir al menos `Library/`, `Temp/`, `obj/`, `Build/` y `Logs/` de la sincronización | Entorno de desarrollo | Medio |
 
 ### Pendiente — Trabajo en el Editor de Unity
 
@@ -121,7 +122,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 - ~~Decidir el `applicationIdentifier` definitivo~~ ✅ `io.github.jic51.arcubetower` — ver *Decisión: identificador de la aplicación*
 - ~~`companyName` real en lugar de `DefaultCompany`~~ ✅ `jic51`
-- Keystore de Android (hoy firma con la de debug)
+- **Keystore de Android — urgente**, ya no es solo requisito de publicación: la firma de debug provocó el fallo de instalación del 2026-09-21. Crearla **y respaldarla fuera de la máquina**: perder la keystore de producción tras publicar significa no poder actualizar la app nunca más
 - Ícono de la app
 - Capturas de pantalla para la ficha
 - Política de privacidad y formulario de Data Safety (la app pide cámara)
@@ -213,33 +214,38 @@ Se revisó el acuerdo que Unity pide aceptar al instalar el SDK de Android. Es e
 
 ---
 
-### Incidente abierto — Build and Run falla al instalar en el teléfono
+### Incidente diagnosticado — Build and Run falla al instalar en el teléfono
 
-**Sin confirmar.** Falta el mensaje de error exacto del `Editor.log`; lo de abajo es diagnóstico por síntomas, no lectura del log.
+**Causa confirmada por el `Editor.log`.** Error exacto:
 
-**Síntomas:** el build tardó ~1 h, terminó con error y Unity ofreció **eliminar la app del teléfono** para reintentar. Se respondió que no, así que quedó sin instalar.
+```
+adb.exe: failed to install AR CUBE PILE.apk: Failure
+[INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.unity.jc.ARTowerGame
+ signatures do not match newer version; ignoring!]
+```
 
-**Lectura de los síntomas**
+**Lo primero: el build funcionó.** `Build completed with a result of 'Succeeded' in 1217 seconds`. Veinte minutos, no una hora — la hora percibida incluía la reimportación de assets previa. Lo que falló fue únicamente el despliegue. **El APK está construido y es válido**, en `AR-CUBE-TOWER\AR CUBE PILE.apk`. No hace falta recompilar para probar la Fase 1.
 
-El fallo es de **instalación, no de compilación**: si hubiera fallado al compilar, Unity no ofrecería desinstalar nada. El APK muy probablemente existe y no hace falta recompilar para probarlo — basta `adb install -r`.
+**Las dos cosas que confirma el log**
 
-Ese diálogo aparece cuando Android rechaza instalar sobre una app existente **con el mismo package name**. De ahí la deducción que importa: **si el ID nuevo (`io.github.jic51.arcubetower`) estuviera activo en la máquina de desarrollo, el conflicto sería imposible** — sería otro package name y se instalaría al lado de la app vieja sin tocarla. Que chocara significa que Unity **sigue compilando con `com.unity.jc.ARTowerGame`**.
+1. **El cambio de ID no llegó a la máquina de desarrollo.** El log nombra `com.unity.jc.ARTowerGame`, no `io.github.jic51.arcubetower`. Unity compiló con el identificador viejo, así que el commit `f5102bc` o no se trajo con `git pull`, o se trajo con Unity abierto y Unity reescribió `ProjectSettings` desde memoria. Un detalle apunta en la misma dirección: el APK se llama `AR CUBE PILE.apk` mientras el repo tiene `productName: AR_Tower_Game`.
+2. **`signatures do not match`** — la app instalada se firmó con una debug keystore que ya no es la de esta máquina. Android nunca permite actualizar una app con una firma distinta, por diseño: es la garantía de que nadie pueda suplantar una app ajena. No hay forma de reconciliarlo; la app vieja **hay que desinstalarla**.
 
-Dos causas posibles, ambas del lado de la máquina local:
+**Por qué esto importa más de lo que parece**
 
-1. No se hizo `git pull` tras el push del cambio de ID (commit `f5102bc`).
-2. Se hizo `git pull` **con Unity abierto**. Unity mantiene `ProjectSettings` en memoria y lo reescribe al guardar o cerrar, pisando lo que llegó por git. Trampa silenciosa: el archivo cambia en disco y luego vuelve atrás solo.
+Es el hallazgo 9 (`androidUseCustomKeystore: 0`) cobrándose su primera factura. Y es un ensayo a escala pequeña de un desastre grande: **el día que la app esté en Play, perder la keystore de producción significa perder la app para siempre** — sin posibilidad de publicar una actualización nunca más, con el mismo error que salió hoy. Hoy se arregla desinstalando; entonces no se arregla.
 
-**Aprendizaje operativo:** cualquier cambio que llegue por git y toque `ProjectSettings/` o `Packages/` exige **cerrar Unity antes del pull**. Aplicar de aquí en adelante.
+**Crear la keystore propia y respaldarla deja de ser tarea de publicación y pasa a ser urgente.**
 
-**Causa probable del rechazo:** firma distinta (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). La app instalada se firmó con una debug keystore que ya no coincide con la actual de la máquina. Es el hallazgo 9 manifestándose: `androidUseCustomKeystore: 0`, seguimos firmando con la keystore de depuración, que es volátil por diseño. **Crear la keystore propia sube de prioridad: ya no es solo requisito de publicación, está costando tiempo de desarrollo.**
+**Aprendizaje operativo:** cualquier cambio que llegue por git y toque `ProjectSettings/` o `Packages/` exige **cerrar Unity antes del pull**. Ya incorporado a la rutina de trabajo.
 
-**Para cerrar el incidente hace falta**
+**Salida del incidente**
 
-- La línea `INSTALL_FAILED...` del `Editor.log` (Windows `%LOCALAPPDATA%\Unity\Editor\Editor.log`, Mac `~/Library/Logs/Unity/Editor.log`)
-- El Package Name que muestra `Player Settings → Other Settings → Identification`
+1. Desinstalar la app vieja del teléfono: `adb uninstall com.unity.jc.ARTowerGame`, o a mano desde el teléfono.
+2. Instalar el APK que ya existe: `adb install "<ruta>\AR CUBE PILE.apk"`. Esto permite **probar la Fase 1 hoy** sin recompilar.
+3. Después, y por separado: cerrar Unity, `git pull`, reabrir, y verificar que el Package Name diga `io.github.jic51.arcubetower`.
 
-El proyecto tiene `com.unity.mobile.android-logcat` instalado: `Window → Analysis → Android Logcat` da el log del teléfono sin salir de Unity.
+`adb.exe` está en la instalación de Unity, en `Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\`.
 
 ---
 
