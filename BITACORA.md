@@ -5,6 +5,7 @@ Registro de trabajo del proyecto. Se actualiza al cierre de cada sesión.
 **Repositorio:** https://github.com/jic51/AR-CUBE-TOWER
 **Stack:** Unity 6.0.3 · ARFoundation 6.3.2 · URP 17.0 · Android
 **Guía de pruebas en dispositivo:** [`COMO-PROBAR-EN-EL-TELEFONO.md`](COMO-PROBAR-EN-EL-TELEFONO.md) — pasos concretos, sin consola
+**Guía de mudanza fuera de OneDrive:** [`COMO-MOVER-EL-PROYECTO.md`](COMO-MOVER-EL-PROYECTO.md)
 
 ---
 
@@ -17,6 +18,8 @@ Registro de trabajo del proyecto. Se actualiza al cierre de cada sesión.
 | **Al cerrar** | Actualizar esta bitácora + commit + **push a `main`** |
 
 El objetivo de esta rutina es que la bitácora sea suficiente para retomar el proyecto desde cualquier máquina sin depender de la memoria de nadie.
+
+**Dónde vive el proyecto:** en `C:\Dev\AR-CUBE-TOWER`, **nunca** dentro de OneDrive, Dropbox, Google Drive ni Documentos sincronizados — ver el incidente del 2026-09-21. El respaldo es GitHub, no la nube del sistema operativo: la carpeta del disco es desechable y se recupera con `git clone`.
 
 ---
 
@@ -105,7 +108,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | **N3** | El hallazgo 8 es peor de lo listado: además de que `GameManager.cs:144-148` desactiva la oclusión en runtime, **no hay ni un solo `AROcclusionManager` en la escena** (0 ocurrencias en `ARTowerGame.unity`). Es decir, `m_Depth: 0` (*Required*) está recortando el catálogo de dispositivos a cambio de una función que el juego no usa en ninguna parte. Cambiarlo a *Optional* no rompe nada | `AR Core Settings.asset` | Medio |
 | **N4** | El hallazgo 9 estaba parcialmente mal: **`stripEngineCode: 1` ya está activo**. Lo que de verdad falta, leído del asset: `AndroidTargetSdkVersion: 0` (Automatic), `AndroidMinifyRelease: 0` (sin R8) y `androidUseCustomKeystore: 0` (firma con la keystore de debug). El ID de aplicación y el `companyName` **ya quedaron resueltos** el 2026-09-21 — ver *Decisión: identificador de la aplicación* | `ProjectSettings.asset:184-189,292,298` | Alto — parcialmente resuelto |
 | **N5** | No existe ningún `AndroidManifest.xml` propio en el repo: Unity genera el suyo en cada build. No es un fallo, pero conviene saberlo antes de la ficha de Play, porque declarar permisos a mano exigirá crear uno en `Assets/Plugins/Android/` | — | Informativo |
-| **N6** | **El proyecto vive dentro de OneDrive** (`C:\Users\remod\OneDrive\Documents\JoseCastro\APPS\AR-CUBE-TOWER`), según la ruta del APK en el log del 2026-09-21. Unity y la sincronización en la nube se llevan mal: OneDrive intenta subir `Library/` y `Temp/` —decenas de miles de archivos que Unity reescribe constantemente—, lo que provoca bloqueos de archivo a media compilación, importaciones corruptas y builds más lentos. Que un build haya tardado 20 minutos encaja. **Recomendación:** mover el proyecto a una ruta local fuera de OneDrive (`C:\Dev\AR-CUBE-TOWER`); el respaldo real ya lo da GitHub. Si se prefiere no moverlo, excluir al menos `Library/`, `Temp/`, `obj/`, `Build/` y `Logs/` de la sincronización | Entorno de desarrollo | Medio |
+| **N6** | **El proyecto vive dentro de OneDrive** (`C:\Users\remod\OneDrive\Documents\JoseCastro\APPS\AR-CUBE-TOWER`), según la ruta del APK en el log del 2026-09-21. Unity y la sincronización en la nube se llevan mal: OneDrive intenta subir `Library/` y `Temp/` —decenas de miles de archivos que Unity reescribe constantemente—, lo que provoca bloqueos de archivo a media compilación, importaciones corruptas y builds más lentos. Que un build haya tardado 20 minutos encaja | Entorno de desarrollo | **En curso** — mudanza a `C:\Dev\AR-CUBE-TOWER` documentada en [`COMO-MOVER-EL-PROYECTO.md`](COMO-MOVER-EL-PROYECTO.md) |
 
 ### Pendiente — Trabajo en el Editor de Unity
 
@@ -254,11 +257,29 @@ Es el hallazgo 9 (`androidUseCustomKeystore: 0`) cobrándose su primera factura.
 
 **Salida del incidente**
 
-1. Desinstalar la app vieja del teléfono: `adb uninstall com.unity.jc.ARTowerGame`, o a mano desde el teléfono.
-2. Instalar el APK que ya existe: `adb install "<ruta>\AR CUBE PILE.apk"`. Esto permite **probar la Fase 1 hoy** sin recompilar.
-3. Después, y por separado: cerrar Unity, `git pull`, reabrir, y verificar que el Package Name diga `io.github.jic51.arcubetower`.
+La primera propuesta fue desinstalar la app vieja con `adb` e instalar a mano el APK ya construido. Se descartó: obligaba a usar la consola y a pelear contra el conflicto en lugar de evitarlo.
 
-`adb.exe` está en la instalación de Unity, en `Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\`.
+**El camino elegido rodea el problema.** Al traer el cambio de identificador, el juego pasa a llamarse `io.github.jic51.arcubetower` y el teléfono lo trata como **una aplicación distinta**: se instala sin chocar con la vieja, que se queda ahí sin molestar. No hay que desinstalar nada ni tocar `adb`.
+
+Pasos en [`COMO-PROBAR-EN-EL-TELEFONO.md`](COMO-PROBAR-EN-EL-TELEFONO.md).
+
+---
+
+### Incidente — Intento de mudanza fuera de OneDrive
+
+A raíz del hallazgo N6 se intentó mover el proyecto copiando la carpeta a mano. La copia no terminó, se borraron archivos a medio camino y quedó la duda de si se había perdido algo de la carpeta original.
+
+**No se perdió nada.** Verificado contra el repositorio: **1.020 archivos rastreados**, incluidos los 22 scripts de `Assets/Scripts`, la escena `ARTowerGame.unity`, 53 imágenes, 44 materiales, 35 prefabs, los `ProjectSettings` y el paquete `ARAdSystem` completo. Aunque se borrase la carpeta entera, se recupera íntegra desde GitHub.
+
+Lo único sin respaldo sigue siendo el video de desarrollo (`Assets/Videos/*.mp4`), excluido desde el 2026-09-19 por pesar 399 MB. El resto de lo no rastreado —`Library/`, `Temp/`, `Logs/`, el APK— se regenera solo.
+
+El `git stash` previo había guardado cuatro archivos de configuración reescritos por Unity (`ProjectSettings.asset`, `manifest.json`, `packages-lock.json`, `UniversalRenderPipelineGlobalSettings.asset`). Nada de trabajo creativo: ni escena, ni scripts, ni prefabs.
+
+**Causa raíz del fallo de copia:** copiar un proyecto de Unity a mano falla casi siempre por `Library/`, que tiene decenas de miles de archivos pequeños en uso. Y no hace falta copiarla: Unity la reconstruye sola.
+
+**Lección — no copiar, clonar.** La forma correcta de mudar el proyecto es `git clone` en la ruta nueva. Sale limpio, actualizado y sin `Library/`. Documentado en [`COMO-MOVER-EL-PROYECTO.md`](COMO-MOVER-EL-PROYECTO.md).
+
+**Regla de aquí en adelante:** los proyectos van en `C:\Dev\`, nunca en carpetas sincronizadas (OneDrive, Dropbox, Google Drive, Documentos). El respaldo es GitHub, que además guarda historial. La carpeta del disco es desechable.
 
 ---
 
