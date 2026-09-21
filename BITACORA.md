@@ -11,7 +11,7 @@ Registro de trabajo del proyecto. Se actualiza al cierre de cada sesión.
 
 | Momento | Acción |
 |---|---|
-| **Al iniciar** | Traer el repo (`git fetch`), comparar lo que hay en GitHub con lo local y **releer esta bitácora antes de tocar nada** |
+| **Al iniciar** | Traer el repo (`git fetch`), comparar lo que hay en GitHub con lo local y **releer esta bitácora antes de tocar nada**. Si lo que llega toca `ProjectSettings/` o `Packages/`, **cerrar Unity antes del `git pull`**: Unity los tiene en memoria y los reescribe al guardar |
 | **Durante** | Contrastar lo que dice la bitácora contra el código real: lo que sigue pendiente, lo que ya está hecho y todo hallazgo nuevo se anota aquí |
 | **Al cerrar** | Actualizar esta bitácora + commit + **push a `main`** |
 
@@ -210,6 +210,36 @@ Se revisó el acuerdo que Unity pide aceptar al instalar el SDK de Android. Es e
 
 1. Abrir el proyecto en Unity, compilar y probar el flujo completo en dispositivo. Todo lo de la Fase 1 depende de esto y nada nuevo debería construirse encima hasta validarlo. **Ojo:** al cambiar el ID de la aplicación, la primera instalación tras este cambio empieza con el guardado vacío.
 2. Resto de la Fase 4: keystore propia, R8, target SDK fijo, ícono, capturas y política de privacidad.
+
+---
+
+### Incidente abierto — Build and Run falla al instalar en el teléfono
+
+**Sin confirmar.** Falta el mensaje de error exacto del `Editor.log`; lo de abajo es diagnóstico por síntomas, no lectura del log.
+
+**Síntomas:** el build tardó ~1 h, terminó con error y Unity ofreció **eliminar la app del teléfono** para reintentar. Se respondió que no, así que quedó sin instalar.
+
+**Lectura de los síntomas**
+
+El fallo es de **instalación, no de compilación**: si hubiera fallado al compilar, Unity no ofrecería desinstalar nada. El APK muy probablemente existe y no hace falta recompilar para probarlo — basta `adb install -r`.
+
+Ese diálogo aparece cuando Android rechaza instalar sobre una app existente **con el mismo package name**. De ahí la deducción que importa: **si el ID nuevo (`io.github.jic51.arcubetower`) estuviera activo en la máquina de desarrollo, el conflicto sería imposible** — sería otro package name y se instalaría al lado de la app vieja sin tocarla. Que chocara significa que Unity **sigue compilando con `com.unity.jc.ARTowerGame`**.
+
+Dos causas posibles, ambas del lado de la máquina local:
+
+1. No se hizo `git pull` tras el push del cambio de ID (commit `f5102bc`).
+2. Se hizo `git pull` **con Unity abierto**. Unity mantiene `ProjectSettings` en memoria y lo reescribe al guardar o cerrar, pisando lo que llegó por git. Trampa silenciosa: el archivo cambia en disco y luego vuelve atrás solo.
+
+**Aprendizaje operativo:** cualquier cambio que llegue por git y toque `ProjectSettings/` o `Packages/` exige **cerrar Unity antes del pull**. Aplicar de aquí en adelante.
+
+**Causa probable del rechazo:** firma distinta (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`). La app instalada se firmó con una debug keystore que ya no coincide con la actual de la máquina. Es el hallazgo 9 manifestándose: `androidUseCustomKeystore: 0`, seguimos firmando con la keystore de depuración, que es volátil por diseño. **Crear la keystore propia sube de prioridad: ya no es solo requisito de publicación, está costando tiempo de desarrollo.**
+
+**Para cerrar el incidente hace falta**
+
+- La línea `INSTALL_FAILED...` del `Editor.log` (Windows `%LOCALAPPDATA%\Unity\Editor\Editor.log`, Mac `~/Library/Logs/Unity/Editor.log`)
+- El Package Name que muestra `Player Settings → Other Settings → Identification`
+
+El proyecto tiene `com.unity.mobile.android-logcat` instalado: `Window → Analysis → Android Logcat` da el log del teléfono sin salir de Unity.
 
 ---
 
