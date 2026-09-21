@@ -59,7 +59,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 ### Pendiente — Seguridad
 
-21 hallazgos totales (19 de la auditoría + 2 nuevos del 2026-09-21). Los 4 primeros **bloquean el lanzamiento**. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
+24 hallazgos totales (19 de la auditoría + 5 nuevos del 2026-09-21). De ellos, 5 están resueltos en código (1, 2, 3, 5, 17), 3 cerrados como riesgo asumido (7, 14, N1) y 1 es informativo (N5): **quedan 15 abiertos**, y el hallazgo 4 es el único que todavía bloquea el lanzamiento. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
 
 #### Bloqueantes
 
@@ -76,14 +76,14 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 |---|---|---|---|
 | 5 | Recompensa completa del anuncio sin verlo | `ARAdBreak.cs:277` | ✅ Confirmado: el reloj arranca en el spawn del objeto |
 | 6 | El pack de 3 vidas cobra 120 monedas y puede entregar 1 | `TiendaManager.cs:223-235` | **Pendiente — confirmado.** `GanarVida(3)` hace `Min(vidas+3, 5)`: con 4 vidas pagas 120 y recibes 1. La guarda solo rechaza cuando ya estás al máximo |
-| 7 | Regeneración de vidas manipulable adelantando el reloj del teléfono | `EconomiaManager.cs:60` | Pendiente — confirmado (`DateTimeOffset.UtcNow` local, sin ancla de servidor) |
+| 7 | Regeneración de vidas manipulable adelantando el reloj del teléfono | `EconomiaManager.cs:60` | ⚖️ **Riesgo asumido** el 2026-09-21 — ver *Decisión: el reloj del dispositivo* |
 | 8 | ARCore Depth marcado *Required* pero desactivado en runtime — recorta dispositivos | `AR Core Settings.asset` (`m_Depth: 0`) | Pendiente — confirmado y agravado, ver hallazgo **N3** |
-| 9 | Build sin endurecer | `ProjectSettings.asset` | Pendiente — **parcialmente incorrecto**, ver hallazgo **N4** |
+| 9 | Build sin endurecer | `ProjectSettings.asset` | Parcial — ID y `companyName` ya resueltos (ver **N4**); faltan R8, target SDK y keystore |
 | 10 | API key `DEMO_KEY` serializada en la escena e inicializa el SDK en producción | `ARTowerGame.unity:6790` | Pendiente — confirmado |
 | 11 | Guardado JSON sin HMAC — economía editable | `SaveSystem.cs:14` | Pendiente — confirmado (`JsonUtility.ToJson` + `File.WriteAllText`, texto plano) |
 | 12 | Métodos `DEBUG_` sin `#if UNITY_EDITOR` (uno da 999 monedas) | `GameManager.cs:997-1054` | Pendiente — confirmado. Son 4 y ninguno está entre directivas. Riesgo real atenuado: son `[ContextMenu]` privados, no alcanzables desde la UI del build, pero viajan en el binario |
 | 13 | Eliminar campo `fechaNacimiento` sin uso | `PlayerData.cs:9` | Pendiente — confirmado: es su **única** aparición en todo el repo |
-| 14 | Bonus diario manipulable por fecha del dispositivo | `GameManager.cs:166` | Pendiente — confirmado (`System.DateTime.Now`) |
+| 14 | Bonus diario manipulable por fecha del dispositivo | `GameManager.cs:166` | ⚖️ **Riesgo asumido** el 2026-09-21 — ver *Decisión: el reloj del dispositivo* |
 | 15 | Nombre de usuario sin límite ni sanitización | `PanelConfiguracion.cs:125-127` | Pendiente — confirmado: la única validación es `Length > 0` |
 
 #### Bajos
@@ -99,10 +99,10 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 | # | Hallazgo | Archivo:Línea | Severidad |
 |---|---|---|---|
-| **N1** | **El decrecimiento de recompensa por anuncio es evadible.** `CalcularRecompensaAd()` compara contra `DateTime.Now` (hora local del teléfono) para decidir si resetear `adsVistosHoy`. Adelantar la fecha del dispositivo devuelve la recompensa al 100 % tantas veces como se quiera, así que el fix de la Fase 1 no cierra el farming: lo encarece un toque de ajustes. Es el mismo agujero que el hallazgo 14, y también el 7: **los tres dependen del reloj del dispositivo** y solo se cierran juntos, con una fuente de tiempo fiable (NTP o servidor) o aceptando el riesgo de forma explícita | `EconomiaManager.cs:123` | Medio |
+| **N1** | **El decrecimiento de recompensa por anuncio es evadible.** `CalcularRecompensaAd()` compara contra `DateTime.Now` (hora local del teléfono) para decidir si resetear `adsVistosHoy`. Adelantar la fecha del dispositivo devuelve la recompensa al 100 % tantas veces como se quiera, así que el fix de la Fase 1 no cierra el farming: lo encarece un toque de ajustes. Es el mismo agujero que el hallazgo 14, y también el 7: **los tres dependen del reloj del dispositivo** | `EconomiaManager.cs:123` | ⚖️ **Riesgo asumido** el 2026-09-21 — ver *Decisión: el reloj del dispositivo* |
 | **N2** | `LayeredAds.Inicializar(null)` lanza `NullReferenceException`: el log evalúa `apiKey.Length` antes de cualquier guarda. Con cadena vacía funciona; solo `null` rompe. Un `if (string.IsNullOrEmpty(apiKey))` al entrar lo resuelve y de paso cubre el hallazgo 19 | `LayeredAds.cs:47-52` | Bajo |
 | **N3** | El hallazgo 8 es peor de lo listado: además de que `GameManager.cs:144-148` desactiva la oclusión en runtime, **no hay ni un solo `AROcclusionManager` en la escena** (0 ocurrencias en `ARTowerGame.unity`). Es decir, `m_Depth: 0` (*Required*) está recortando el catálogo de dispositivos a cambio de una función que el juego no usa en ninguna parte. Cambiarlo a *Optional* no rompe nada | `AR Core Settings.asset` | Medio |
-| **N4** | El hallazgo 9 estaba parcialmente mal: **`stripEngineCode: 1` ya está activo**. Lo que de verdad falta, leído del asset: `AndroidTargetSdkVersion: 0` (Automatic), `AndroidMinifyRelease: 0` (sin R8), `androidUseCustomKeystore: 0` (firma con la keystore de debug), `companyName: DefaultCompany` y `applicationIdentifier.Android: com.unity.jc.ARTowerGame` — un prefijo de dominio ajeno que **no se puede cambiar una vez publicado**. Decidir el ID definitivo es lo primero de la Fase 4 | `ProjectSettings.asset:15,184-189,292,298` | Alto |
+| **N4** | El hallazgo 9 estaba parcialmente mal: **`stripEngineCode: 1` ya está activo**. Lo que de verdad falta, leído del asset: `AndroidTargetSdkVersion: 0` (Automatic), `AndroidMinifyRelease: 0` (sin R8) y `androidUseCustomKeystore: 0` (firma con la keystore de debug). El ID de aplicación y el `companyName` **ya quedaron resueltos** el 2026-09-21 — ver *Decisión: identificador de la aplicación* | `ProjectSettings.asset:184-189,292,298` | Alto — parcialmente resuelto |
 | **N5** | No existe ningún `AndroidManifest.xml` propio en el repo: Unity genera el suyo en cada build. No es un fallo, pero conviene saberlo antes de la ficha de Play, porque declarar permisos a mano exigirá crear uno en `Assets/Plugins/Android/` | — | Informativo |
 
 ### Pendiente — Trabajo en el Editor de Unity
@@ -117,15 +117,49 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | Crear GameObjects hijos `IconoPausa` e `IconoCerrar` | Jerarquía del Canvas |
 | Asignar textura a `TestAdConfig.texturaImagen` | Inspector |
 
-### Pendiente — Publicación (0%)
+### Pendiente — Publicación (2 de 7)
 
-- **Decidir el `applicationIdentifier` definitivo** — hoy es `com.unity.jc.ARTowerGame`. Irreversible una vez publicado, así que va primero
+- ~~Decidir el `applicationIdentifier` definitivo~~ ✅ `io.github.jic51.arcubetower` — ver *Decisión: identificador de la aplicación*
+- ~~`companyName` real en lugar de `DefaultCompany`~~ ✅ `jic51`
 - Keystore de Android (hoy firma con la de debug)
-- `companyName` real en lugar de `DefaultCompany`
 - Ícono de la app
 - Capturas de pantalla para la ficha
 - Política de privacidad y formulario de Data Safety (la app pide cámara)
 - Optimización de build: R8 activo y target SDK fijo en lugar de Automatic
+
+---
+
+## Decisiones permanentes
+
+Decisiones que ya están tomadas y no hay que volver a discutir. Si alguna se revisa, se anota aquí la fecha y el motivo.
+
+### Decisión: identificador de la aplicación — 2026-09-21
+
+**`io.github.jic51.arcubetower`**, aplicado en `ProjectSettings.asset:173`. `companyName` pasa de `DefaultCompany` a `jic51`.
+
+El proyecto no tiene dominio propio. La convención de Android es usar un dominio en orden inverso, y `io.github.<usuario>` es la forma estándar y reconocida de derivar un espacio de nombres de una cuenta de GitHub cuando no hay dominio: está respaldado por https://jic51.github.io/AR-CUBE-TOWER/, que sí controlamos. El ID anterior, `com.unity.jc.ARTowerGame`, colgaba de un dominio de Unity Technologies.
+
+**Por qué importaba decidirlo ya:** el ID es libre de cambiar mientras el proyecto no se haya subido nunca a Play Console. Desde la primera subida —incluso a un canal de prueba interna— queda congelado de por vida: Play lo usa como clave primaria de la ficha. Cambiarlo después no es editar un campo, es publicar una aplicación distinta, con ficha nueva, URL nueva, cero instalaciones y cero reseñas, y los usuarios que ya tuvieran la anterior no recibirían la actualización. El ID viejo tampoco se libera.
+
+**Efecto secundario a tener en cuenta:** en Android la ruta de datos de la app deriva del ID, así que **los guardados de cualquier dispositivo de prueba se pierden** en la próxima instalación. Sin consecuencia real: `DEBUG_DarRecursos` rehace el estado.
+
+### Decisión: el reloj del dispositivo — 2026-09-21
+
+**Riesgo asumido y documentado. Cierra los hallazgos 7, 14 y N1.**
+
+La regeneración de vidas, el bonus diario y el decrecimiento de recompensa por anuncio leen la fecha y hora del teléfono. Un jugador que adelante el reloj en ajustes puede regenerar vidas al instante, cobrar el bonus diario varias veces al día y resetear el contador de anuncios para mantener la recompensa al 100 %.
+
+**No se va a corregir**, y el motivo es que el remedio cuesta más de lo que evita: anclar el tiempo a NTP o a un servidor propio mete una dependencia de red en el arranque de un juego que hoy funciona entero sin conexión, y obliga a decidir qué pasa cuando esa consulta falla.
+
+**Lo que hace aceptable el riesgo:** aquí no hay dinero real. El jugador que manipule el reloj se hace trampas a sí mismo en un juego de un solo jugador, sin clasificaciones ni compras integradas. El daño máximo es que se salte una espera diseñada para él.
+
+**Lo que invalidaría esta decisión —revisarla si ocurre cualquiera de estas—:**
+
+- Se añaden compras integradas con dinero real
+- Se añade una clasificación, un multijugador o cualquier comparación entre jugadores
+- El contrato con un anunciante empieza a pagar por impresión, porque entonces el reloj manipulado nos cuesta dinero a nosotros o al anunciante
+
+Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y no deben volver a listarse como tales.
 
 ---
 
@@ -157,11 +191,25 @@ Están detallados arriba en su propia tabla (N1–N5). Los dos que cambian prior
 
 De paso, el hallazgo 9 estaba parcialmente mal: el stripping de engine code ya estaba activo. Lo que falta es R8, el target SDK fijo y la keystore.
 
-**Pendiente inmediato (sin cambios respecto a ayer)**
+**Decisiones tomadas en esta sesión**
 
-1. Abrir el proyecto en Unity, compilar y probar el flujo completo en dispositivo. Todo lo de la Fase 1 depende de esto y nada nuevo debería construirse encima hasta validarlo.
-2. Decidir el `applicationIdentifier` definitivo (N4) — bloquea la publicación y es irreversible.
-3. Decidir qué hacer con la dependencia del reloj del dispositivo (N1 + hallazgos 7 y 14): arreglarlo de raíz o aceptarlo explícitamente.
+Las dos que quedaban abiertas se cerraron el mismo día y están arriba, en *Decisiones permanentes*:
+
+- **Identificador de la aplicación:** `io.github.jic51.arcubetower`, ya aplicado en `ProjectSettings.asset`. `companyName` pasa a `jic51`. Era lo único de la Fase 4 con fecha de caducidad —deja de poder cambiarse en la primera subida a Play— y ya no lo es.
+- **Reloj del dispositivo:** riesgo asumido por escrito, con las tres condiciones que obligarían a revisarlo. Los hallazgos 7, 14 y N1 dejan de contar como pendientes.
+
+**Sobre la licencia del Android SDK**
+
+Se revisó el acuerdo que Unity pide aceptar al instalar el SDK de Android. Es el contrato estándar y hay que aceptarlo para compilar; no hay nada en él que condicione el diseño del juego. Los tres puntos que sí nos tocan:
+
+- **§4.3** obliga a dar aviso de privacidad adecuado a los usuarios. No añade trabajo: ya lo exigía Play por pedir cámara, y sigue siendo el hallazgo bloqueante 4.
+- **§3.7** prohíbe usar nombres, logos o marcas de Google. A tener presente al diseñar el ícono y las capturas de la ficha.
+- **§6.1** dice que el SDK recoge telemetría de uso del propio SDK, previo consentimiento. Afecta a la máquina de desarrollo, no a la app ni a los jugadores.
+
+**Pendiente inmediato**
+
+1. Abrir el proyecto en Unity, compilar y probar el flujo completo en dispositivo. Todo lo de la Fase 1 depende de esto y nada nuevo debería construirse encima hasta validarlo. **Ojo:** al cambiar el ID de la aplicación, la primera instalación tras este cambio empieza con el guardado vacío.
+2. Resto de la Fase 4: keystore propia, R8, target SDK fijo, ícono, capturas y política de privacidad.
 
 ---
 
