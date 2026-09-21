@@ -112,7 +112,26 @@ Cuando la copia nueva funcione, la vieja de OneDrive ya no sirve para nada y con
 
 Bórrala desde el Explorador de Windows, con Unity cerrado.
 
-Si Windows se queja de que algún archivo está en uso, reinicia la computadora e inténtalo otra vez.
+### Si Windows no deja borrarla
+
+Aparece una ventana **«Folder In Use — the folder or a file in it is open in another program»**, y debajo, **«Availability status: Sync pending»**.
+
+**No es un problema de permisos**, aunque lo parezca. Ser administrador no permite borrar un archivo que otro programa tiene abierto en ese momento. Y quien lo tiene abierto es OneDrive, que está sincronizando la carpeta.
+
+**Cierra OneDrive:**
+
+1. Abajo a la derecha, en la barra de tareas, busca el ícono de **nube** (puede estar oculto tras la flechita `^`)
+2. Haz clic en él
+3. Arriba a la derecha del panel, clic en el **engranaje**
+4. Elige **Quit OneDrive** / **Cerrar OneDrive** y confirma
+
+Comprueba también que Unity esté cerrado y que no haya ninguna ventana del Explorador abierta dentro de esa carpeta. Luego inténtalo de nuevo.
+
+**Si sigue sin dejarte:** reinicia la computadora y borra la carpeta antes de abrir cualquier otra cosa. Al arrancar todavía nada la tiene tomada.
+
+### Si no quieres pelearte con esto ahora
+
+Borrarla es limpieza, no un requisito: no bloquea nada. La alternativa de un segundo es **renombrarla** a `AR-CUBE-TOWER-VIEJO-NO-USAR`. Así ya no la abres por error —que era el único riesgo real— y la borras otro día.
 
 ---
 
