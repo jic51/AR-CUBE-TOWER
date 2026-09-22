@@ -54,10 +54,10 @@ namespace Layered.ARAdSystem
                  "OFF = usa los valores de Tamano Quad directamente.")]
         public bool  autoTamano         = true;
 
-        [Tooltip("Porcentaje del ancho de pantalla que ocupa el ad (0.38 = 38%).\n" +
+        [Tooltip("Porcentaje del ancho de pantalla que ocupa el ad (0.60 = 60%).\n" +
                  "Solo aplica cuando Auto Tamano está ON.")]
-        [Range(0.15f, 0.70f)]
-        public float porcentajePantalla = 0.38f;
+        [Range(0.15f, 0.85f)]
+        public float porcentajePantalla = 0.60f;   // era 0.38: en pruebas se veía demasiado pequeño
 
         [Tooltip("Tamaño manual en metros (ancho × alto). Solo se usa cuando Auto Tamano está OFF.\n" +
                  "La relación de aspecto también se usa como referencia para el cálculo auto.")]

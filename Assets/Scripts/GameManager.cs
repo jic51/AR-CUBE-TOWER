@@ -146,6 +146,13 @@ public class GameManager : MonoBehaviour
 
     private Camera _camara;
 
+    // Tiempo que se deja al último cubo de un nivel con cubos limitados para
+    // caer y asentarse antes de evaluar la partida
+    private const float SegundosGraciaUltimoCubo = 4f;
+
+    // Valor centinela del reloj en niveles sin límite de tiempo (EFFICIENCY)
+    private const float SinReloj = 999f;
+
     public EstadoJuego estadoActual;
 
     // ── Awake / Start ─────────────────────────────────────────────────────────
@@ -182,11 +189,10 @@ public class GameManager : MonoBehaviour
             string hoy = System.DateTime.Now.ToString("yyyy-MM-dd");
             if (datosJugador.ultimoDiaJugado != hoy)
             {
-                datosJugador.ultimoDiaJugado = hoy;
-                EconomiaManager.Instance?.GanarMonedas(30);
-                SaveSystem.Guardar(datosJugador);
-                // El mensaje se muestra cuando el menú ya está visible (0.5s delay)
-                StartCoroutine(MostrarBonusDiarioTras(0.8f));
+                // Se entrega dentro de la corrutina, con el menú ya visible y el
+                // contador en pantalla. Antes se sumaba aquí, en el arranque, en
+                // un menú sin contador de monedas: el jugador nunca lo veía.
+                StartCoroutine(EntregarBonusDiario(hoy, 0.8f));
             }
         }
 
@@ -276,6 +282,15 @@ public class GameManager : MonoBehaviour
         estadoActual = nuevoEstado;
         _enRescate   = false;
 
+        // Pantalla siempre encendida mientras la sesión AR está activa. El juego
+        // tiene esperas sin tocar la pantalla (el pozo, apuntar) y el teléfono se
+        // apagaba; tocarla para evitarlo soltaba un cubo. En los menús vuelve el
+        // ajuste del sistema para no gastar batería.
+        bool sesionActiva = nuevoEstado == EstadoJuego.Setup
+                         || nuevoEstado == EstadoJuego.Jugando
+                         || nuevoEstado == EstadoJuego.Pausa;
+        Screen.sleepTimeout = sesionActiva ? SleepTimeout.NeverSleep : SleepTimeout.SystemSetting;
+
         if (panelMenuPrincipal) panelMenuPrincipal.SetActive(false);
         if (panelJuegoHUD)      panelJuegoHUD.SetActive(false);
         if (panelPausa)         panelPausa.SetActive(false);
@@ -342,13 +357,15 @@ public class GameManager : MonoBehaviour
         // El control de disponibilidad ya se hizo en BotonIrASetup().
         EconomiaManager.Instance?.GastarVida();
 
+        AplicarDatosNivel();
+
         basePlataforma          = plataforma;
         alturaInicialPlataforma = plataforma.position.y;
         pozoTargetY         = plataforma.position.y;
         pozoUltimoDescenso  = Time.time;
         tiempoSinVerCima    = 0f;
         tiempoDesdeCaida    = float.MaxValue; // empieza sin "cubo caído reciente"
-        tiempoRestante          = tiempoLimite > 0 ? tiempoLimite : 999f;
+        tiempoRestante          = tiempoLimite > 0 ? tiempoLimite : SinReloj;
         cubosUsados              = 0;
         alturaMaxima             = 0;
         yaUsoRescate             = false;
@@ -388,19 +405,56 @@ public class GameManager : MonoBehaviour
         ComodinesManager.Instance?.IniciarPartida();
     }
 
+    /// <summary>
+    /// Carga la configuración del nivel actual justo al empezar la partida.
+    /// Es la única fuente de estos valores: antes se copiaban al elegir el nivel
+    /// en el menú, y "Retry" (que recarga la escena) arrancaba con los valores
+    /// por defecto de la escena —60 s y 1 m— en lugar de los del nivel.
+    /// La meta se multiplica por la escala de la plataforma porque los cubos
+    /// crecen con ella: sin esto, agrandar la plataforma hacía los niveles triviales.
+    /// </summary>
+    void AplicarDatosNivel()
+    {
+        if (LevelManager.Instance == null) return;
+        DatosNivel d = LevelManager.Instance.ObtenerNivelActual();
+
+        metaAlturaNivel  = d.metaAltura * SetupFase.EscalaSeleccionada;
+        tiempoLimite     = d.tiempoLimite > 0 ? d.tiempoLimite : 0f;   // 0 = sin reloj
+        cubosMaximos     = d.cubosMaximos;
+        intervaloEntrega = d.intervaloEntrega > 0 ? d.intervaloEntrega : 1f;
+        snapDesactivado  = d.snapDesactivado;
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     public void RegistrarCuboLanzado()
     {
         cubosUsados++;
+        // Sin cubos: la partida acaba, pero no en este fotograma. El último cubo
+        // acaba de SOLTARSE y tiene que caer y asentarse para contar; antes el
+        // reloj se ponía a 0 aquí y ese cubo nunca sumaba altura.
         if (cubosMaximos > 0 && cubosUsados >= cubosMaximos)
-            tiempoRestante = 0;
+            tiempoRestante = Mathf.Min(tiempoRestante, SegundosGraciaUltimoCubo);
     }
 
     public bool PuedeLanzarCubo()
     {
         // False si se agotaron los cubos del nivel
         return cubosMaximos == 0 || cubosUsados < cubosMaximos;
+    }
+
+    /// <summary>
+    /// Llamado por AnclaTorre cuando ARCore corrige el tracking y la torre se ha
+    /// desplazado junto con su ancla. El pozo guarda alturas absolutas: sin este
+    /// ajuste, tras una corrección vertical arrastraría la plataforma de vuelta
+    /// a la altura vieja y la separaría de los cubos.
+    /// </summary>
+    public void NotificarCorreccionAncla(float deltaY)
+    {
+        if (Mathf.Approximately(deltaY, 0f)) return;
+        pozoTargetY             += deltaY;
+        alturaInicialPlataforma += deltaY;
+        foreach (var c in CuboInteligente.cubosActivos) c?.AjustarAlturaReferencia(deltaY);
     }
 
     /// <summary>Llamado por CuboInteligente cuando un cubo cae físicamente de la torre.</summary>
@@ -520,10 +574,34 @@ public class GameManager : MonoBehaviour
 
     private bool metaAlcanzadaMostrada = false;
 
-    System.Collections.IEnumerator MostrarBonusDiarioTras(float delay)
+    private const int MonedasBonusDiario = 30;
+
+    /// <summary>
+    /// Entrega el bono diario de forma visible. El menú principal no muestra el
+    /// header (decisión de diseño), así que se revela solo mientras dura la
+    /// animación de monedas y se vuelve a ocultar al terminar.
+    /// </summary>
+    System.Collections.IEnumerator EntregarBonusDiario(string hoy, float delay)
     {
         yield return new WaitForSecondsRealtime(delay);
-        MensajeFlotante.Mostrar("Daily bonus  +30 coins!", new Color(0.95f, 0.80f, 0.10f), 2.5f);
+
+        bool enMenu = estadoActual == EstadoJuego.Menu;
+        if (enMenu) PlayerHeaderUI.Mostrar(true);
+        yield return null;   // un fotograma para que el header calcule su layout
+
+        // El día se marca en el mismo guardado que suma las monedas: si la app
+        // se cierra antes de este punto, el bono se vuelve a ofrecer, no se pierde
+        datosJugador.ultimoDiaJugado = hoy;
+        AnimadorMonedas.AnimarDesdeCentro(MonedasBonusDiario);
+        EconomiaManager.Instance?.GanarMonedas(MonedasBonusDiario);
+        MensajeFlotante.Mostrar($"Daily bonus  +{MonedasBonusDiario} coins!", new Color(0.95f, 0.80f, 0.10f), 2.5f);
+
+        // Duración aproximada de la animación completa + un momento para verlo
+        yield return new WaitForSecondsRealtime(2.8f);
+
+        // Solo se oculta si el jugador sigue en el menú (si ya entró a jugar,
+        // el header lo gobierna CambiarEstado)
+        if (enMenu && estadoActual == EstadoJuego.Menu) PlayerHeaderUI.Mostrar(false);
     }
 
     System.Collections.IEnumerator MensajeGemasTras(float segundos, int cantidad)
@@ -539,9 +617,13 @@ public class GameManager : MonoBehaviour
         // Timer
         if (textoTiempo)
         {
+            // Niveles sin reloj: "--" hasta que se acaben los cubos (entonces
+            // aparece la cuenta de gracia del último cubo). No "∞": la fuente
+            // LiberationSans SDF tiene atlas estático sin ese glifo.
+            bool sinReloj = tiempoLimite <= 0f && tiempoRestante > SegundosGraciaUltimoCubo;
             int s = Mathf.CeilToInt(tiempoRestante);
-            textoTiempo.text  = s + "s";
-            textoTiempo.color = tiempoRestante <= 10f ? Color.red : Color.white;
+            textoTiempo.text  = sinReloj ? "--" : s + "s";
+            textoTiempo.color = !sinReloj && tiempoRestante <= 10f ? Color.red : Color.white;
         }
 
         if (textoAltura) textoAltura.text = alturaMaxima.ToString("F2") + " m";
@@ -694,7 +776,11 @@ public class GameManager : MonoBehaviour
                 CambiarEstado(EstadoJuego.Jugando); // restaura header + comodines
 
                 int monedas = EconomiaManager.Instance?.CalcularRecompensaAd(resultado.monedasRecomendadas) ?? 0;
-                if (monedas > 0) EconomiaManager.Instance?.GanarMonedas(monedas);
+                if (monedas > 0)
+                {
+                    AnimadorMonedas.AnimarDesdeCentro(monedas);
+                    EconomiaManager.Instance?.GanarMonedas(monedas);
+                }
             }
             else
             {
@@ -846,9 +932,11 @@ public class GameManager : MonoBehaviour
             if (primerVez)   gemasGanadas += 2;
             if (nuevoRecord) gemasGanadas += EconomiaManager.GEMAS_POR_RECORD;
 
+            // Animar ANTES de sumar: la animación retiene las monedas y el
+            // contador sube con cada una que llega, en vez de saltar al total
+            AnimadorMonedas.AnimarDesdeCentro(monedasGanadas);
             EconomiaManager.Instance?.GanarMonedas(monedasGanadas);
             MensajeFlotante.MonedasGanadas(monedasGanadas);
-            AnimadorMonedas.AnimarDesdeCentro(monedasGanadas);
 
             if (gemasGanadas > 0)
             {
@@ -920,9 +1008,13 @@ public class GameManager : MonoBehaviour
             _adResuelto = true;
 
             int monedas = EconomiaManager.Instance?.CalcularRecompensaAd(resultado.monedasRecomendadas) ?? 0;
-            if (monedas > 0) EconomiaManager.Instance?.GanarMonedas(monedas);
+            CerrarAdYMostrarGameOver();   // primero el header visible, luego la animación
 
-            CerrarAdYMostrarGameOver();
+            if (monedas > 0)
+            {
+                AnimadorMonedas.AnimarDesdeCentro(monedas);
+                EconomiaManager.Instance?.GanarMonedas(monedas);
+            }
         });
     }
 
@@ -982,6 +1074,8 @@ public class GameManager : MonoBehaviour
 
     public void BotonReintentar()
     {
+        // Sin esto, LevelManager.Awake() vuelve al nivel 1 al recargar la escena
+        LevelManager.preservarNivel = true;
         saltarDirectoASetup = true;
         Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

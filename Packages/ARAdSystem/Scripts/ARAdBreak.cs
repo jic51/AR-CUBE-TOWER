@@ -127,8 +127,80 @@ namespace Layered.ARAdSystem
 
         // ── API interna ────────────────────────────────────────────────────────
 
+        // ── Layout de pantalla ─────────────────────────────────────────────────
+        //
+        // El anuncio vive en AR; la interfaz (Skip, CTA, instrucción) vive en la
+        // pantalla. El prefab traía su canvas en tamaño de píxel constante con
+        // referencia 800×600 y todo anclado al centro: en un teléfono de 1080×2400
+        // los botones medían 120×25 px y quedaban en medio de la pantalla. Se
+        // corrige aquí, en código, para que ningún anunciante ni juego tenga que
+        // maquetar el prefab: el SDK se ve bien en cualquier resolución.
+
+        const float RefAncho = 1080f, RefAlto = 1920f;   // unidades de diseño
+        const float Margen   = 48f;
+
+        void AjustarLayoutPantalla()
+        {
+            var scaler = GetComponentInChildren<CanvasScaler>(true);
+            if (scaler != null)
+            {
+                scaler.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(RefAncho, RefAlto);
+                scaler.matchWidthOrHeight  = 0.5f;
+            }
+
+            // Anclas en coordenadas normalizadas del área segura: respetan la
+            // muesca y la barra de gestos sin depender del factor de escala
+            Rect  seg  = Screen.safeArea;
+            float w    = Mathf.Max(1, Screen.width), h = Mathf.Max(1, Screen.height);
+            var   arribaDer = new Vector2(seg.xMax / w, seg.yMax / h);
+            float abajo     = seg.yMin / h;
+
+            // Skip: arriba a la derecha, donde lo busca cualquiera que haya visto un anuncio
+            Colocar(botonSkip,  arribaDer, arribaDer, new Vector2(1f, 1f),
+                    new Vector2(-Margen, -Margen), new Vector2(320f, 110f));
+
+            // CTA: abajo al centro, ancho y grande — es la acción que paga al anunciante
+            Colocar(botonCTA, new Vector2(0.5f, abajo), new Vector2(0.5f, abajo), new Vector2(0.5f, 0f),
+                    new Vector2(0f, Margen * 2f), new Vector2(640f, 140f));
+
+            // Instrucción y flecha: tercio superior, sin tapar el centro donde aparece el ad
+            if (textoInstruccion != null)
+            {
+                Colocar(textoInstruccion.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                        new Vector2(0.5f, 0.5f), new Vector2(0f, 420f), new Vector2(940f, 180f));
+                AutoTamanoTexto(textoInstruccion, 34f, 64f);
+            }
+            if (imagenFlecha != null)
+                Colocar(imagenFlecha.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                        new Vector2(0.5f, 0.5f), new Vector2(0f, 180f), new Vector2(200f, 300f));
+
+            AutoTamanoTexto(botonSkip != null ? botonSkip.GetComponentInChildren<TMP_Text>(true) : null, 26f, 48f);
+            AutoTamanoTexto(textoCTALabel, 30f, 58f);
+        }
+
+        static void Colocar(Component c, Vector2 aMin, Vector2 aMax, Vector2 pivot, Vector2 pos, Vector2 tam)
+        {
+            if (c == null) return;
+            var rt = c.transform as RectTransform;
+            if (rt == null) return;
+            rt.anchorMin = aMin; rt.anchorMax = aMax; rt.pivot = pivot;
+            rt.anchoredPosition = pos; rt.sizeDelta = tam;
+        }
+
+        static void AutoTamanoTexto(TMP_Text t, float min, float max)
+        {
+            if (t == null) return;
+            t.enableAutoSizing = true;
+            t.fontSizeMin = min;
+            t.fontSizeMax = max;
+            t.alignment   = TextAlignmentOptions.Center;
+        }
+
         public void Iniciar(ARAdConfig config, Action<ARAdResult> callback)
         {
+            AjustarLayoutPantalla();
+
             _config   = config;
             _callback = callback;
             _camara   = Camera.main?.transform;

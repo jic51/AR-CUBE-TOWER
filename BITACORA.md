@@ -43,8 +43,18 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 |---|---|---|---|
 | 1 | **Sistema de sonido completo** — cero `AudioSource`, `AudioClip` o `PlayOneShot` en `Assets/Scripts`. El único `AudioSource` del repo pertenece al sistema de anuncios (`ARAdBreak.cs:45`) y el único `.wav` es de un sample de XR Interaction Toolkit | nuevo | No empezado |
 | 2 | **Modo supervivencia** — no existe. Lo único que apunta a él es `LevelManager.cs:10`, donde `tiempoLimite = 0` ya significa "sin límite": es la base sobre la que construirlo | nuevo | No empezado |
-| 3 | **Toggle de idioma** en configuración (sonido y vibración ya funcionan) — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
+| 3 | **Toggle de idioma** — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
 | 4 | Verificar en dispositivo que el bug de destrucción en cascada quedó resuelto | `CuboInteligente.cs:251-253` | Umbral presente (`caída > 3× la altura del cubo` **y** `velocidad > 2 m/s`), falta probar |
+
+### Pendiente — Funciones nuevas (pedidas el 2026-09-22)
+
+| # | Función | Estado |
+|---|---|---|
+| F1 | **Pantalla de Settings** — `PanelConfiguracion.cs` existe pero **no está en la escena**: hoy no hay Settings ni forma de borrar los datos desde el juego. Debe incluir sonido, vibración, borrar datos (con confirmación), enlaces a Privacy y Terms, versión | Por diseñar |
+| F2 | **Menú de usuario** — perfil con avatar, nombre y estadísticas | Por diseñar |
+| F3 | **Usos de las gemas** — decidido el 2026-09-22: los tres usos (atajos premium, cosméticos y cambio por monedas) | Por diseñar |
+| F4 | **Rediseño del panel de comodines** — hoy se ve poco profesional | Por diseñar |
+| F5 | Sistema de sonido (ver tarea de código 1) | No empezado |
 
 ### Ya resuelto (estaba mal listado como pendiente)
 
@@ -114,8 +124,6 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 | Tarea | Dónde |
 |---|---|
-| Vertical Layout Group + Content Size Fitter | `contenedorBotones` |
-| Altura del prefab de botón de nivel a 85px | `prefabBotonNivel` |
 | Ejecutar "CubePile → Crear Materiales de Cubos Faltantes" | Menú del Editor |
 | Conectar campos de botones y textos | Inspector de `TiendaManager` |
 | Cambiar onClick del botón pausa a `PlayerHeaderUI.OnBotonAccionClick()` | Inspector |
@@ -123,7 +131,6 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | Asignar textura a `TestAdConfig.texturaImagen` | Inspector |
 | Asignar las **3 imágenes de estrella por separado** (hoy hay 1 sola, el gráfico entero: por eso siempre salen 3 estrellas aunque el resultado sea "Plata") | `GameManager` → `imagenesEstrellas` |
 | Asignar `textoPrecioVida1` y `textoPrecioVidaPack` (el pack muestra "50" pero cuesta 120) | Inspector de `TiendaManager` |
-| Botón CTA del anuncio: el texto es más grande que el fondo y se monta sobre el Skip | Prefab `ARAdBreakPrefab` |
 
 ### Pendiente — Publicación (2 de 7)
 
@@ -132,7 +139,8 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 - **Keystore de Android — urgente**, ya no es solo requisito de publicación: la firma de debug provocó el fallo de instalación del 2026-09-21. Crearla **y respaldarla fuera de la máquina**: perder la keystore de producción tras publicar significa no poder actualizar la app nunca más
 - Ícono de la app
 - Capturas de pantalla para la ficha
-- Política de privacidad y formulario de Data Safety (la app pide cámara)
+- Política de privacidad y Terms: ✅ **borrador** en `docs/` (2026-09-22), pendiente de revisión por un abogado, del estado de EE. UU. para la ley aplicable (`[STATE]` en `terms.html`) y de activar GitHub Pages. Falta el formulario Data Safety en Play Console
+- Landing: ✅ `docs/index.html`, se publica con GitHub Pages en https://jic51.github.io/AR-CUBE-TOWER/
 - Optimización de build: R8 activo y target SDK fijo en lugar de Automatic
 
 ---
@@ -172,6 +180,51 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-09-22 (Mac) — Bugs de jugabilidad, niveles, landing y legales
+
+El usuario confirmó que la versión anterior compila y reportó 15 problemas. Se autorizó mejorar todo lo que se pudiera sin consultar, preguntando solo las decisiones de producto.
+
+**Decisiones tomadas**
+
+| Tema | Decisión |
+|---|---|
+| Nombre oficial | **AR Cube Tower** |
+| Contacto público | joseisrael5101@gmail.com |
+| País del editor | Estados Unidos (COPPA, CCPA/CPRA; GDPR para usuarios del EEE/Reino Unido) |
+| Gemas | Los tres usos: atajos premium, cosméticos y cambio por monedas |
+
+**Causas encontradas y arreglos**
+
+| Síntoma | Causa real | Arreglo |
+|---|---|---|
+| Solo 5–6 niveles, nunca más | `niveles` era un array público serializado: **la escena guardaba una copia vieja de 6 niveles** ("Nivel 1…6") que pisaba los 40 del código. Los 40 nunca se usaron | `[NonSerialized]`: la tabla del código es la única fuente de verdad |
+| Además, la lista solo mostraba unos pocos | El contenedor no estaba dentro de un área con scroll | `ScrollRect` + máscara montados en código, botones de 150 de alto, la lista se desplaza sola al último nivel desbloqueado |
+| Nivel 1 con ~60 s para 3 cubos | La tabla vieja de la escena (0,5 m, 60 s) | Curva nueva: nivel 1 = 3 cubos en 20 s |
+| Los 40 niveles del código eran imposibles | Metas en metros sin relación con el ritmo de la grúa (el 40 pedía ~133 cubos en 35 s; el 33, 8 m con 5 cubos) | Curva rediseñada **en cubos**, de 3 a 41, con el tiempo derivado del intervalo de entrega. Tabla completa en el comentario de `LevelManager.cs` |
+| "Retry" repetía siempre el nivel 1 con 60 s | No conservaba el nivel al recargar la escena, y los datos del nivel solo se aplicaban al elegirlo en el menú | `preservarNivel` en Retry y `AplicarDatosNivel()` al empezar cada partida |
+| Agrandar la plataforma facilitaba el nivel | Los cubos crecen con la plataforma, la meta no | La meta se multiplica por la escala elegida |
+| El último cubo de un nivel de cubos limitados no contaba | Al *lanzarlo* el reloj se ponía a 0 y la partida terminaba antes de que aterrizara | 4 s de gracia para que caiga y se asiente; en niveles sin reloj el HUD muestra `--` en vez de `999s` |
+| El resize nunca funcionó | Umbral de 6 px por fotograma y sensibilidad de 0.000025: un pinch normal se ignoraba entero y uno rápido cambiaba la escala ~0.06 | Pinch **proporcional** a la distancia entre dedos desde el inicio del gesto |
+| La plataforma y los cubos "saltan" hacia un lado | El juego no usaba anclas AR: cuando ARCore corrige su tracking, todo lo colocado en coordenadas fijas se desplaza respecto al suelo real | `AnclaTorre.cs`: ARAnchor en el punto de anclaje; cuando ARCore mueve el ancla, se mueve la plataforma con todos los cubos como un sólido. El pozo y la detección de caídas corrigen sus alturas de referencia |
+| Cubos en el filo de la plataforma que no caen | Sobre la plataforma el voladizo se fijaba a 0 | `FraccionColgando()` mide el voladizo en los ejes de cualquier soporte |
+| Cubos medio fuera de otro cubo que no caen | Por debajo del 50 % la rotación se congelaba para siempre, y el voladizo se medía en diagonal | Umbral 0,45 (`UmbralVuelco`) y giro inicial que ignora la masa (el plomo no se movía con el impulso anterior) |
+| La pantalla se apaga esperando y tocarla suelta un cubo | Nunca se desactivaba el apagado automático | Pantalla siempre encendida en setup, juego y pausa; en menús, el ajuste del sistema |
+| Las monedas se suman antes de terminar la animación | El total se actualizaba de golpe | El header muestra *total − monedas en vuelo* y sube con cada moneda. Además el reparto era inexacto: 75 monedas en 8 iconos entregaban 80 |
+| El bono diario se sumaba sin que se viera | Se daba al arrancar, en un menú sin contador | Se entrega con el menú visible, mostrando el header durante la animación |
+| Anuncio pequeño y botones minúsculos en el centro | El canvas del anuncio estaba en tamaño de píxel constante con referencia 800×600: los botones medían 120×25 px | El SDK ajusta la interfaz al iniciar cada anuncio: escala con la pantalla, Skip arriba a la derecha, CTA grande abajo, respetando el área segura. Tamaño del anuncio por defecto: 38 % → 60 % del ancho de la vista |
+
+**Landing y legales (con un agente en paralelo)**
+
+`docs/index.html`, `privacy.html`, `terms.html`, `styles.css` y `.nojekyll`, listos para GitHub Pages. Revisados contra el código antes de subir. Se corrigió una afirmación de la política: decía que en Settings había una opción para borrar los datos, y **el juego no tiene pantalla de Settings**. Ahora dice lo que es cierto hoy (desinstalar o borrar el almacenamiento desde Android). Cuando exista la pantalla de Settings con la opción de borrar, hay que volver a añadirlo.
+
+Pendiente de los legales: revisión por un abogado, el estado de EE. UU. (`[STATE]` en `terms.html`) y activar Pages (Settings → Pages → Deploy from a branch → `main` → `/docs`). Suposiciones del agente a revisar: el tope de responsabilidad de 50 USD en los términos y las descripciones de los cubos cuyas mecánicas no estaban documentadas.
+
+**No verificado**
+
+Nada de esto se ha compilado ni probado. Las anclas AR y el pinch solo se pueden probar en el teléfono: en el Editor no hay multitáctil y XR Simulation apenas corrige el tracking.
+
+---
 
 ### 2026-09-21 (Mac) — Revisión de 2 videos de juego en el Editor
 

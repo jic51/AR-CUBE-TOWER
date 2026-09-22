@@ -47,10 +47,38 @@ public class PlayerHeaderUI : MonoBehaviour
     private enum ContextoBoton { Pausa, CerrarPanel }
     private ContextoBoton _contextoBoton = ContextoBoton.Pausa;
 
+    // Monedas ya sumadas en EconomiaManager pero que la animación todavía no ha
+    // "entregado". El contador muestra (total real − en vuelo), así sube moneda a
+    // moneda mientras vuelan en lugar de saltar al total de golpe. La economía
+    // real no se retrasa: se guarda al instante, esto es solo lo que se ve.
+    private static int s_monedasEnVuelo;
+
+    /// <summary>Monedas que el contador muestra en este momento.</summary>
+    public static int MonedasMostradas =>
+        Mathf.Max(0, (EconomiaManager.Instance?.Monedas ?? 0) - s_monedasEnVuelo);
+
+    /// <summary>Llamar ANTES de sumar monedas que se van a animar.</summary>
+    public static void RetenerMonedas(int cantidad)
+    {
+        if (cantidad <= 0) return;
+        s_monedasEnVuelo += cantidad;
+        Instance?.Refrescar();
+    }
+
+    /// <summary>Llamar cuando llega cada moneda animada con su valor.</summary>
+    public static void LiberarMonedas(int cantidad)
+    {
+        s_monedasEnVuelo = Mathf.Max(0, s_monedasEnVuelo - cantidad);
+        Instance?.Refrescar();
+    }
+
     void Awake()
     {
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
+
+        // Una recarga de escena corta cualquier animación a medias
+        s_monedasEnVuelo = 0;
     }
 
     // Delegates guardados como campos para poder desuscribirse correctamente
@@ -88,7 +116,7 @@ public class PlayerHeaderUI : MonoBehaviour
     {
         if (EconomiaManager.Instance == null) return;
 
-        if (textoMonedas) textoMonedas.text = EconomiaManager.Instance.Monedas.ToString();
+        if (textoMonedas) textoMonedas.text = MonedasMostradas.ToString();
         if (textoGemas)   textoGemas.text   = EconomiaManager.Instance.Gemas.ToString();
         if (textoVidas)
         {

@@ -280,33 +280,49 @@ public class CuboInteligente : MonoBehaviour
         }
 
         // ── Física de inestabilidad ──────────────────────────────────────────
-        // Solo cuando cae sobre OTRO CUBO (sobre la plataforma siempre es estable).
-        float overhangRatio = 0f;
-        if (sobreOtroCubo)
-        {
-            // IMPORTANTE: no usar posSoporte != Vector3.zero como condición
-            // (si el cubo está en world origin (0,0,0) la comparación falla).
-            // Siempre usar localScale del objeto colisionado.
-            float anchoSoporte = collision.transform.localScale.x;
-
-            // ratio: 0 = perfectamente centrado
-            //        0.5 = borde del cubo nuevo sobre borde del cubo debajo (punto de vuelco)
-            //        > 0.5 = más de la mitad colgando → caerá
-            overhangRatio = anchoSoporte > 0.001f ? distXZ / anchoSoporte : 0f;
-        }
+        // Se mide sobre CUALQUIER soporte: antes la plataforma devolvía siempre 0,
+        // así que un cubo en su filo nunca caía. Y sobre otro cubo se usaba la
+        // distancia en diagonal, que no coincide con lo que se ve.
+        float overhangRatio = FraccionColgando(collision.transform);
 
         Aterrizar(overhangRatio, posSoporte, sobreOtroCubo);
     }
 
+    /// <summary>
+    /// Fracción del ancho de este cubo que queda fuera del soporte, medida en
+    /// los ejes del propio soporte (así funciona aunque esté girado):
+    ///   0 = totalmente apoyado · 0.5 = el centro justo en el borde · 1 = fuera.
+    /// Se toma el eje más desfavorable. Vale igual para la plataforma y para
+    /// otro cubo porque usa el tamaño real de cada uno.
+    /// </summary>
+    float FraccionColgando(Transform soporte)
+    {
+        float anchoCubo = transform.localScale.x;
+        if (anchoCubo < 0.0001f) return 0f;
+
+        Vector3 d    = transform.position - soporte.position;
+        Vector3 escS = soporte.lossyScale;
+
+        float peor = 0f;
+        foreach (var (eje, mitadSoporte) in new[] {
+                     (soporte.right,   escS.x * 0.5f),
+                     (soporte.forward, escS.z * 0.5f) })
+        {
+            float offset   = Mathf.Abs(Vector3.Dot(d, eje));
+            // distancia desde el centro del cubo hasta el borde del soporte
+            float fuera    = offset - mitadSoporte;           // >0 = centro ya fuera
+            float fraccion = Mathf.Clamp01((fuera + anchoCubo * 0.5f) / anchoCubo);
+            peor = Mathf.Max(peor, fraccion);
+        }
+        return peor;
+    }
+
     // ── Aterrizaje con física de estabilidad ──────────────────────────────────
     //
-    //  overhangRatio:
-    //    < 0.50  → cubo centrado o ligeramente desplazado: ESTABLE, rotación congelada
-    //    ≥ 0.50  → más de la mitad del cubo colgando (punto de vuelco real): INESTABLE
-    //
-    //  El punto de vuelco físico de un cubo uniforme es exactamente cuando su centro
-    //  de masa sale del borde del soporte, es decir a 0.5 * anchoSoporte.
-    //  Usar 0.50 como umbral es físicamente correcto y da la mejor jugabilidad.
+    //  overhangRatio (ver FraccionColgando), sobre la plataforma o sobre otro cubo:
+    //    < UmbralVuelco → apoyado: ESTABLE, rotación congelada
+    //    ≥ UmbralVuelco → casi la mitad o más colgando: INESTABLE, se le da un
+    //                     giro inicial hacia el vacío para que caiga
     //
     //  IMPORTANTE: se eliminó el caso intermedio con FreezePositionY porque causaba
     //  que cubos empujados lateralmente "flotaran" al no poder bajar en Y.
@@ -323,7 +339,7 @@ public class CuboInteligente : MonoBehaviour
         if (tipo == TipoCubo.Fuego)
             EfectoFuego();
 
-        if (overhangRatio < 0.50f)
+        if (overhangRatio < UmbralVuelco)
         {
             // ── ESTABLE: menos de la mitad colgando ──────────────────────────
             // Rotación completamente congelada. El cubo NUNCA se caerá por sí solo.
@@ -389,12 +405,24 @@ public class CuboInteligente : MonoBehaviour
         TutorialManager.Instance?.Completar();
     }
 
+    // Fracción colgando a partir de la cual el cubo cae. Decisión del 2026-09-22:
+    // "si la mitad está en el aire, se cae", también sobre la plataforma. Se usa
+    // 0.45 y no 0.50 porque a simple vista "la mitad" suele ser algo menos, y
+    // con 0.50 exacto el cubo queda en equilibrio y la física no lo tumba.
+    public const float UmbralVuelco = 0.45f;
+
     System.Collections.IEnumerator AplicarTorqueSiguienteFrame(Vector3 dir, float ratio)
     {
         yield return new WaitForFixedUpdate();
         if (rb == null || yaExploto) yield break;
+
+        // Giro hacia el lado que cuelga. VelocityChange ignora la masa: antes se
+        // usaba un impulso y un cubo de plomo (masa 40) apenas se inmutaba.
+        // Entre 0.45 y 0.5 el centro de masas aún está sobre el soporte, así que
+        // el empujón es lo único que lo tumba; por eso es más fuerte ahí.
         Vector3 ejeTorque = Vector3.Cross(Vector3.up, dir);
-        rb.AddTorque(ejeTorque * Mathf.Clamp(ratio * 0.8f, 0f, 0.8f), ForceMode.Impulse);
+        float   velGiro   = ratio < 0.5f ? 3.5f : 2.0f;   // rad/s
+        rb.AddTorque(ejeTorque * velGiro, ForceMode.VelocityChange);
     }
 
     // ── Física de aterrizaje por tipo ─────────────────────────────────────────

@@ -56,7 +56,13 @@ public class AnimadorMonedas : MonoBehaviour
     /// </summary>
     public static void Animar(int cantidad, Vector2 posOrigen)
     {
-        if (Instance == null) return;
+        if (Instance == null || cantidad <= 0) return;
+        if (Instance.prefabMoneda == null || Instance.contenedor == null || Instance.destinoMoneda == null)
+            return;   // sin animación posible, el contador muestra el total directamente
+
+        // Retener ANTES de que se sumen: el contador arranca en el valor viejo y
+        // sube con cada moneda que llega (ver PlayerHeaderUI.RetenerMonedas)
+        PlayerHeaderUI.RetenerMonedas(cantidad);
         Instance.StartCoroutine(Instance.SecuenciaMonedas(cantidad, posOrigen));
     }
 
@@ -66,19 +72,23 @@ public class AnimadorMonedas : MonoBehaviour
 
     IEnumerator SecuenciaMonedas(int total, Vector2 posOrigenPantalla)
     {
-        if (prefabMoneda == null || contenedor == null || destinoMoneda == null) yield break;
+        int iconos = Mathf.Clamp(total, 1, Mathf.Max(1, monedasMaxSimultaneas));
 
-        int monedasALanzar = Mathf.Min(total, monedasMaxSimultaneas);
-        int monedasPorIcono = Mathf.Max(1, Mathf.CeilToInt((float)total / monedasALanzar));
+        // Reparto exacto: la suma de todos los iconos es justo el total. Antes se
+        // redondeaba hacia arriba por icono (75 monedas en 8 iconos = 10 cada uno
+        // = 80), y el contador terminaba en un número distinto del real.
+        int baseIcono = total / iconos;
+        int resto     = total % iconos;
 
         // Convertir posición pantalla → Canvas local
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             contenedor, posOrigenPantalla, null, out Vector2 posLocal);
 
-        for (int i = 0; i < monedasALanzar; i++)
+        for (int i = 0; i < iconos; i++)
         {
-            StartCoroutine(VolarMoneda(posLocal, monedasPorIcono));
-            yield return new WaitForSeconds(delayEntreMonedas);
+            StartCoroutine(VolarMoneda(posLocal, baseIcono + (i < resto ? 1 : 0)));
+            // Realtime: el GameOver puede llegar con timeScale 0 tras un anuncio
+            yield return new WaitForSecondsRealtime(delayEntreMonedas);
         }
     }
 
@@ -129,9 +139,11 @@ public class AnimadorMonedas : MonoBehaviour
 
     void IncrementarContador(int cantidad)
     {
-        if (textoContador == null || EconomiaManager.Instance == null) return;
-        // El contador refleja el valor real guardado en EconomiaManager
-        textoContador.text = EconomiaManager.Instance.Monedas.ToString();
+        // Entrega el valor de esta moneda: el header sube exactamente esto
+        PlayerHeaderUI.LiberarMonedas(cantidad);
+
+        if (textoContador == null) return;
+        textoContador.text = PlayerHeaderUI.MonedasMostradas.ToString();
         StartCoroutine(FlashTexto());
     }
 

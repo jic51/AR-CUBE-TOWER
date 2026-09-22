@@ -18,8 +18,7 @@ public class SetupFase : MonoBehaviour
     [Header("Configuración Escala")]
     public float escalaMin           = 0.5f;
     public float escalaMax           = 4.0f;
-    [Range(0.000005f, 0.0005f)]
-    public float sensibilidadZoom    = 0.000025f; // ajusta este slider en el Inspector
+    // (sensibilidadZoom se eliminó: el pinch ahora es proporcional y no necesita ajuste)
     public float sensibilidadRotacion = 2.0f;
 
     [Header("Tiempos del flujo AR (segundos)")]
@@ -148,6 +147,7 @@ public class SetupFase : MonoBehaviour
             ActualizarCuboFantasma();
             return;
         }
+        _pinchActivo = false;   // al levantar un dedo, el próximo pinch empieza de cero
 
         // El resto del input requiere que el escaneo esté activo
         if (!escaneoActivo) return;
@@ -259,30 +259,45 @@ public class SetupFase : MonoBehaviour
 
     // ── Escalar y Rotar (EnhancedTouch) ──────────────────────────────────────
 
+    // Estado del pinch en curso. La escala se calcula PROPORCIONAL a la distancia
+    // entre los dedos respecto al inicio del gesto (como al hacer zoom a una foto).
+    // Antes se sumaban deltas por fotograma, con un umbral de 6 px por fotograma y
+    // una sensibilidad de 0.000025: un pinch normal se mueve menos de 6 px por
+    // fotograma y se ignoraba entero, y uno rápido cambiaba la escala en ~0.06.
+    // Por eso el resize nunca funcionó.
+    private bool  _pinchActivo;
+    private float _pinchDistInicial;
+    private float _pinchEscalaInicial;
+
+    // Distancia mínima entre dedos para empezar a escalar (evita divisiones
+    // inestables si los dos dedos caen casi en el mismo punto)
+    private const float PinchDistMinima = 40f;
+
     void EscalarYRotar(ETouch t1, ETouch t2)
     {
-        // Ignorar el primer frame del segundo dedo (delta == 0 → spike falso)
-        if (t2.phase == UnityEngine.InputSystem.TouchPhase.Began) return;
-
-        // 1. ESCALAR (pinch)
         Vector2 pos1Actual = t1.screenPosition;
         Vector2 pos2Actual = t2.screenPosition;
         Vector2 pos1Prev   = pos1Actual - t1.delta;
         Vector2 pos2Prev   = pos2Actual - t2.delta;
 
+        // 1. ESCALAR (pinch proporcional)
         float distActual = Vector2.Distance(pos1Actual, pos2Actual);
-        float distPrev   = Vector2.Distance(pos1Prev,   pos2Prev);
-        float deltaDist  = distActual - distPrev;
 
-        // Umbral: ignorar movimientos menores a 6 píxeles (elimina jitter)
-        // Clamp: máximo 40 px por frame para evitar saltos en primer contacto
-        deltaDist = Mathf.Clamp(deltaDist, -40f, 40f);
-
-        if (Mathf.Abs(deltaDist) > 6f)
+        if (!_pinchActivo)
         {
-            EscalaSeleccionada = Mathf.Clamp(
-                EscalaSeleccionada + deltaDist * sensibilidadZoom,
-                escalaMin, escalaMax);
+            if (distActual < PinchDistMinima) return;
+            _pinchActivo        = true;
+            _pinchDistInicial   = distActual;
+            _pinchEscalaInicial = EscalaSeleccionada;
+            return;   // el primer fotograma solo fija la referencia
+        }
+
+        float nuevaEscala = Mathf.Clamp(
+            _pinchEscalaInicial * (distActual / _pinchDistInicial), escalaMin, escalaMax);
+
+        if (!Mathf.Approximately(nuevaEscala, EscalaSeleccionada))
+        {
+            EscalaSeleccionada = nuevaEscala;
 
             if (plataformaActual != null)
                 plataformaActual.transform.localScale =
@@ -444,6 +459,11 @@ public class SetupFase : MonoBehaviour
         }
 
         plataformaActual.transform.position = posInicial;
+
+        // Ancla AR: evita que la torre "salte" cuando ARCore corrige el tracking.
+        // Los managers de trackables viven en el XR Origin, igual que el raycast.
+        if (raycastManager != null)
+            AnclaTorre.Crear(plataformaActual.transform, raycastManager.gameObject);
 
         if (GameManager.Instance != null)
             GameManager.Instance.IniciarPartida(plataformaActual.transform);

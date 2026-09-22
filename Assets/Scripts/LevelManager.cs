@@ -20,264 +20,277 @@ public class LevelManager : MonoBehaviour
 {
     public static LevelManager Instance;
 
-    // ── 25 niveles ───────────────────────────────────────────────────────────
-    [Header("Niveles")]
+    // Alto de un cubo a escala 1. Las metas se escriben en cubos (N * CUBO) y en
+    // partida se multiplican por la escala elegida de la plataforma, porque los
+    // cubos crecen con ella: la dificultad no depende del tamaño que elija el jugador.
+    public const float CUBO = 0.15f;
+
+    // ── 40 niveles ───────────────────────────────────────────────────────────
+    // Curva de dificultad (2026-09-22): de 3 a 41 cubos; el tiempo concedido baja
+    // de 4.0 a 2.4 s por cubo y la grúa entrega de cada 1.2 s a cada 0.75 s.
+    //   TIME TRIAL: 75 % del tiempo · EFFICIENCY: sin reloj, cubos limitados
+    //   PRECISION / sin snap: +15 % de tiempo · MASTER: +15 % de cubos, 90 % del tiempo
+    //
+    // [NonSerialized] a propósito: esta tabla es la ÚNICA fuente de verdad. Siendo
+    // un campo público serializado, la escena guardaba una copia vieja de 6 niveles
+    // que pisaba esta y por eso nunca se vieron los 40.
+    [System.NonSerialized]
     public DatosNivel[] niveles = new DatosNivel[]
     {
-        // ── BLOQUE 1: Intro (1-5) ────────────────────────────────────────────
+        // ── BLOQUE 1: Intro (1-5) ───────────────────────────────────────
         new DatosNivel {
-            nombre = "Level 1 — First Tower", metaAltura = 0.30f, tiempoLimite = 90f,
-            cubosMaximos = 0, intervaloEntrega = 1.2f, snapDesactivado = false,
+            nombre = "Level 1 — First Tower", metaAltura = 3f * CUBO, tiempoLimite = 20f,
+            cubosMaximos = 0, intervaloEntrega = 1.20f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "Your first tower. Take your time and learn to stack."
+            descripcion = "Your first tower: 3 cubes high. Learn to aim and drop."
         },
         new DatosNivel {
-            nombre = "Level 2 — Going Higher", metaAltura = 0.50f, tiempoLimite = 80f,
-            cubosMaximos = 0, intervaloEntrega = 1.1f, snapDesactivado = false,
+            nombre = "Level 2 — Going Higher", metaAltura = 4f * CUBO, tiempoLimite = 25f,
+            cubosMaximos = 0, intervaloEntrega = 1.19f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "Half a meter. Keep it steady."
+            descripcion = "Stack 4 cubes in 25s. Find your rhythm."
         },
         new DatosNivel {
-            nombre = "Level 3 — Three Quarters", metaAltura = 0.75f, tiempoLimite = 75f,
-            cubosMaximos = 0, intervaloEntrega = 1.0f, snapDesactivado = false,
+            nombre = "Level 3 — First Wobble", metaAltura = 5f * CUBO, tiempoLimite = 30f,
+            cubosMaximos = 0, intervaloEntrega = 1.18f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "75 cm. The tower starts to wobble."
+            descripcion = "Stack 5 cubes in 30s. Steady hands win."
         },
         new DatosNivel {
-            nombre = "Level 4 — The Meter", metaAltura = 1.00f, tiempoLimite = 70f,
-            cubosMaximos = 0, intervaloEntrega = 1.0f, snapDesactivado = false,
+            nombre = "Level 4 — Steady Climb", metaAltura = 6f * CUBO, tiempoLimite = 35f,
+            cubosMaximos = 0, intervaloEntrega = 1.17f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "One full meter. You're getting the hang of it."
+            descripcion = "Stack 6 cubes in 35s. Build it clean."
         },
         new DatosNivel {
-            nombre = "Level 5 — Level Up", metaAltura = 1.25f, tiempoLimite = 65f,
-            cubosMaximos = 0, intervaloEntrega = 1.0f, snapDesactivado = false,
+            nombre = "Level 5 — Level Up", metaAltura = 6f * CUBO, tiempoLimite = 35f,
+            cubosMaximos = 0, intervaloEntrega = 1.15f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "A meter and a quarter. Focus!"
+            descripcion = "Stack 6 cubes in 35s. Stay calm and stack."
         },
 
-        // ── BLOQUE 2: Speed + Efficiency (6-10) ─────────────────────────────
+        // ── BLOQUE 2: Velocidad + Eficiencia (6-10) ─────────────────────
         new DatosNivel {
-            nombre = "Level 6 — Tower & Half", metaAltura = 1.50f, tiempoLimite = 60f,
-            cubosMaximos = 0, intervaloEntrega = 0.95f, snapDesactivado = false,
+            nombre = "Level 6 — Faster Blocks", metaAltura = 7f * CUBO, tiempoLimite = 35f,
+            cubosMaximos = 0, intervaloEntrega = 1.14f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "Blocks arrive faster. Stay calm."
+            descripcion = "Stack 7 cubes in 35s. Keep it steady."
         },
         new DatosNivel {
-            nombre = "Level 7 — Race", metaAltura = 1.50f, tiempoLimite = 45f,
-            cubosMaximos = 0, intervaloEntrega = 0.9f, snapDesactivado = false,
+            nombre = "Level 7 — Race", metaAltura = 8f * CUBO, tiempoLimite = 30f,
+            cubosMaximos = 0, intervaloEntrega = 1.02f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "Same height, half the time. Go!"
+            descripcion = "Stack 8 cubes in 30s. Beat the clock."
         },
         new DatosNivel {
-            nombre = "Level 8 — Almost Two", metaAltura = 1.75f, tiempoLimite = 60f,
-            cubosMaximos = 0, intervaloEntrega = 1.0f, snapDesactivado = false,
+            nombre = "Level 8 — Steady Hands", metaAltura = 9f * CUBO, tiempoLimite = 45f,
+            cubosMaximos = 0, intervaloEntrega = 1.12f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "Almost two meters. Steady hands."
+            descripcion = "Stack 9 cubes in 45s. Steady hands win."
         },
         new DatosNivel {
-            nombre = "Level 9 — Count Your Blocks", metaAltura = 1.75f, tiempoLimite = 0f,
-            cubosMaximos = 15, intervaloEntrega = 1.0f, snapDesactivado = false,
+            nombre = "Level 9 — Count Your Blocks", metaAltura = 10f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 13, intervaloEntrega = 1.11f, snapDesactivado = false,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "15 blocks. Don't waste a single one."
+            descripcion = "Stack 10 cubes using at most 13. Limited cubes. Don't waste one."
         },
         new DatosNivel {
-            nombre = "Level 10 — Two Meters", metaAltura = 2.00f, tiempoLimite = 55f,
-            cubosMaximos = 0, intervaloEntrega = 0.9f, snapDesactivado = false,
+            nombre = "Level 10 — The Real Test", metaAltura = 11f * CUBO, tiempoLimite = 50f,
+            cubosMaximos = 0, intervaloEntrega = 1.10f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "Two meters. The real test begins here."
+            descripcion = "Stack 11 cubes in 50s. Stay calm and stack."
         },
 
-        // ── BLOQUE 3: Precisión (11-15) ──────────────────────────────────────
+        // ── BLOQUE 3: Precisión (11-15) ─────────────────────────────────
         new DatosNivel {
-            nombre = "Level 11 — No Safety Net", metaAltura = 2.00f, tiempoLimite = 55f,
-            cubosMaximos = 0, intervaloEntrega = 1.0f, snapDesactivado = true,
+            nombre = "Level 11 — No Safety Net", metaAltura = 12f * CUBO, tiempoLimite = 60f,
+            cubosMaximos = 0, intervaloEntrega = 1.08f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "No snap assist. Aim true."
+            descripcion = "Stack 12 cubes in 60s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 12 — Master Builder", metaAltura = 2.50f, tiempoLimite = 60f,
-            cubosMaximos = 0, intervaloEntrega = 0.85f, snapDesactivado = false,
+            nombre = "Level 12 — Master Builder", metaAltura = 12f * CUBO, tiempoLimite = 55f,
+            cubosMaximos = 0, intervaloEntrega = 1.07f, snapDesactivado = false,
             etiquetaEspecial = "",
-            descripcion = "2.5 meters. You are a builder."
+            descripcion = "Stack 12 cubes in 55s. Find your rhythm."
         },
         new DatosNivel {
-            nombre = "Level 13 — Efficient Master", metaAltura = 2.50f, tiempoLimite = 0f,
-            cubosMaximos = 12, intervaloEntrega = 0.85f, snapDesactivado = false,
+            nombre = "Level 13 — Efficient Master", metaAltura = 13f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 17, intervaloEntrega = 1.06f, snapDesactivado = false,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "12 blocks for 2.5 m. Every block counts."
+            descripcion = "Stack 13 cubes using at most 17. Limited cubes. Don't waste one."
         },
         new DatosNivel {
-            nombre = "Level 14 — Architect", metaAltura = 3.00f, tiempoLimite = 65f,
-            cubosMaximos = 0, intervaloEntrega = 0.8f, snapDesactivado = true,
+            nombre = "Level 14 — Architect", metaAltura = 14f * CUBO, tiempoLimite = 70f,
+            cubosMaximos = 0, intervaloEntrega = 1.05f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "3 meters. No snap. Pure skill."
+            descripcion = "Stack 14 cubes in 70s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 15 — Legend", metaAltura = 3.50f, tiempoLimite = 60f,
-            cubosMaximos = 0, intervaloEntrega = 0.75f, snapDesactivado = false,
+            nombre = "Level 15 — Legend", metaAltura = 17f * CUBO, tiempoLimite = 60f,
+            cubosMaximos = 0, intervaloEntrega = 1.04f, snapDesactivado = false,
             etiquetaEspecial = "MASTER",
-            descripcion = "3.5 meters in 60 seconds. Legendary."
+            descripcion = "Stack 17 cubes in 60s. Taller and faster. Masters only."
         },
 
-        // ── BLOQUE 4: Elite (16-20) ───────────────────────────────────────────
+        // ── BLOQUE 4: Élite (16-20) ─────────────────────────────────────
         new DatosNivel {
-            nombre = "Level 16 — Sharp Eye", metaAltura = 4.00f, tiempoLimite = 55f,
-            cubosMaximos = 0, intervaloEntrega = 0.8f, snapDesactivado = true,
+            nombre = "Level 16 — Sharp Eye", metaAltura = 16f * CUBO, tiempoLimite = 75f,
+            cubosMaximos = 0, intervaloEntrega = 1.03f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "4 meters. No snap. Eyes like a hawk."
+            descripcion = "Stack 16 cubes in 75s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 17 — Efficient Stack", metaAltura = 4.50f, tiempoLimite = 0f,
-            cubosMaximos = 12, intervaloEntrega = 0.75f, snapDesactivado = false,
+            nombre = "Level 17 — Efficient Stack", metaAltura = 17f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 21, intervaloEntrega = 1.02f, snapDesactivado = false,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "12 blocks to reach 4.5 m. Waste nothing."
+            descripcion = "Stack 17 cubes using at most 21. Limited cubes. Don't waste one."
         },
         new DatosNivel {
-            nombre = "Level 18 — Master Class", metaAltura = 5.00f, tiempoLimite = 50f,
-            cubosMaximos = 0, intervaloEntrega = 0.75f, snapDesactivado = false,
+            nombre = "Level 18 — Master Class", metaAltura = 20f * CUBO, tiempoLimite = 70f,
+            cubosMaximos = 0, intervaloEntrega = 1.00f, snapDesactivado = false,
             etiquetaEspecial = "MASTER",
-            descripcion = "5 meters in 50 seconds. Masters only."
+            descripcion = "Stack 20 cubes in 70s. Taller and faster. Masters only."
         },
         new DatosNivel {
-            nombre = "Level 19 — Ultra Efficient", metaAltura = 5.50f, tiempoLimite = 0f,
-            cubosMaximos = 10, intervaloEntrega = 0.7f, snapDesactivado = true,
+            nombre = "Level 19 — Ultra Efficient", metaAltura = 18f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 22, intervaloEntrega = 0.99f, snapDesactivado = true,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "10 blocks, no snap, 5.5 m. Brutal efficiency."
+            descripcion = "Stack 18 cubes using at most 22. Limited cubes. Don't waste one. No snap."
         },
         new DatosNivel {
-            nombre = "Level 20 — Race The Clock", metaAltura = 6.00f, tiempoLimite = 45f,
-            cubosMaximos = 0, intervaloEntrega = 0.7f, snapDesactivado = false,
+            nombre = "Level 20 — Race The Clock", metaAltura = 19f * CUBO, tiempoLimite = 55f,
+            cubosMaximos = 0, intervaloEntrega = 0.88f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "6 meters. 45 seconds. Don't blink."
+            descripcion = "Stack 19 cubes in 55s. Beat the clock."
         },
 
-        // ── BLOQUE 5: Legendary (21-25) ───────────────────────────────────────
+        // ── BLOQUE 5: Leyenda (21-25) ───────────────────────────────────
         new DatosNivel {
-            nombre = "Level 21 — The Summit", metaAltura = 6.50f, tiempoLimite = 45f,
-            cubosMaximos = 8, intervaloEntrega = 0.7f, snapDesactivado = true,
+            nombre = "Level 21 — The Summit", metaAltura = 23f * CUBO, tiempoLimite = 85f,
+            cubosMaximos = 0, intervaloEntrega = 0.97f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "8 blocks, no snap. Reach the summit."
+            descripcion = "Stack 23 cubes in 85s. Taller and faster. Masters only. No snap."
         },
         new DatosNivel {
-            nombre = "Level 22 — Double Challenge", metaAltura = 7.00f, tiempoLimite = 40f,
-            cubosMaximos = 0, intervaloEntrega = 0.65f, snapDesactivado = true,
+            nombre = "Level 22 — Double Challenge", metaAltura = 24f * CUBO, tiempoLimite = 90f,
+            cubosMaximos = 0, intervaloEntrega = 0.96f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "7 meters, no snap, 40 seconds. Insane."
+            descripcion = "Stack 24 cubes in 90s. Taller and faster. Masters only. No snap."
         },
         new DatosNivel {
-            nombre = "Level 23 — Peak Builder", metaAltura = 8.00f, tiempoLimite = 40f,
-            cubosMaximos = 7, intervaloEntrega = 0.65f, snapDesactivado = false,
+            nombre = "Level 23 — Peak Builder", metaAltura = 22f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 27, intervaloEntrega = 0.95f, snapDesactivado = false,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "7 blocks. 8 meters. Every block must land."
+            descripcion = "Stack 22 cubes using at most 27. Limited cubes. Don't waste one."
         },
         new DatosNivel {
-            nombre = "Level 24 — Sky Reach", metaAltura = 9.00f, tiempoLimite = 35f,
-            cubosMaximos = 0, intervaloEntrega = 0.6f, snapDesactivado = true,
+            nombre = "Level 24 — Sky Reach", metaAltura = 23f * CUBO, tiempoLimite = 95f,
+            cubosMaximos = 0, intervaloEntrega = 0.93f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "9 meters, no snap, 35 seconds. Sky is the limit."
+            descripcion = "Stack 23 cubes in 95s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 25 — LEGEND FINAL", metaAltura = 10.00f, tiempoLimite = 30f,
-            cubosMaximos = 0, intervaloEntrega = 0.6f, snapDesactivado = true,
+            nombre = "Level 25 — LEGEND FINAL", metaAltura = 26f * CUBO, tiempoLimite = 90f,
+            cubosMaximos = 0, intervaloEntrega = 0.92f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "10 meters. No snap. 30 seconds. You are the LEGEND."
+            descripcion = "Stack 26 cubes in 90s. Taller and faster. Masters only. No snap."
         },
 
-        // ── BLOQUE 6: GODLIKE (26-30) ─────────────────────────────────────────
+        // ── BLOQUE 6: Divino (26-30) ────────────────────────────────────
         new DatosNivel {
-            nombre = "Level 26 — Efficiency God", metaAltura = 6.00f, tiempoLimite = 0f,
-            cubosMaximos = 6, intervaloEntrega = 0.55f, snapDesactivado = true,
+            nombre = "Level 26 — Efficiency God", metaAltura = 24f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 29, intervaloEntrega = 0.91f, snapDesactivado = true,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "6 blocks. 6 meters. No snap. Perfect or nothing."
+            descripcion = "Stack 24 cubes using at most 29. Limited cubes. Don't waste one. No snap."
         },
         new DatosNivel {
-            nombre = "Level 27 — Flash Builder", metaAltura = 8.00f, tiempoLimite = 25f,
-            cubosMaximos = 0, intervaloEntrega = 0.5f, snapDesactivado = false,
+            nombre = "Level 27 — Flash Builder", metaAltura = 25f * CUBO, tiempoLimite = 65f,
+            cubosMaximos = 0, intervaloEntrega = 0.81f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "8 meters in 25 seconds. Blocks arrive like bullets."
+            descripcion = "Stack 25 cubes in 65s. Beat the clock."
         },
         new DatosNivel {
-            nombre = "Level 28 — The Surgeon", metaAltura = 9.00f, tiempoLimite = 0f,
-            cubosMaximos = 9, intervaloEntrega = 0.55f, snapDesactivado = true,
+            nombre = "Level 28 — The Surgeon", metaAltura = 26f * CUBO, tiempoLimite = 100f,
+            cubosMaximos = 0, intervaloEntrega = 0.89f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "9 blocks, 9 meters, no snap. Surgical precision required."
+            descripcion = "Stack 26 cubes in 100s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 29 — Overdrive", metaAltura = 11.00f, tiempoLimite = 35f,
-            cubosMaximos = 0, intervaloEntrega = 0.45f, snapDesactivado = false,
+            nombre = "Level 29 — Overdrive", metaAltura = 31f * CUBO, tiempoLimite = 90f,
+            cubosMaximos = 0, intervaloEntrega = 0.88f, snapDesactivado = false,
             etiquetaEspecial = "MASTER",
-            descripcion = "11 meters. Blocks come non-stop. Are you fast enough?"
+            descripcion = "Stack 31 cubes in 90s. Taller and faster. Masters only."
         },
         new DatosNivel {
-            nombre = "Level 30 — Iron Will", metaAltura = 12.00f, tiempoLimite = 40f,
-            cubosMaximos = 0, intervaloEntrega = 0.5f, snapDesactivado = true,
+            nombre = "Level 30 — Iron Will", metaAltura = 32f * CUBO, tiempoLimite = 105f,
+            cubosMaximos = 0, intervaloEntrega = 0.87f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "12 meters. No snap. 40 seconds. Unbreakable focus."
+            descripcion = "Stack 32 cubes in 105s. Taller and faster. Masters only. No snap."
         },
 
-        // ── BLOQUE 7: TRANSCENDENT (31-35) ────────────────────────────────────
+        // ── BLOQUE 7: Trascendente (31-35) ──────────────────────────────
         new DatosNivel {
-            nombre = "Level 31 — Ghost Protocol", metaAltura = 10.00f, tiempoLimite = 0f,
-            cubosMaximos = 7, intervaloEntrega = 0.5f, snapDesactivado = true,
+            nombre = "Level 31 — Ghost Protocol", metaAltura = 28f * CUBO, tiempoLimite = 100f,
+            cubosMaximos = 0, intervaloEntrega = 0.85f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "7 blocks for 10m. No snap. No margin for error."
+            descripcion = "Stack 28 cubes in 100s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 32 — Blitz", metaAltura = 13.00f, tiempoLimite = 30f,
-            cubosMaximos = 0, intervaloEntrega = 0.4f, snapDesactivado = false,
+            nombre = "Level 32 — Blitz", metaAltura = 29f * CUBO, tiempoLimite = 70f,
+            cubosMaximos = 0, intervaloEntrega = 0.76f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "13 meters, 30 seconds. The fastest hands win."
+            descripcion = "Stack 29 cubes in 70s. Beat the clock."
         },
         new DatosNivel {
-            nombre = "Level 33 — Minimalist", metaAltura = 8.00f, tiempoLimite = 0f,
-            cubosMaximos = 5, intervaloEntrega = 0.5f, snapDesactivado = true,
+            nombre = "Level 33 — Minimalist", metaAltura = 30f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 35, intervaloEntrega = 0.83f, snapDesactivado = true,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "5 blocks. 8 meters. No snap. Efficiency redefined."
+            descripcion = "Stack 30 cubes using at most 35. Limited cubes. Don't waste one. No snap."
         },
         new DatosNivel {
-            nombre = "Level 34 — The Architect", metaAltura = 14.00f, tiempoLimite = 45f,
-            cubosMaximos = 0, intervaloEntrega = 0.45f, snapDesactivado = true,
+            nombre = "Level 34 — The Architect", metaAltura = 36f * CUBO, tiempoLimite = 110f,
+            cubosMaximos = 0, intervaloEntrega = 0.82f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "14 meters. No snap. Fast delivery. The greatest builder."
+            descripcion = "Stack 36 cubes in 110s. Taller and faster. Masters only. No snap."
         },
         new DatosNivel {
-            nombre = "Level 35 — Clockwork", metaAltura = 12.00f, tiempoLimite = 28f,
-            cubosMaximos = 0, intervaloEntrega = 0.4f, snapDesactivado = false,
+            nombre = "Level 35 — Clockwork", metaAltura = 32f * CUBO, tiempoLimite = 70f,
+            cubosMaximos = 0, intervaloEntrega = 0.73f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "12 meters in 28 seconds. Like clockwork, never miss a beat."
+            descripcion = "Stack 32 cubes in 70s. Beat the clock."
         },
 
-        // ── BLOQUE 8: MYTHIC (36-40) ──────────────────────────────────────────
+        // ── BLOQUE 8: Mítico (36-40) ────────────────────────────────────
         new DatosNivel {
-            nombre = "Level 36 — Six Sigma", metaAltura = 12.00f, tiempoLimite = 0f,
-            cubosMaximos = 6, intervaloEntrega = 0.45f, snapDesactivado = true,
+            nombre = "Level 36 — Six Sigma", metaAltura = 33f * CUBO, tiempoLimite = 0f,
+            cubosMaximos = 38, intervaloEntrega = 0.80f, snapDesactivado = true,
             etiquetaEspecial = "EFFICIENCY",
-            descripcion = "6 blocks. 12 meters. No snap. Statistical perfection."
+            descripcion = "Stack 33 cubes using at most 38. Limited cubes. Don't waste one. No snap."
         },
         new DatosNivel {
-            nombre = "Level 37 — Warp Speed", metaAltura = 15.00f, tiempoLimite = 35f,
-            cubosMaximos = 0, intervaloEntrega = 0.35f, snapDesactivado = false,
+            nombre = "Level 37 — Warp Speed", metaAltura = 34f * CUBO, tiempoLimite = 75f,
+            cubosMaximos = 0, intervaloEntrega = 0.71f, snapDesactivado = false,
             etiquetaEspecial = "TIME TRIAL",
-            descripcion = "15 meters in 35 seconds. Faster than thought itself."
+            descripcion = "Stack 34 cubes in 75s. Beat the clock."
         },
         new DatosNivel {
-            nombre = "Level 38 — The Void", metaAltura = 15.00f, tiempoLimite = 0f,
-            cubosMaximos = 8, intervaloEntrega = 0.4f, snapDesactivado = true,
+            nombre = "Level 38 — The Void", metaAltura = 34f * CUBO, tiempoLimite = 110f,
+            cubosMaximos = 0, intervaloEntrega = 0.77f, snapDesactivado = true,
             etiquetaEspecial = "PRECISION",
-            descripcion = "8 blocks. 15 meters. No snap. Pure void, pure will."
+            descripcion = "Stack 34 cubes in 110s. No snap assist. Aim true."
         },
         new DatosNivel {
-            nombre = "Level 39 — Singularity", metaAltura = 18.00f, tiempoLimite = 40f,
-            cubosMaximos = 0, intervaloEntrega = 0.35f, snapDesactivado = true,
+            nombre = "Level 39 — Singularity", metaAltura = 40f * CUBO, tiempoLimite = 110f,
+            cubosMaximos = 0, intervaloEntrega = 0.76f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "18 meters. No snap. 40 seconds. A singular achievement."
+            descripcion = "Stack 40 cubes in 110s. Taller and faster. Masters only. No snap."
         },
         new DatosNivel {
-            nombre = "Level 40 — INFINITE SKY", metaAltura = 20.00f, tiempoLimite = 35f,
-            cubosMaximos = 0, intervaloEntrega = 0.3f, snapDesactivado = true,
+            nombre = "Level 40 — INFINITE SKY", metaAltura = 41f * CUBO, tiempoLimite = 115f,
+            cubosMaximos = 0, intervaloEntrega = 0.75f, snapDesactivado = true,
             etiquetaEspecial = "MASTER",
-            descripcion = "20 meters. No snap. 35 seconds. The sky has no ceiling."
+            descripcion = "Stack 41 cubes in 115s. Taller and faster. Masters only. No snap."
         },
     };
 
@@ -303,13 +316,81 @@ public class LevelManager : MonoBehaviour
             panelSeleccionNivel.SetActive(false);
     }
 
+    // Alto de cada botón de nivel en la lista (unidades del canvas de 1080×1920).
+    // El prefab mide 90, pequeño para tocar con el dedo.
+    private const float AltoBotonNivel = 150f;
+
+    private ScrollRect _scrollNiveles;
+
+    /// <summary>
+    /// Mete el contenedor de botones dentro de un área con scroll. La escena solo
+    /// tenía el contenedor con layout, sin ScrollRect ni máscara: los botones que
+    /// no cabían quedaban fuera del panel y solo se veían 5 o 6. Se construye en
+    /// código para no depender de montarlo a mano en el Editor.
+    /// </summary>
+    void AsegurarScroll()
+    {
+        if (_scrollNiveles != null || contenedorBotones == null) return;
+
+        var contenido = contenedorBotones as RectTransform;
+        _scrollNiveles = contenido.GetComponentInParent<ScrollRect>();
+        if (_scrollNiveles != null) return;   // alguien ya lo montó en la escena
+
+        // Viewport: del pie del panel hasta justo debajo del título (el título
+        // está anclado al centro a +544 con 244 de alto → su borde inferior ~+420)
+        var vpGO = new GameObject("ViewportNiveles", typeof(RectTransform), typeof(RectMask2D), typeof(Image));
+        var vp   = vpGO.GetComponent<RectTransform>();
+        vp.SetParent(contenido.parent, false);
+        vp.SetSiblingIndex(contenido.GetSiblingIndex());
+        vp.anchorMin = new Vector2(0f, 0f);
+        vp.anchorMax = new Vector2(1f, 0.5f);
+        vp.offsetMin = new Vector2(60f, 80f);
+        vp.offsetMax = new Vector2(-60f, 400f);
+        // Imagen transparente: permite arrastrar también desde los huecos
+        vpGO.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+
+        contenido.SetParent(vp, false);
+        contenido.anchorMin = new Vector2(0f, 1f);
+        contenido.anchorMax = new Vector2(1f, 1f);
+        contenido.pivot     = new Vector2(0.5f, 1f);
+        contenido.anchoredPosition = Vector2.zero;
+        contenido.sizeDelta = new Vector2(0f, contenido.sizeDelta.y);
+
+        var layout = contenido.GetComponent<VerticalLayoutGroup>();
+        if (layout != null)
+        {
+            layout.spacing = 16f;
+            layout.childControlWidth      = true;
+            layout.childForceExpandWidth  = true;
+            layout.childControlHeight     = true;    // usa el alto del LayoutElement
+            layout.childForceExpandHeight = false;
+        }
+        var fitter = contenido.GetComponent<ContentSizeFitter>();
+        if (fitter != null) fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        _scrollNiveles = vpGO.AddComponent<ScrollRect>();
+        _scrollNiveles.viewport          = vp;
+        _scrollNiveles.content           = contenido;
+        _scrollNiveles.horizontal        = false;
+        _scrollNiveles.vertical          = true;
+        _scrollNiveles.movementType      = ScrollRect.MovementType.Elastic;
+        _scrollNiveles.scrollSensitivity = 30f;
+    }
+
     public void MostrarSeleccionNivel(int nivelMaxDesbloqueado)
     {
         if (panelSeleccionNivel == null) return;
         panelSeleccionNivel.SetActive(true);
+        AsegurarScroll();
 
-        foreach (Transform hijo in contenedorBotones)
+        // Sacarlos del contenedor antes de destruirlos: Destroy actúa al final del
+        // fotograma y, mientras, seguirían contando en la altura de la lista
+        for (int h = contenedorBotones.childCount - 1; h >= 0; h--)
+        {
+            Transform hijo = contenedorBotones.GetChild(h);
+            hijo.SetParent(null, false);
             Destroy(hijo.gameObject);
+        }
 
         for (int i = 0; i < niveles.Length; i++)
         {
@@ -317,6 +398,11 @@ public class LevelManager : MonoBehaviour
             bool desbloqueado = i <= nivelMaxDesbloqueado;
 
             GameObject boton = Instantiate(prefabBotonNivel, contenedorBotones);
+
+            // Sin "??": en el Editor GetComponent devuelve un falso nulo de Unity
+            if (!boton.TryGetComponent(out LayoutElement le)) le = boton.AddComponent<LayoutElement>();
+            le.preferredHeight = AltoBotonNivel;
+            le.minHeight       = AltoBotonNivel;
 
             // ── Intentar usar BotonNivelUI (nuevo sistema con candado y colores) ──
             var botonUI = boton.GetComponent<BotonNivelUI>();
@@ -347,6 +433,15 @@ public class LevelManager : MonoBehaviour
                 if (desbloqueado)
                     btn.onClick.AddListener(() => SeleccionarNivel(indice));
             }
+        }
+
+        // Desplazar la lista hasta el último nivel desbloqueado: con 40 niveles,
+        // obligar a bajar a mano hasta el nivel 23 cada vez sería molesto
+        if (_scrollNiveles != null && niveles.Length > 1)
+        {
+            Canvas.ForceUpdateCanvases();
+            int objetivo = Mathf.Clamp(nivelMaxDesbloqueado, 0, niveles.Length - 1);
+            _scrollNiveles.verticalNormalizedPosition = 1f - (float)objetivo / (niveles.Length - 1);
         }
     }
 
