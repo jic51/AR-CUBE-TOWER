@@ -81,7 +81,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | `GruaController.Instance` | Existe en `GruaController.cs:6` |
 | `ReticuloVisible` | Existe en `GruaController.cs:30` |
 | `ReticuloAlturaHit` | Existe en `GruaController.cs:32` |
-| Sensibilidad de pinch | Ahora `0.000025f` con slider en Inspector (`SetupFase.cs:22`) |
+| Sensibilidad de pinch | Sustituida el 2026-09-22 por un pinch proporcional (`SetupFase.EscalarYRotar`): la sensibilidad ya no existe ni hace falta |
 | Mensajes de setup AR en inglés | Implementado (`SetupFase.cs:122`) |
 | Interacciones entre tipos de cubo | Las 5 implementadas en `CuboInteligente.cs:582` (`AplicarEfectoDeImpacto`) |
 | CuboPreview3D con RawImage | Implementado (RenderTexture presente) |
