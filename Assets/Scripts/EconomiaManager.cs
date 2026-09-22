@@ -21,6 +21,11 @@ public class EconomiaManager : MonoBehaviour
     public const int PRECIO_PLOMO_MONEDAS    = 60;
     public const int PRECIO_ESCUDO_MONEDAS   = 80;
 
+    // Vidas en la tienda
+    public const int PRECIO_VIDA_MONEDAS       = 50;
+    public const int PRECIO_PACK_VIDAS_MONEDAS = 120;
+    public const int VIDAS_POR_PACK            = 3;
+
     // Recompensas por jugar
     public const int MONEDAS_POR_GANAR       = 50;
     public const int MONEDAS_BONUS_RECORD     = 25;

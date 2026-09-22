@@ -51,6 +51,11 @@ public class TiendaManager : MonoBehaviour
     public Button botonComprarVidaPack;    // 3 vidas, 120 monedas
     public TextMeshProUGUI textoVidasActuales; // muestra "2 / 5"
 
+    [Tooltip("Texto del precio de 1 vida. Se rellena desde código para que nunca difiera de lo que se cobra.")]
+    public TextMeshProUGUI textoPrecioVida1;
+    [Tooltip("Texto del precio del pack de vidas. Se rellena desde código.")]
+    public TextMeshProUGUI textoPrecioVidaPack;
+
     // ── Botones de compra — Comodines ─────────────────────────────────────────
     [Header("Botones — Comodines")]
     public Button botonComprarSnap;    // 50 monedas
@@ -183,11 +188,16 @@ public class TiendaManager : MonoBehaviour
         // Tab Vidas
         if (textoVidasActuales)   textoVidasActuales.text   = eco.Vidas + " / " + EconomiaManager.MAX_VIDAS;
 
-        bool vidasLlenas = eco.Vidas >= EconomiaManager.MAX_VIDAS;
+        if (textoPrecioVida1)    textoPrecioVida1.text    = EconomiaManager.PRECIO_VIDA_MONEDAS.ToString();
+        if (textoPrecioVidaPack) textoPrecioVidaPack.text = EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS.ToString();
+
+        int hueco = EconomiaManager.MAX_VIDAS - eco.Vidas;
         if (botonComprarVida1)
-            botonComprarVida1.interactable    = !vidasLlenas && eco.TieneMonedas(50);
+            botonComprarVida1.interactable    = hueco >= 1 && eco.TieneMonedas(EconomiaManager.PRECIO_VIDA_MONEDAS);
+        // El pack solo se ofrece si caben las 3 vidas: si no, se pagaría de más
         if (botonComprarVidaPack)
-            botonComprarVidaPack.interactable = !vidasLlenas && eco.TieneMonedas(120);
+            botonComprarVidaPack.interactable = hueco >= EconomiaManager.VIDAS_POR_PACK
+                                             && eco.TieneMonedas(EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS);
 
         // Tab Comodines — stock en inventario
         if (textoStockSnap)   textoStockSnap.text   = "x" + eco.ObtenerComodin(0);
@@ -211,7 +221,7 @@ public class TiendaManager : MonoBehaviour
         if (EconomiaManager.Instance.Vidas >= EconomiaManager.MAX_VIDAS)
         { MostrarFeedback("Ya tienes vidas al máximo", false); return; }
 
-        if (!EconomiaManager.Instance.GastarMonedas(50))
+        if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_VIDA_MONEDAS))
         { MostrarFeedback("Monedas insuficientes", false); return; }
 
         EconomiaManager.Instance.GanarVida(1);
@@ -223,13 +233,15 @@ public class TiendaManager : MonoBehaviour
     {
         if (EconomiaManager.Instance == null) return;
 
-        if (EconomiaManager.Instance.Vidas >= EconomiaManager.MAX_VIDAS)
-        { MostrarFeedback("Ya tienes vidas al máximo", false); return; }
+        // Validar ANTES de cobrar: con 4 vidas el pack cobraba 120 y entregaba 1
+        int hueco = EconomiaManager.MAX_VIDAS - EconomiaManager.Instance.Vidas;
+        if (hueco < EconomiaManager.VIDAS_POR_PACK)
+        { MostrarFeedback(hueco <= 0 ? "Ya tienes vidas al máximo" : $"Solo te caben {hueco} vidas", false); return; }
 
-        if (!EconomiaManager.Instance.GastarMonedas(120))
+        if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS))
         { MostrarFeedback("Monedas insuficientes", false); return; }
 
-        EconomiaManager.Instance.GanarVida(3);
+        EconomiaManager.Instance.GanarVida(EconomiaManager.VIDAS_POR_PACK);
         MostrarFeedback("+3 vidas compradas!", true);
         ActualizarUI();
     }

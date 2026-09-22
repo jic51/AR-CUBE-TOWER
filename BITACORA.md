@@ -63,7 +63,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 ### Pendiente — Seguridad
 
-25 hallazgos totales (19 de la auditoría + 6 nuevos del 2026-09-21). De ellos, 5 están resueltos en código (1, 2, 3, 5, 17), 3 cerrados como riesgo asumido (7, 14, N1) y 1 es informativo (N5): **quedan 16 abiertos**, y el hallazgo 4 es el único que todavía bloquea el lanzamiento. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
+25 hallazgos totales (19 de la auditoría + 6 nuevos del 2026-09-21). De ellos, 7 están resueltos en código (1, 2, 3, 5, 6, 16, 17), 3 cerrados como riesgo asumido (7, 14, N1) y 1 es informativo (N5): **quedan 14 abiertos**, y el hallazgo 4 es el único que todavía bloquea el lanzamiento. Todas las referencias `archivo:línea` fueron reverificadas el 2026-09-21 contra el código de `main`.
 
 #### Bloqueantes
 
@@ -79,7 +79,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | # | Tarea | Archivo:Línea | Estado |
 |---|---|---|---|
 | 5 | Recompensa completa del anuncio sin verlo | `ARAdBreak.cs:277` | ✅ Confirmado: el reloj arranca en el spawn del objeto |
-| 6 | El pack de 3 vidas cobra 120 monedas y puede entregar 1 | `TiendaManager.cs:223-235` | **Pendiente — confirmado.** `GanarVida(3)` hace `Min(vidas+3, 5)`: con 4 vidas pagas 120 y recibes 1. La guarda solo rechaza cuando ya estás al máximo |
+| 6 | El pack de 3 vidas cobra 120 monedas y puede entregar 1 | `TiendaManager.cs` | ✅ Resuelto el 2026-09-21: se valida el hueco antes de cobrar y el botón solo se habilita si caben las 3. Precios movidos a constantes de `EconomiaManager`. Sin probar |
 | 7 | Regeneración de vidas manipulable adelantando el reloj del teléfono | `EconomiaManager.cs:60` | ⚖️ **Riesgo asumido** el 2026-09-21 — ver *Decisión: el reloj del dispositivo* |
 | 8 | ARCore Depth marcado *Required* pero desactivado en runtime — recorta dispositivos | `AR Core Settings.asset` (`m_Depth: 0`) | Pendiente — confirmado y agravado, ver hallazgo **N3** |
 | 9 | Build sin endurecer | `ProjectSettings.asset` | Parcial — ID y `companyName` ya resueltos (ver **N4**); faltan R8, target SDK y keystore |
@@ -94,7 +94,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 | # | Tarea | Archivo:Línea | Estado |
 |---|---|---|---|
-| 16 | `Application.OpenURL` sin validar el esquema de la URL | `ARAdBreak.cs:583` | Pendiente — confirmado (la línea se movió de 555 a 583 tras la Fase 1) |
+| 16 | `Application.OpenURL` sin validar el esquema de la URL | `ARAdBreak.cs` (`TryNormalizarUrl`) | ✅ Resuelto el 2026-09-21: solo http/https; además completa `https://` cuando el anunciante escribe `www.marca.com`. Sin probar |
 | 17 | `MostrarBreak()` no llama al callback si está ocupado → deja `timeScale` en 0 | `LayeredAds.cs:103-111` | ✅ Resuelto en la Fase 1 — estaba mal listado aquí |
 | 18 | `PlayerPrefs.DeleteAll()` borra claves de terceros | `PanelConfiguracion.cs:160` | Pendiente — confirmado |
 | 19 | Log de API key visible en Logcat de producción | `LayeredAds.cs:52` | Pendiente — confirmado. Imprime los primeros 8 caracteres en cualquier build |
@@ -121,6 +121,12 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | Cambiar onClick del botón pausa a `PlayerHeaderUI.OnBotonAccionClick()` | Inspector |
 | Crear GameObjects hijos `IconoPausa` e `IconoCerrar` | Jerarquía del Canvas |
 | Asignar textura a `TestAdConfig.texturaImagen` | Inspector |
+| Asignar las **3 imágenes de estrella por separado** (hoy hay 1 sola, el gráfico entero: por eso siempre salen 3 estrellas aunque el resultado sea "Plata") | `GameManager` → `imagenesEstrellas` |
+| Asignar `textoPrecioVida1` y `textoPrecioVidaPack` (el pack muestra "50" pero cuesta 120) | Inspector de `TiendaManager` |
+| Botón CTA del anuncio: el texto es más grande que el fondo y se monta sobre el Skip | Prefab `ARAdBreakPrefab` |
+| Texto del botón de anclaje dice "Anchore" | Escena, setup AR |
+| "1 Live" → "1 Life" | Tienda, pestaña vidas |
+| `adCadaNDerrotas` está en **1** en la escena; el código trae 2 | Inspector de `GameManager` — ver decisión pendiente |
 
 ### Pendiente — Publicación (2 de 7)
 
@@ -169,6 +175,45 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-09-21 (Mac) — Revisión de 2 videos de juego en el Editor
+
+Dos grabaciones del juego en el Editor de Unity con XR Simulation (4:03 y 2:48). Se analizaron 103 fotogramas, uno cada 4 s, y uno por segundo en los tramos dudosos.
+
+**Primera validación real de la Fase 1** — compila y corre:
+
+- Las vidas bajan 5 → 4 → 3 al *iniciar* cada partida
+- El primer anuncio del día dio las 50 monedas completas (130 → 180)
+- Botón contextual del header (pausa ↔ X en la tienda) y pausa real con la tienda abierta
+- Botones del rescate deshabilitados sin monedas suficientes; gemas al completar nivel por primera vez
+
+**Bugs corregidos en código**
+
+| Bug visto en el video | Causa | Arreglo |
+|---|---|---|
+| "Platform descending..." encima del panel "Don't give up!" | El rescate no cambia el estado, así que `Update()` seguía corriendo el pozo | Flag `_enRescate` que detiene la partida mientras el panel está abierto |
+| Dos contadores de Skip distintos a la vez ("Skip in 3s" arriba, "Skip in 5s" fijo abajo) | El botón tenía su propio texto estático y la cuenta iba en otro | La cuenta se muestra en el propio botón; el texto suelto se oculta |
+| El Skip se podía pulsar desde el segundo 0 | Se activaba antes de la cuenta sin bloquear la interacción | `interactable = false` hasta que termina la cuenta |
+| Error de macOS "-50" al pulsar "Saber más" | `urlCTA` es `WWW.DENTACCEPT.COM`, sin `https://` | Normalización de URL (cierra el hallazgo 16) |
+| El pack de 3 vidas muestra 50 y cobra 120 | Precio escrito a mano en escena y código | Constantes en `EconomiaManager`; el texto sale del código (falta asignarlo en el Inspector) |
+| Con 4 vidas el pack cobra 120 y da 1 | No validaba el hueco antes de cobrar | Cierra el hallazgo 6 |
+
+**Aclarado: por qué "Watch ad!" no rescató en el primer video.** El clic llegó en el último segundo de la cuenta; el panel se cerró por tiempo y lo que se vio fue el anuncio *automático* de derrota (con `adCadaNDerrotas = 1` sale tras cada derrota), que termina en GameOver por diseño. Desde el punto de vista del jugador parece que "vio el anuncio y no le rescató". Queda como decisión de producto.
+
+**Por investigar en dispositivo**
+
+- Tras "Retry" o "Next level" el entorno AR se ve negro y el escaneo tarda mucho. Solo la primera partida muestra la habitación simulada. Puede ser propio de XR Simulation al recargar la escena
+- La consola se llena de avisos `JobTempAlloc ... more than 4 frames old — likely a leak`. Suele venir del Editor; confirmar que no ocurre en el teléfono
+
+**Decisiones pendientes**
+
+- Idioma de la interfaz: casi todos los paneles mezclan español e inglés ("¡Don't give up!", "75 monedas", "¡TIEMPO AGOTADO!", "Retry", "Cubos:")
+- Frecuencia del anuncio automático de derrota
+- Criterio del pozo: baja la plataforma aunque la torre sea corta y se vea entera (con 3 cubos, repetidas veces)
+
+**Sincronización:** al subir, GitHub tenía 8 commits de la sesión de Windows que esta máquina no tenía. Se fusionaron sin forzar; la bitácora combina ambas.
+
+---
 
 ### 2026-09-21 — Auditoría de contraste: bitácora vs. código real
 

@@ -93,6 +93,9 @@ public class GameManager : MonoBehaviour
     // anuncios seguidos cuando el jugador salta el del rescate y cae al GameOver.
     private bool _adMostradoEstaPartida = false;
 
+    // True mientras está abierto el panel "Don't give up!" (antes del GameOver)
+    private bool _enRescate = false;
+
     // ── Configuración ─────────────────────────────────────────────────────────
     [Header("Configuración Juego")]
     public float tiempoLimite     = 60.0f;
@@ -208,6 +211,11 @@ public class GameManager : MonoBehaviour
     {
         if (estadoActual != EstadoJuego.Jugando) return;
 
+        // Durante el panel de rescate la partida está detenida: el estado sigue
+        // siendo Jugando (para poder reanudar), pero el pozo no debe seguir
+        // bajando la plataforma ni la altura recalculándose.
+        if (_enRescate) return;
+
         if (tiempoRestante > 0)
         {
             tiempoRestante -= Time.deltaTime;
@@ -253,6 +261,7 @@ public class GameManager : MonoBehaviour
     public void CambiarEstado(EstadoJuego nuevoEstado)
     {
         estadoActual = nuevoEstado;
+        _enRescate   = false;
 
         if (panelMenuPrincipal) panelMenuPrincipal.SetActive(false);
         if (panelJuegoHUD)      panelJuegoHUD.SetActive(false);
@@ -561,6 +570,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator FlujoRescate()
     {
+        _enRescate = true;   // se libera en CambiarEstado() o MostrarGameOver()
         if (miGrua != null) miGrua.DesactivarGrúa();
 
         // Mostrar panel de rescate
@@ -693,6 +703,7 @@ public class GameManager : MonoBehaviour
     void MostrarGameOver(bool gano)
     {
         estadoActual = EstadoJuego.GameOver;
+        _enRescate   = false;
 
         if (miGrua != null) miGrua.DesactivarGrúa();
         ComodinesManager.Instance?.TerminarPartida();

@@ -284,23 +284,34 @@ namespace Layered.ARAdSystem
             yield return StartCoroutine(FadeAlpha(panelOscuro, 0.30f, 0f, 0.25f));
 
             // 5. Skip countdown
+            // El botón se ve desde ya pero NO se puede pulsar hasta que termine la
+            // cuenta: antes estaba activo desde el segundo 0 y la cuenta era solo
+            // decorativa. La cuenta atrás se muestra en el propio botón; el texto
+            // suelto de arriba se oculta para no mostrar dos contadores distintos.
+            var labelSkip = botonSkip.GetComponentInChildren<TMP_Text>(true);
+            var textoCuenta = labelSkip != null ? labelSkip : textoTimerSkip;
+            if (textoTimerSkip != null && textoTimerSkip != textoCuenta)
+                textoTimerSkip.gameObject.SetActive(false);
+
+            botonSkip.interactable = false;
             botonSkip.gameObject.SetActive(true);
-            if (textoTimerSkip != null) textoTimerSkip.gameObject.SetActive(true);
+            if (textoCuenta != null) textoCuenta.gameObject.SetActive(true);
 
             float timerSkip = _config.duracionAntesDeSkipSegundos;
             while (timerSkip > 0f && !_finalizado)
             {
                 timerSkip -= Time.unscaledDeltaTime;
-                if (textoTimerSkip != null)
-                    textoTimerSkip.text = $"Skip in {Mathf.CeilToInt(timerSkip)}s";
+                if (textoCuenta != null)
+                    textoCuenta.text = $"Skip in {Mathf.CeilToInt(timerSkip)}s";
                 yield return null;
             }
 
-            // 6. CTA habilitado
+            // 6. Skip y CTA habilitados
             if (!_finalizado)
             {
+                botonSkip.interactable = true;
+                if (textoCuenta != null) textoCuenta.text = "Skip";
                 botonCTA.gameObject.SetActive(true);
-                if (textoTimerSkip != null) textoTimerSkip.text = "Skip";
             }
 
             // 7. Duración máxima del break
@@ -580,10 +591,37 @@ namespace Layered.ARAdSystem
         void OnClic()
         {
             if (_finalizado) return;
-            Application.OpenURL(_config.urlCTA);
+
+            if (TryNormalizarUrl(_config.urlCTA, out string url))
+                Application.OpenURL(url);
+            else
+                Debug.LogWarning($"[ARAdBreak] URL de CTA no válida en '{_config.adId}': \"{_config.urlCTA}\"");
+
+            // El clic cuenta aunque la URL falle: el usuario interactuó con el anuncio
             Finalizar(ARAdResult.ConClic(TiempoVisualizacion(),
                                          _config.monedasRecompensaCompleto,
                                          _config.adId));
+        }
+
+        /// <summary>
+        /// Acepta lo que un anunciante escribiría a mano ("www.marca.com",
+        /// "marca.com/promo") y lo convierte en una URL abrible añadiendo https://.
+        /// Solo permite http y https: bloquea intent://, tel:, market:// y deep
+        /// links a otras apps, que no deben poder dispararse desde un anuncio.
+        /// </summary>
+        static bool TryNormalizarUrl(string entrada, out string url)
+        {
+            url = null;
+            if (string.IsNullOrWhiteSpace(entrada)) return false;
+
+            string s = entrada.Trim();
+            if (!s.Contains("://")) s = "https://" + s;
+
+            if (!Uri.TryCreate(s, UriKind.Absolute, out Uri uri)) return false;
+            if (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp) return false;
+
+            url = uri.AbsoluteUri;
+            return true;
         }
 
         void OnSkip()
