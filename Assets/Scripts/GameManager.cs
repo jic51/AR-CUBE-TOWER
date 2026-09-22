@@ -81,7 +81,14 @@ public class GameManager : MonoBehaviour
     [Tooltip("Mostrar un AR Break cada N derrotas (0 = nunca automático)")]
     public int adCadaNDerrotas = 2;
 
-    private int _derrotasConsecutivas = 0;
+    // Derrotas desde el último anuncio. ESTÁTICO a propósito: "Retry" y
+    // "siguiente nivel" recargan la escena y recrean este GameManager; como
+    // campo normal volvía a 0 en cada partida y "cada N derrotas" nunca se
+    // cumplía para N > 1. Vive lo que dura la sesión de la app.
+    private static int s_derrotasSinAd = 0;
+
+    // True si el panel de rescate ofreció el anuncio en esta partida
+    private bool _adOfrecidoEnRescate = false;
 
     // Watchdog del AR Break: garantiza que el juego se recupere aunque el SDK
     // no devuelva el callback. _adResuelto evita que callback y watchdog
@@ -126,12 +133,18 @@ public class GameManager : MonoBehaviour
     private float tiempoDesdeCaida        = float.MaxValue;
 
     [Header("Pozo — configuración")]
-    [Tooltip("Segundos sin ver la cima antes de bajar la plataforma")]
+    [Tooltip("Segundos seguidos con la cima por encima de pozoUmbralViewport antes de bajar la plataforma")]
     public float pozSegundosSinCima     = 2f;
     [Tooltip("Gracia en segundos tras un cubo que cae — no baja durante este tiempo")]
     public float pozSegundosGraciaCaida = 8f;
     [Tooltip("Cooldown mínimo entre descensos consecutivos")]
     public float pozoCooldown           = 3f;
+    [Tooltip("Altura en pantalla (0 = abajo, 1 = arriba) a partir de la cual la cima se considera " +
+             "demasiado alta y la plataforma empieza a bajar. 0.85 deja margen para ver dónde cae el cubo.")]
+    [Range(0.5f, 1f)]
+    public float pozoUmbralViewport     = 0.85f;
+
+    private Camera _camara;
 
     public EstadoJuego estadoActual;
 
@@ -340,6 +353,7 @@ public class GameManager : MonoBehaviour
         alturaMaxima             = 0;
         yaUsoRescate             = false;
         _adMostradoEstaPartida   = false;
+        _adOfrecidoEnRescate     = false;
         metaAlcanzadaMostrada    = false;
         CuboInteligente.comboConsecutivo = 0;
 
@@ -422,20 +436,27 @@ public class GameManager : MonoBehaviour
 
         tiempoDesdeCaida += Time.deltaTime;
 
-        // ¿Está el retículo sobre la cima de la torre?
+        // ¿Se está saliendo la cima por arriba de la pantalla?
+        // Antes se miraba si el retículo apuntaba a la cima, pero el retículo
+        // indica dónde caerá el próximo cubo, no lo que el jugador ve: con una
+        // torre de 3 cubos entera en pantalla, apuntar al lado bastaba para que
+        // la plataforma bajara. Bajarla solo sirve si la cima queda alta en el
+        // encuadre; si el jugador mira a otra parte, bajarla no le ayuda.
         float cubeSize   = 0.15f * SetupFase.EscalaSeleccionada;
         float alturaCima = basePlataforma.position.y + alturaMaxima;
-        bool reticuloEnCima = miGrua.ReticuloVisible &&
-                              miGrua.ReticuloAlturaHit >= alturaCima - cubeSize * 1.8f;
 
-        if (reticuloEnCima)
+        if (_camara == null && Camera.main != null) _camara = Camera.main;
+
+        bool cimaMuyAlta = false;
+        if (_camara != null)
         {
-            tiempoSinVerCima = 0f;  // el usuario ve bien la cima → reset
+            Vector3 cima = new Vector3(basePlataforma.position.x, alturaCima, basePlataforma.position.z);
+            Vector3 vp   = _camara.WorldToViewportPoint(cima);
+            cimaMuyAlta  = vp.z > 0f && vp.y > pozoUmbralViewport;   // delante de la cámara y arriba del umbral
         }
-        else
-        {
-            tiempoSinVerCima += Time.deltaTime;
-        }
+
+        if (cimaMuyAlta) tiempoSinVerCima += Time.deltaTime;
+        else             tiempoSinVerCima  = 0f;
 
         // Condición de descenso: lleva N segundos sin ver la cima Y no cayó cubo recientemente
         bool debesBajar = tiempoSinVerCima     >= pozSegundosSinCima
@@ -589,7 +610,11 @@ public class GameManager : MonoBehaviour
 
         // Botón "Ver anuncio gratis" — solo visible si el SDK AR está listo
         if (botonAdRescate != null)
-            botonAdRescate.gameObject.SetActive(LayeredAds.EstaListo());
+        {
+            bool ofrecer = LayeredAds.EstaListo();
+            botonAdRescate.gameObject.SetActive(ofrecer);
+            if (ofrecer) _adOfrecidoEnRescate = true;
+        }
 
         // Countdown
         float tiempo = 5f;
@@ -651,6 +676,7 @@ public class GameManager : MonoBehaviour
 
         _adResuelto            = false;
         _adMostradoEstaPartida = true;
+        s_derrotasSinAd        = 0;   // un anuncio visto reinicia la cuenta
         StartCoroutine(WatchdogRescate(SegundosMaxAd));
 
         LayeredAds.MostrarBreak(resultado =>
@@ -722,16 +748,22 @@ public class GameManager : MonoBehaviour
         // la aparición del panel de GameOver hasta que el anuncio termine.
         bool mostrarAd = false;
 
-        if (!gano && adCadaNDerrotas > 0 && !_adMostradoEstaPartida)
+        if (!gano && adCadaNDerrotas > 0)
         {
-            _derrotasConsecutivas++;
-            if (_derrotasConsecutivas >= adCadaNDerrotas && LayeredAds.EstaListo())
+            s_derrotasSinAd++;
+
+            // Nunca tras un rescate: si en esta partida ya se le ofreció (o vio)
+            // el anuncio de rescate, el jugador ya tomó su decisión sobre anuncios.
+            // Mostrarle otro a los dos segundos de decir "no" es lo que más irrita.
+            bool elegible = !_adMostradoEstaPartida && !_adOfrecidoEnRescate;
+
+            if (elegible && s_derrotasSinAd >= adCadaNDerrotas && LayeredAds.EstaListo())
             {
-                _derrotasConsecutivas = 0;
+                s_derrotasSinAd = 0;
                 mostrarAd = true;
             }
         }
-        if (gano) _derrotasConsecutivas = 0;
+        if (gano) s_derrotasSinAd = 0;
 
         // Si toca anuncio el panel aparece después, al terminar el break
         if (!mostrarAd && panelGameOver) panelGameOver.SetActive(true);

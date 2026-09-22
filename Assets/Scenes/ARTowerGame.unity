@@ -6789,7 +6789,7 @@ MonoBehaviour:
   botonAdRescate: {fileID: 1661381249}
   layeredApiKey: DEMO_KEY
   adConfigDefault: {fileID: 11400000, guid: 3d20a8f9bffa14167bb49b2bd12193ea, type: 2}
-  adCadaNDerrotas: 1
+  adCadaNDerrotas: 2
   tiempoLimite: 60
   metaAlturaNivel: 1
   cubosMaximos: 0
