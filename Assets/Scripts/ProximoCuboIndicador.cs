@@ -10,7 +10,7 @@ using TMPro;
 ///   1. Crea un Panel pequeño en el Canvas del HUD (ej. esquina superior izquierda,
 ///      fuera del área de los comodines).
 ///   2. Dentro: un Image (cuadrado de color, 48x48px) + un TextMeshProUGUI con el nombre.
-///      Opcionalmente un TextMeshProUGUI de etiqueta fija "SIGUIENTE".
+///      Opcionalmente un TextMeshProUGUI de etiqueta fija "NEXT".
 ///   3. Adjunta este script al Panel.
 ///   4. Asigna los campos en el Inspector.
 ///   5. Asigna el GruaController en el Inspector.
@@ -44,7 +44,7 @@ public class ProximoCuboIndicador : MonoBehaviour
     {
         rect = GetComponent<RectTransform>();
         escalaBase = rect != null ? rect.localScale : Vector3.one;
-        if (textoEtiqueta != null) textoEtiqueta.text = "SIGUIENTE";
+        if (textoEtiqueta != null) textoEtiqueta.text = "NEXT";
     }
 
     void LateUpdate()

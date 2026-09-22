@@ -24,10 +24,10 @@ MonoBehaviour:
   audioClip: {fileID: 0}
   volumenAudio: 0.8
   direccion: 0
-  textoInstruccion: "Gira el tel\xE9fono para descubrir el anuncio"
+  textoInstruccion: Turn your phone to find the ad
   duracionAntesDeSkipSegundos: 5
   duracionMaximaSegundos: 15
-  textoCTA: "Saber m\xE1s"
+  textoCTA: Learn more
   urlCTA: WWW.DENTACCEPT.COM
   monedasRecompensaCompleto: 50
   monedasRecompensaSkip: 0

@@ -132,7 +132,7 @@ public class BarraProgresoAR : MonoBehaviour
                 0f);
 
             textoAltura.text  = ratio >= 1f
-                ? "¡Meta!\n" + metaAltura.ToString("F1") + " m"
+                ? "Goal!\n" + metaAltura.ToString("F1") + " m"
                 : alturaActual.ToString("F2") + " m\n/ " + metaAltura.ToString("F1") + " m";
             textoAltura.color = colorActual;
         }

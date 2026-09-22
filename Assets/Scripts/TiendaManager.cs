@@ -21,7 +21,7 @@ using UnityEngine.UI;
 ///   │   ├── FilaTiempo         → +30s, 75 monedas
 ///   │   ├── FilaPlomo          → Cubo Plomo, 60 monedas
 ///   │   └── FilaEscudo         → Escudo, 80 monedas
-///   ├── TextoFeedback          → "¡Compra exitosa!" / "Monedas insuficientes"
+///   ├── TextoFeedback          → "¡Compra exitosa!" / "Not enough coins"
 ///   └── BotonCerrar
 /// </summary>
 public class TiendaManager : MonoBehaviour
@@ -219,13 +219,13 @@ public class TiendaManager : MonoBehaviour
         if (EconomiaManager.Instance == null) return;
 
         if (EconomiaManager.Instance.Vidas >= EconomiaManager.MAX_VIDAS)
-        { MostrarFeedback("Ya tienes vidas al máximo", false); return; }
+        { MostrarFeedback("Lives already full", false); return; }
 
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_VIDA_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarVida(1);
-        MostrarFeedback("+1 vida comprada!", true);
+        MostrarFeedback("+1 life!", true);
         ActualizarUI();
     }
 
@@ -236,13 +236,13 @@ public class TiendaManager : MonoBehaviour
         // Validar ANTES de cobrar: con 4 vidas el pack cobraba 120 y entregaba 1
         int hueco = EconomiaManager.MAX_VIDAS - EconomiaManager.Instance.Vidas;
         if (hueco < EconomiaManager.VIDAS_POR_PACK)
-        { MostrarFeedback(hueco <= 0 ? "Ya tienes vidas al máximo" : $"Solo te caben {hueco} vidas", false); return; }
+        { MostrarFeedback(hueco <= 0 ? "Lives already full" : $"Only room for {hueco} more", false); return; }
 
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarVida(EconomiaManager.VIDAS_POR_PACK);
-        MostrarFeedback("+3 vidas compradas!", true);
+        MostrarFeedback("+3 lives!", true);
         ActualizarUI();
     }
 
@@ -251,40 +251,40 @@ public class TiendaManager : MonoBehaviour
     public void ComprarSnap()
     {
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_SNAP_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarComodin(0);
-        MostrarFeedback("Snap Perfecto comprado!", true);
+        MostrarFeedback("Perfect Snap purchased!", true);
         ActualizarUI();
     }
 
     public void ComprarTiempoExtra()
     {
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_TIEMPO_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarComodin(1);
-        MostrarFeedback("+30s comprado!", true);
+        MostrarFeedback("+30s purchased!", true);
         ActualizarUI();
     }
 
     public void ComprarCuboPlomo()
     {
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_PLOMO_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarComodin(2);
-        MostrarFeedback("Cubo Plomo comprado!", true);
+        MostrarFeedback("Heavy Cube purchased!", true);
         ActualizarUI();
     }
 
     public void ComprarEscudo()
     {
         if (!EconomiaManager.Instance.GastarMonedas(EconomiaManager.PRECIO_ESCUDO_MONEDAS))
-        { MostrarFeedback("Monedas insuficientes", false); return; }
+        { MostrarFeedback("Not enough coins", false); return; }
 
         EconomiaManager.Instance.GanarComodin(3);
-        MostrarFeedback("Escudo comprado!", true);
+        MostrarFeedback("Shield purchased!", true);
         ActualizarUI();
     }
 

@@ -36,7 +36,7 @@ public class PlayerData
     // ────────────────────────────────────────────────────────────────────────
     public PlayerData()
     {
-        nombreUsuario               = "Constructor";
+        nombreUsuario               = "Builder";
         avatarId                    = 0;
         nivelMaximoDesbloqueado     = 0;
         totalCubosUsadosHistorico   = 0;

@@ -550,13 +550,13 @@ public class GameManager : MonoBehaviour
         if (textoCubos)
         {
             textoCubos.text = cubosMaximos > 0
-                ? "Cubos: " + cubosUsados + "/" + cubosMaximos
-                : "Cubos: " + cubosUsados;
+                ? "Cubes: " + cubosUsados + "/" + cubosMaximos
+                : "Cubes: " + cubosUsados;
         }
         if (textoCubosRestantes && cubosMaximos > 0)
         {
             int restantes = Mathf.Max(0, cubosMaximos - cubosUsados);
-            textoCubosRestantes.text  = "Restantes: " + restantes;
+            textoCubosRestantes.text  = "Left: " + restantes;
             textoCubosRestantes.color = restantes <= 3 ? Color.red : Color.white;
         }
 
@@ -599,10 +599,10 @@ public class GameManager : MonoBehaviour
 
         // Configurar textos del panel
         if (textoPrecioRescate)
-            textoPrecioRescate.text = EconomiaManager.PRECIO_RESCATE_MONEDAS + " monedas";
+            textoPrecioRescate.text = EconomiaManager.PRECIO_RESCATE_MONEDAS + " coins";
 
         if (textoMonedasEnRescate && EconomiaManager.Instance != null)
-            textoMonedasEnRescate.text = "Tienes: " + EconomiaManager.Instance.Monedas;
+            textoMonedasEnRescate.text = "You have: " + EconomiaManager.Instance.Monedas;
 
         if (botonComprarRescate && EconomiaManager.Instance != null)
             botonComprarRescate.interactable =
@@ -771,7 +771,7 @@ public class GameManager : MonoBehaviour
         // Estado final
         if (textoEstadoFinal)
         {
-            textoEstadoFinal.text  = gano ? "¡NIVEL COMPLETADO!" : "¡TIEMPO AGOTADO!";
+            textoEstadoFinal.text  = gano ? "LEVEL COMPLETE!" : "TIME'S UP!";
             textoEstadoFinal.color = gano ? Color.green : Color.red;
         }
 
@@ -781,8 +781,8 @@ public class GameManager : MonoBehaviour
 
         if (textoRecordFinal)
         {
-            textoRecordFinal.text  = nuevoRecord ? "¡NUEVO RÉCORD!"
-                                    : "Récord: " + datosJugador.mejorAltura.ToString("F2") + " m";
+            textoRecordFinal.text  = nuevoRecord ? "NEW RECORD!"
+                                    : "Best: " + datosJugador.mejorAltura.ToString("F2") + " m";
             textoRecordFinal.color = nuevoRecord ? new Color(1f, 0.84f, 0f) : Color.white;
         }
 
@@ -813,7 +813,7 @@ public class GameManager : MonoBehaviour
             // Texto de respaldo (útil si no hay imágenes asignadas)
             if (textoEstrellas)
             {
-                string[] ratings = { "Sin rating", "Bronce", "Plata", "ORO!" };
+                string[] ratings = { "No rating", "Bronze", "Silver", "GOLD!" };
                 textoEstrellas.text  = ratings[estrellas];
                 textoEstrellas.color = estrellas == 3 ? new Color(1f, 0.84f, 0f)
                                      : estrellas == 2 ? new Color(0.75f, 0.75f, 0.75f)
@@ -824,7 +824,7 @@ public class GameManager : MonoBehaviour
 
         if (textoAlturaFinal)  textoAlturaFinal.text  = alturaMaxima.ToString("F2") + " m";
         if (textoCubosFinal)   textoCubosFinal.text    = cubosUsados.ToString();
-        if (textoStatsFinales) textoStatsFinales.text  = "Meta: " + metaAlturaNivel + "m";
+        if (textoStatsFinales) textoStatsFinales.text  = "Goal: " + metaAlturaNivel + "m";
 
         // ── Economía ─────────────────────────────────────────────────────────
         int monedasGanadas = 0;
@@ -871,7 +871,7 @@ public class GameManager : MonoBehaviour
         if (textoMonedasGanadas)
         {
             textoMonedasGanadas.gameObject.SetActive(gano && monedasGanadas > 0);
-            textoMonedasGanadas.text = "+" + monedasGanadas + " monedas";
+            textoMonedasGanadas.text = "+" + monedasGanadas + " coins";
         }
 
         // ── Progreso ──────────────────────────────────────────────────────────

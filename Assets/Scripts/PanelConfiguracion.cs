@@ -110,9 +110,9 @@ public class PanelConfiguracion : MonoBehaviour
         }
 
         var eco = EconomiaManager.Instance;
-        if (textoVidasConfig  != null) textoVidasConfig.text   = $"Vidas: {(eco?.Vidas ?? 0)} / {EconomiaManager.MAX_VIDAS}";
-        if (textoMonedasConfig != null) textoMonedasConfig.text = $"Monedas: {eco?.Monedas ?? 0}";
-        if (textoGemasConfig   != null) textoGemasConfig.text   = $"Gemas: {eco?.Gemas ?? 0}";
+        if (textoVidasConfig  != null) textoVidasConfig.text   = $"Lives: {(eco?.Vidas ?? 0)} / {EconomiaManager.MAX_VIDAS}";
+        if (textoMonedasConfig != null) textoMonedasConfig.text = $"Coins: {eco?.Monedas ?? 0}";
+        if (textoGemasConfig   != null) textoGemasConfig.text   = $"Gems: {eco?.Gemas ?? 0}";
     }
 
     void GuardarNombre()

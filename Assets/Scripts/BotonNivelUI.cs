@@ -43,7 +43,7 @@ public class BotonNivelUI : MonoBehaviour
 
         // ── Descripción o "[BLOQUEADO]" ───────────────────────────────────────
         if (textoDescripcion != null)
-            textoDescripcion.text = desbloqueado ? descripcion : "BLOQUEADO";
+            textoDescripcion.text = desbloqueado ? descripcion : "LOCKED";
 
         // ── Candado: visible solo cuando está bloqueado ───────────────────────
         if (imagenCandado != null)
@@ -53,10 +53,10 @@ public class BotonNivelUI : MonoBehaviour
         if (imagenFondo != null)
         {
             imagenFondo.color = !desbloqueado ? colorBloqueado
-                              : etiqueta == "CONTRARRELOJ" ? colorContrarreloj
-                              : etiqueta == "EFICIENCIA"   ? colorEficiencia
+                              : etiqueta == "TIME TRIAL" ? colorContrarreloj
+                              : etiqueta == "EFFICIENCY"   ? colorEficiencia
                               : etiqueta == "PRECISION"    ? colorPrecision
-                              : etiqueta == "MAESTRO"      ? colorMaestro
+                              : etiqueta == "MASTER"      ? colorMaestro
                               :                              colorNormal;
         }
     }

@@ -93,6 +93,9 @@ namespace Layered.ARAdSystem
                  "Una vez el ad aparece, la guía se vuelve dinámica automáticamente:\n" +
                  "'Gira a la derecha', 'Mira arriba', etc.")]
         [TextArea(1, 2)]
+        // El campo se llamaba "textoInstruccion". Sin este atributo, renombrarlo
+        // descartó en silencio el texto de todos los ARAdConfig ya creados.
+        [UnityEngine.Serialization.FormerlySerializedAs("textoInstruccion")]
         public string textoInstruccionInicial = "Move your phone to find the ad";
 
         // ── Timing ────────────────────────────────────────────────────────────

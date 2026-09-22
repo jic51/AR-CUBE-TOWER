@@ -314,7 +314,7 @@ public class SetupFase : MonoBehaviour
         if (textoEscalaIndicador == null) return;
 
         textoEscalaIndicador.gameObject.SetActive(true);
-        textoEscalaIndicador.text = "Escala: " + EscalaSeleccionada.ToString("F1") + "x";
+        textoEscalaIndicador.text = "Scale: " + EscalaSeleccionada.ToString("F1") + "x";
 
         // Reiniciar el timer de ocultado
         if (coroutineEscalaIndicador != null) StopCoroutine(coroutineEscalaIndicador);

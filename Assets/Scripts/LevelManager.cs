@@ -11,7 +11,7 @@ public class DatosNivel
     public int    cubosMaximos;         // 0 = ilimitado
     public float  intervaloEntrega;     // segundos entre cubo y cubo (default 1.0)
     public bool   snapDesactivado;      // true = sin ayuda de snap
-    public string etiquetaEspecial;     // "CONTRARRELOJ", "EFICIENCIA", "PRECISION", etc.
+    public string etiquetaEspecial;     // "TIME TRIAL", "EFFICIENCY", "PRECISION", etc.
     [TextArea(1, 2)]
     public string descripcion;
 }
@@ -66,7 +66,7 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 7 — Race", metaAltura = 1.50f, tiempoLimite = 45f,
             cubosMaximos = 0, intervaloEntrega = 0.9f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "Same height, half the time. Go!"
         },
         new DatosNivel {
@@ -78,7 +78,7 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 9 — Count Your Blocks", metaAltura = 1.75f, tiempoLimite = 0f,
             cubosMaximos = 15, intervaloEntrega = 1.0f, snapDesactivado = false,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "15 blocks. Don't waste a single one."
         },
         new DatosNivel {
@@ -104,7 +104,7 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 13 — Efficient Master", metaAltura = 2.50f, tiempoLimite = 0f,
             cubosMaximos = 12, intervaloEntrega = 0.85f, snapDesactivado = false,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "12 blocks for 2.5 m. Every block counts."
         },
         new DatosNivel {
@@ -116,7 +116,7 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 15 — Legend", metaAltura = 3.50f, tiempoLimite = 60f,
             cubosMaximos = 0, intervaloEntrega = 0.75f, snapDesactivado = false,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "3.5 meters in 60 seconds. Legendary."
         },
 
@@ -130,25 +130,25 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 17 — Efficient Stack", metaAltura = 4.50f, tiempoLimite = 0f,
             cubosMaximos = 12, intervaloEntrega = 0.75f, snapDesactivado = false,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "12 blocks to reach 4.5 m. Waste nothing."
         },
         new DatosNivel {
             nombre = "Level 18 — Master Class", metaAltura = 5.00f, tiempoLimite = 50f,
             cubosMaximos = 0, intervaloEntrega = 0.75f, snapDesactivado = false,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "5 meters in 50 seconds. Masters only."
         },
         new DatosNivel {
             nombre = "Level 19 — Ultra Efficient", metaAltura = 5.50f, tiempoLimite = 0f,
             cubosMaximos = 10, intervaloEntrega = 0.7f, snapDesactivado = true,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "10 blocks, no snap, 5.5 m. Brutal efficiency."
         },
         new DatosNivel {
             nombre = "Level 20 — Race The Clock", metaAltura = 6.00f, tiempoLimite = 45f,
             cubosMaximos = 0, intervaloEntrega = 0.7f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "6 meters. 45 seconds. Don't blink."
         },
 
@@ -156,19 +156,19 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 21 — The Summit", metaAltura = 6.50f, tiempoLimite = 45f,
             cubosMaximos = 8, intervaloEntrega = 0.7f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "8 blocks, no snap. Reach the summit."
         },
         new DatosNivel {
             nombre = "Level 22 — Double Challenge", metaAltura = 7.00f, tiempoLimite = 40f,
             cubosMaximos = 0, intervaloEntrega = 0.65f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "7 meters, no snap, 40 seconds. Insane."
         },
         new DatosNivel {
             nombre = "Level 23 — Peak Builder", metaAltura = 8.00f, tiempoLimite = 40f,
             cubosMaximos = 7, intervaloEntrega = 0.65f, snapDesactivado = false,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "7 blocks. 8 meters. Every block must land."
         },
         new DatosNivel {
@@ -180,7 +180,7 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 25 — LEGEND FINAL", metaAltura = 10.00f, tiempoLimite = 30f,
             cubosMaximos = 0, intervaloEntrega = 0.6f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "10 meters. No snap. 30 seconds. You are the LEGEND."
         },
 
@@ -188,13 +188,13 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 26 — Efficiency God", metaAltura = 6.00f, tiempoLimite = 0f,
             cubosMaximos = 6, intervaloEntrega = 0.55f, snapDesactivado = true,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "6 blocks. 6 meters. No snap. Perfect or nothing."
         },
         new DatosNivel {
             nombre = "Level 27 — Flash Builder", metaAltura = 8.00f, tiempoLimite = 25f,
             cubosMaximos = 0, intervaloEntrega = 0.5f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "8 meters in 25 seconds. Blocks arrive like bullets."
         },
         new DatosNivel {
@@ -206,13 +206,13 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 29 — Overdrive", metaAltura = 11.00f, tiempoLimite = 35f,
             cubosMaximos = 0, intervaloEntrega = 0.45f, snapDesactivado = false,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "11 meters. Blocks come non-stop. Are you fast enough?"
         },
         new DatosNivel {
             nombre = "Level 30 — Iron Will", metaAltura = 12.00f, tiempoLimite = 40f,
             cubosMaximos = 0, intervaloEntrega = 0.5f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "12 meters. No snap. 40 seconds. Unbreakable focus."
         },
 
@@ -226,25 +226,25 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 32 — Blitz", metaAltura = 13.00f, tiempoLimite = 30f,
             cubosMaximos = 0, intervaloEntrega = 0.4f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "13 meters, 30 seconds. The fastest hands win."
         },
         new DatosNivel {
             nombre = "Level 33 — Minimalist", metaAltura = 8.00f, tiempoLimite = 0f,
             cubosMaximos = 5, intervaloEntrega = 0.5f, snapDesactivado = true,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "5 blocks. 8 meters. No snap. Efficiency redefined."
         },
         new DatosNivel {
             nombre = "Level 34 — The Architect", metaAltura = 14.00f, tiempoLimite = 45f,
             cubosMaximos = 0, intervaloEntrega = 0.45f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "14 meters. No snap. Fast delivery. The greatest builder."
         },
         new DatosNivel {
             nombre = "Level 35 — Clockwork", metaAltura = 12.00f, tiempoLimite = 28f,
             cubosMaximos = 0, intervaloEntrega = 0.4f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "12 meters in 28 seconds. Like clockwork, never miss a beat."
         },
 
@@ -252,13 +252,13 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 36 — Six Sigma", metaAltura = 12.00f, tiempoLimite = 0f,
             cubosMaximos = 6, intervaloEntrega = 0.45f, snapDesactivado = true,
-            etiquetaEspecial = "EFICIENCIA",
+            etiquetaEspecial = "EFFICIENCY",
             descripcion = "6 blocks. 12 meters. No snap. Statistical perfection."
         },
         new DatosNivel {
             nombre = "Level 37 — Warp Speed", metaAltura = 15.00f, tiempoLimite = 35f,
             cubosMaximos = 0, intervaloEntrega = 0.35f, snapDesactivado = false,
-            etiquetaEspecial = "CONTRARRELOJ",
+            etiquetaEspecial = "TIME TRIAL",
             descripcion = "15 meters in 35 seconds. Faster than thought itself."
         },
         new DatosNivel {
@@ -270,13 +270,13 @@ public class LevelManager : MonoBehaviour
         new DatosNivel {
             nombre = "Level 39 — Singularity", metaAltura = 18.00f, tiempoLimite = 40f,
             cubosMaximos = 0, intervaloEntrega = 0.35f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "18 meters. No snap. 40 seconds. A singular achievement."
         },
         new DatosNivel {
             nombre = "Level 40 — INFINITE SKY", metaAltura = 20.00f, tiempoLimite = 35f,
             cubosMaximos = 0, intervaloEntrega = 0.3f, snapDesactivado = true,
-            etiquetaEspecial = "MAESTRO",
+            etiquetaEspecial = "MASTER",
             descripcion = "20 meters. No snap. 35 seconds. The sky has no ceiling."
         },
     };
@@ -336,7 +336,7 @@ public class LevelManager : MonoBehaviour
                               ? "" : " [" + niveles[i].etiquetaEspecial + "]";
 
                 if (textos.Length > 0) textos[0].text = niveles[i].nombre + etiq;
-                if (textos.Length > 1) textos[1].text = desbloqueado ? niveles[i].descripcion : "BLOQUEADO";
+                if (textos.Length > 1) textos[1].text = desbloqueado ? niveles[i].descripcion : "LOCKED";
             }
 
             // ── Botón interactivo y click ─────────────────────────────────────

@@ -43,7 +43,7 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 |---|---|---|---|
 | 1 | **Sistema de sonido completo** — cero `AudioSource`, `AudioClip` o `PlayOneShot` en `Assets/Scripts`. El único `AudioSource` del repo pertenece al sistema de anuncios (`ARAdBreak.cs:45`) y el único `.wav` es de un sample de XR Interaction Toolkit | nuevo | No empezado |
 | 2 | **Modo supervivencia** — no existe. Lo único que apunta a él es `LevelManager.cs:10`, donde `tiempoLimite = 0` ya significa "sin límite": es la base sobre la que construirlo | nuevo | No empezado |
-| 3 | **Toggle de idioma** en configuración (sonido y vibración ya funcionan) — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | No empezado |
+| 3 | **Toggle de idioma** en configuración (sonido y vibración ya funcionan) — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
 | 4 | Verificar en dispositivo que el bug de destrucción en cascada quedó resuelto | `CuboInteligente.cs:251-253` | Umbral presente (`caída > 3× la altura del cubo` **y** `velocidad > 2 m/s`), falta probar |
 
 ### Ya resuelto (estaba mal listado como pendiente)
@@ -124,9 +124,6 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | Asignar las **3 imágenes de estrella por separado** (hoy hay 1 sola, el gráfico entero: por eso siempre salen 3 estrellas aunque el resultado sea "Plata") | `GameManager` → `imagenesEstrellas` |
 | Asignar `textoPrecioVida1` y `textoPrecioVidaPack` (el pack muestra "50" pero cuesta 120) | Inspector de `TiendaManager` |
 | Botón CTA del anuncio: el texto es más grande que el fondo y se monta sobre el Skip | Prefab `ARAdBreakPrefab` |
-| Texto del botón de anclaje dice "Anchore" | Escena, setup AR |
-| "1 Live" → "1 Life" | Tienda, pestaña vidas |
-| `adCadaNDerrotas` está en **1** en la escena; el código trae 2 | Inspector de `GameManager` — ver decisión pendiente |
 
 ### Pendiente — Publicación (2 de 7)
 
@@ -205,13 +202,26 @@ Dos grabaciones del juego en el Editor de Unity con XR Simulation (4:03 y 2:48).
 - Tras "Retry" o "Next level" el entorno AR se ve negro y el escaneo tarda mucho. Solo la primera partida muestra la habitación simulada. Puede ser propio de XR Simulation al recargar la escena
 - La consola se llena de avisos `JobTempAlloc ... more than 4 frames old — likely a leak`. Suele venir del Editor; confirmar que no ocurre en el teléfono
 
-**Decisiones pendientes**
+**Decisiones tomadas**
 
-- Idioma de la interfaz: casi todos los paneles mezclan español e inglés ("¡Don't give up!", "75 monedas", "¡TIEMPO AGOTADO!", "Retry", "Cubos:")
-- Frecuencia del anuncio automático de derrota
-- Criterio del pozo: baja la plataforma aunque la torre sea corta y se vea entera (con 3 cubos, repetidas veces)
+| Tema | Decisión |
+|---|---|
+| Idioma | **Solo inglés** por ahora. El selector de idioma queda aplazado |
+| Anuncio automático de derrota | **Cada 2 derrotas, y nunca si en esa partida se ofreció el anuncio de rescate** |
+| Pozo | **Bajar la plataforma solo cuando la cima se sale por arriba de la pantalla** |
 
-**Sincronización:** al subir, GitHub tenía 8 commits de la sesión de Windows que esta máquina no tenía. Se fusionaron sin forzar; la bitácora combina ambas.
+**Aplicado a partir de esas decisiones**
+
+- **Idioma.** 28 textos de código y 13 de la escena pasados a inglés, más el anuncio de prueba ("Saber más" → "Learn more") y los textos de ejemplo del prefab de nivel. Las etiquetas de nivel pasan a `TIME TRIAL` / `EFFICIENCY` / `PRECISION` / `MASTER`, cambiadas a la vez en `LevelManager` y en `BotonNivelUI` para que sigan coincidiendo sus colores. Corregidas erratas de la escena: "Anchore", "Goa;", "te pa proteccion por si allgo…", y el "¡" español delante de frases en inglés. El nombre por defecto de las partidas nuevas pasa de "Constructor" a "Builder".
+- **Anuncio automático.** Bug latente descubierto: el contador de derrotas era un campo normal y **cada "Retry" recarga la escena**, así que volvía a 0 en cada partida. Con cualquier valor mayor que 1, el anuncio no habría salido nunca; por eso la escena lo tenía en 1. Ahora es estático, `adCadaNDerrotas` pasa a 2 en la escena y se añadió la regla de "nunca tras un rescate".
+- **Pozo.** Usa la cámara: baja solo si la cima queda por encima del 85 % de la altura de la pantalla durante 2 s seguidos. El umbral se ajusta en el Inspector (`pozoUmbralViewport`).
+- **Texto de instrucción de los anunciantes.** Al renombrar `textoInstruccion` → `textoInstruccionInicial` en una sesión anterior, Unity descartó en silencio el texto de todos los `ARAdConfig` ya creados. Se añadió `[FormerlySerializedAs]` para recuperarlo.
+
+**Consecuencia a vigilar de la regla de anuncios.** El panel de rescate aparece en la primera derrota de cada partida y casi siempre ofrece el anuncio. Con la regla "nunca tras un rescate", el anuncio automático solo saldrá cuando el jugador ya usó su rescate en esa partida, o cuando el SDK no estaba listo. En la práctica será poco frecuente: casi todas las impresiones vendrán del anuncio de rescate, que es voluntario. Revisar esta regla si los ingresos por anuncio quedan cortos.
+
+**Sincronización:** al subir, GitHub tenía 8 commits de la sesión de Windows que esta máquina no tenía. Se fusionaron sin forzar, con Unity cerrado. La bitácora combina ambas. Unity había escrito cambios propios en `ProjectSettings.asset` (vació `preloadedAssets` al cerrarse), en la configuración global de URP y en dos archivos temporales de pruebas de rendimiento. Nada de eso se subió; el cambio de `ProjectSettings` quedó apartado en un `git stash`, recuperable.
+
+**Aprendizaje:** no usar `git add -A` en este proyecto. Unity escribe archivos por su cuenta mientras está abierto, y `-A` los mete en el commit sin que nadie lo decida. Añadir siempre los archivos uno por uno.
 
 ---
 
