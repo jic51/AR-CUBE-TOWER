@@ -45,7 +45,7 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 2 | **Modo supervivencia** — no existe. Lo único que apunta a él es `LevelManager.cs:10`, donde `tiempoLimite = 0` ya significa "sin límite": es la base sobre la que construirlo | nuevo | No empezado |
 | 3 | **Toggle de idioma** — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
 | 4 | Verificar en dispositivo que el bug de destrucción en cascada quedó resuelto | `CuboInteligente.cs:251-253` | Umbral presente (`caída > 3× la altura del cubo` **y** `velocidad > 2 m/s`), falta probar |
-| 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal` | `GruaController.cs:244-288` | Detectado el 2026-09-22, sin corregir |
+| 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs:244-288` | Decidido, por implementar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
 ### Pendiente — Funciones nuevas (pedidas el 2026-09-22)
@@ -58,11 +58,19 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | F4 | **Rediseño del panel de comodines** — hoy se ve poco profesional | Por diseñar |
 | F5 | Sistema de sonido (ver tarea de código 1) | No empezado |
 | F6 | **Grabación de partidas con el fondo real difuminado o pixelado** — pedido el 2026-09-22. El jugador puede grabar su partida, pero en el video el fondo de la cámara (la habitación) sale difuminado o pixelado y los cubos y la plataforma nítidos. Motivo: que no se vea lo que no queremos mostrar y que los jóvenes no graben su casa o su cuarto. Viable técnicamente: en ARFoundation la imagen de la cámara se dibuja en una pasada separada (`ARCameraBackground`), así que se puede difuminar solo esa capa sin tocar los objetos virtuales y sin segmentación. El video necesita un codificador nativo de Android (plugin propio con `MediaCodec`/`MediaRecorder`, o uno comercial). Afecta a la política de privacidad: habrá que declarar dónde se guardan los videos | Anotado, por diseñar |
-| F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez | Por diseñar (reglas propuestas en la sesión del 2026-09-22) |
+| F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez. **Reglas aprobadas el 2026-09-22:** +2 al completar un nivel por primera vez · +1 extra si es con 3 estrellas · +5 al terminar cada bloque de 5 niveles · +1 por récord de altura · +3 el séptimo día seguido jugando. Cada una con animación y mensaje con el motivo | Aprobado, por implementar |
 | F8 | **Los 6 tipos de cubo V2 no tienen comportamiento** — Gelatina, Lava, Hierba, Agua, Nube y Piedra aparecen en partida (1–3 % cada uno) con descripciones que prometen efectos ("Melts Ice and chars Normal blocks"), pero `CuboInteligente` no tiene ni una línea para ellos: son cubos normales recoloreados | Por implementar |
 | F9 | **Comodines** — solo 4, sin límite de uso por partida ni indicación visual en el cubo o la mira cuando están activos | Por diseñar |
-| F10 | **Rediseño visual de todos los menús y pantallas** (11 paneles, 257 elementos de interfaz) y de la presentación de los cubos | Por diseñar |
+| F10 | **Rediseño visual de todos los menús y pantallas** (11 paneles, 257 elementos de interfaz) y de la presentación de los cubos. **Decidido el 2026-09-22:** primero maquetas visuales para aprobar el estilo; después se elige la técnica (UI Toolkit o mejorar la interfaz actual) | Por diseñar: maquetas |
 | F11 | **Landing con más ilustraciones** (vidas, gemas, monedas) y capturas reales del juego | Esperar a F10 para capturar la versión nueva |
+
+**Orden de trabajo aprobado el 2026-09-22 — juego primero, luego lo visual:**
+1. Mira (tarea 5), gemas (F7) y comportamiento de los 6 cubos V2 (F8)
+2. Comodines (F9)
+3. Rediseño de interfaz y de cubos (F10), sustituyendo las imágenes con licencia dudosa (tarea 6)
+4. Landing con capturas nuevas (F11)
+5. Grabación con fondo difuminado (F6)
+6. Settings (F1), menú de usuario (F2) y usos de gemas (F3) según encajen en el rediseño
 
 ### Ya resuelto (estaba mal listado como pendiente)
 
