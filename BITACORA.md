@@ -45,6 +45,8 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 2 | **Modo supervivencia** — no existe. Lo único que apunta a él es `LevelManager.cs:10`, donde `tiempoLimite = 0` ya significa "sin límite": es la base sobre la que construirlo | nuevo | No empezado |
 | 3 | **Toggle de idioma** — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
 | 4 | Verificar en dispositivo que el bug de destrucción en cascada quedó resuelto | `CuboInteligente.cs:251-253` | Umbral presente (`caída > 3× la altura del cubo` **y** `velocidad > 2 m/s`), falta probar |
+| 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal` | `GruaController.cs:244-288` | Detectado el 2026-09-22, sin corregir |
+| 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
 ### Pendiente — Funciones nuevas (pedidas el 2026-09-22)
 
@@ -55,6 +57,12 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | F3 | **Usos de las gemas** — decidido el 2026-09-22: los tres usos (atajos premium, cosméticos y cambio por monedas) | Por diseñar |
 | F4 | **Rediseño del panel de comodines** — hoy se ve poco profesional | Por diseñar |
 | F5 | Sistema de sonido (ver tarea de código 1) | No empezado |
+| F6 | **Grabación de partidas con el fondo real difuminado o pixelado** — pedido el 2026-09-22. El jugador puede grabar su partida, pero en el video el fondo de la cámara (la habitación) sale difuminado o pixelado y los cubos y la plataforma nítidos. Motivo: que no se vea lo que no queremos mostrar y que los jóvenes no graben su casa o su cuarto. Viable técnicamente: en ARFoundation la imagen de la cámara se dibuja en una pasada separada (`ARCameraBackground`), así que se puede difuminar solo esa capa sin tocar los objetos virtuales y sin segmentación. El video necesita un codificador nativo de Android (plugin propio con `MediaCodec`/`MediaRecorder`, o uno comercial). Afecta a la política de privacidad: habrá que declarar dónde se guardan los videos | Anotado, por diseñar |
+| F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez | Por diseñar (reglas propuestas en la sesión del 2026-09-22) |
+| F8 | **Los 6 tipos de cubo V2 no tienen comportamiento** — Gelatina, Lava, Hierba, Agua, Nube y Piedra aparecen en partida (1–3 % cada uno) con descripciones que prometen efectos ("Melts Ice and chars Normal blocks"), pero `CuboInteligente` no tiene ni una línea para ellos: son cubos normales recoloreados | Por implementar |
+| F9 | **Comodines** — solo 4, sin límite de uso por partida ni indicación visual en el cubo o la mira cuando están activos | Por diseñar |
+| F10 | **Rediseño visual de todos los menús y pantallas** (11 paneles, 257 elementos de interfaz) y de la presentación de los cubos | Por diseñar |
+| F11 | **Landing con más ilustraciones** (vidas, gemas, monedas) y capturas reales del juego | Esperar a F10 para capturar la versión nueva |
 
 ### Ya resuelto (estaba mal listado como pendiente)
 
