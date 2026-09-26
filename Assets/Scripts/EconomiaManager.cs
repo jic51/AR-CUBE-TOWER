@@ -29,7 +29,14 @@ public class EconomiaManager : MonoBehaviour
     // Recompensas por jugar
     public const int MONEDAS_POR_GANAR       = 50;
     public const int MONEDAS_BONUS_RECORD     = 25;
-    public const int GEMAS_POR_RECORD         = 1;
+
+    // Gemas — reglas aprobadas el 2026-09-22
+    public const int GEMAS_PRIMERA_VEZ        = 1;   // completar un nivel por primera vez
+    public const int GEMAS_TRES_ESTRELLAS     = 1;   // primera vez con 3 estrellas en un nivel
+    public const int GEMAS_BLOQUE             = 2;   // completar el último nivel de un bloque de 5
+    public const int GEMAS_POR_RECORD         = 1;   // nuevo récord de altura (en cubos)
+    public const int GEMAS_RACHA              = 2;   // cada 7 días seguidos jugando
+    public const int DIAS_RACHA               = 7;
 
     // ── Propiedades acceso a datos (a través de GameManager) ─────────────────
     private PlayerData Datos => GameManager.Instance?.GetDatos();

@@ -504,9 +504,24 @@ public class GameManager : MonoBehaviour
         bool cimaMuyAlta = false;
         if (_camara != null)
         {
-            Vector3 cima = new Vector3(basePlataforma.position.x, alturaCima, basePlataforma.position.z);
-            Vector3 vp   = _camara.WorldToViewportPoint(cima);
-            cimaMuyAlta  = vp.z > 0f && vp.y > pozoUmbralViewport;   // delante de la cámara y arriba del umbral
+            Vector3 basePos = basePlataforma.position;
+            Vector3 vpCima  = _camara.WorldToViewportPoint(new Vector3(basePos.x, alturaCima, basePos.z));
+
+            // Solo cuenta si el jugador está MIRANDO LA TORRE: algún tramo de la
+            // columna entre la base y la cima tiene que estar dentro del encuadre.
+            // Sin esto, mirar al suelo fuera de la plataforma dejaba la cima "por
+            // encima" del encuadre y la plataforma bajaba sin motivo. No se exige
+            // ver la base: con una torre alta se mira el tramo medio, y es
+            // justo ahí cuando más hace falta bajarla.
+            bool mirandoTorre = false;
+            for (int i = 0; i <= 4 && !mirandoTorre; i++)
+            {
+                float   y  = Mathf.Lerp(basePos.y, alturaCima, i / 4f);
+                Vector3 vp = _camara.WorldToViewportPoint(new Vector3(basePos.x, y, basePos.z));
+                mirandoTorre = vp.z > 0f && vp.x >= 0f && vp.x <= 1f && vp.y >= 0f && vp.y <= 1f;
+            }
+
+            cimaMuyAlta = mirandoTorre && vpCima.z > 0f && vpCima.y > pozoUmbralViewport;
         }
 
         if (cimaMuyAlta) tiempoSinVerCima += Time.deltaTime;
@@ -589,12 +604,28 @@ public class GameManager : MonoBehaviour
         if (enMenu) PlayerHeaderUI.Mostrar(true);
         yield return null;   // un fotograma para que el header calcule su layout
 
+        // Racha: sigue si el último día jugado fue ayer; si no, vuelve a 1
+        string ayer = System.DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+        datosJugador.rachaDias = datosJugador.ultimoDiaJugado == ayer ? datosJugador.rachaDias + 1 : 1;
+        bool premioRacha = datosJugador.rachaDias % EconomiaManager.DIAS_RACHA == 0;
+
         // El día se marca en el mismo guardado que suma las monedas: si la app
         // se cierra antes de este punto, el bono se vuelve a ofrecer, no se pierde
         datosJugador.ultimoDiaJugado = hoy;
         AnimadorMonedas.AnimarDesdeCentro(MonedasBonusDiario);
         EconomiaManager.Instance?.GanarMonedas(MonedasBonusDiario);
-        MensajeFlotante.Mostrar($"Daily bonus  +{MonedasBonusDiario} coins!", new Color(0.95f, 0.80f, 0.10f), 2.5f);
+        MensajeFlotante.Mostrar($"Daily bonus  +{MonedasBonusDiario} coins  ·  Day {datosJugador.rachaDias}",
+                                new Color(0.95f, 0.80f, 0.10f), 2.5f);
+
+        // Cada 7 días seguidos: gemas, con su animación después de las monedas
+        if (premioRacha)
+        {
+            AnimadorMonedas.AnimarGemasDesdeCentro(EconomiaManager.GEMAS_RACHA, RetrasoGemas);
+            EconomiaManager.Instance?.GanarGemas(EconomiaManager.GEMAS_RACHA);
+            StartCoroutine(MensajeGemasTras(RetrasoGemas, EconomiaManager.GEMAS_RACHA,
+                                            $"{EconomiaManager.DIAS_RACHA}-day streak"));
+            yield return new WaitForSecondsRealtime(RetrasoGemas);   // que el header siga visible
+        }
 
         // Duración aproximada de la animación completa + un momento para verlo
         yield return new WaitForSecondsRealtime(2.8f);
@@ -604,10 +635,77 @@ public class GameManager : MonoBehaviour
         if (enMenu && estadoActual == EstadoJuego.Menu) PlayerHeaderUI.Mostrar(false);
     }
 
-    System.Collections.IEnumerator MensajeGemasTras(float segundos, int cantidad)
+    // Umbrales de estrellas sobre la meta (2026-09-22). La partida no termina
+    // al alcanzar la meta sino al acabarse el tiempo, así que las estrellas
+    // premian seguir construyendo por encima. Antes bastaba ratio ≥ 1 para 3
+    // estrellas: toda victoria daba 3, y 1 o 2 solo salían al perder.
+    private const float Ratio2Estrellas = 1.25f;
+    private const float Ratio3Estrellas = 1.50f;
+
+    // Las gemas salen después de las monedas, para que cada animación se lea
+    private const float RetrasoGemas = 1.2f;
+
+    System.Collections.IEnumerator MensajeGemasTras(float segundos, int cantidad, string motivo)
     {
         yield return new WaitForSecondsRealtime(segundos);
-        MensajeFlotante.GemasGanadas(cantidad);
+        MensajeFlotante.GemasGanadas(cantidad, motivo);
+    }
+
+    int CalcularEstrellas()
+    {
+        float ratio = metaAlturaNivel > 0 ? alturaMaxima / metaAlturaNivel : 0f;
+        return ratio >= Ratio3Estrellas ? 3 : ratio >= Ratio2Estrellas ? 2 : ratio >= 1f ? 1 : 0;
+    }
+
+    /// <summary>
+    /// Gemas del final de partida, con el motivo de cada una para enseñarlo.
+    /// Reglas aprobadas el 2026-09-22.
+    /// </summary>
+    int CalcularGemas(bool gano, bool primerVez, int estrellas, bool nuevoRecord,
+                      System.Collections.Generic.List<string> motivos)
+    {
+        int gemas  = 0;
+        int nivel  = LevelManager.NivelSeleccionado;
+
+        if (gano && primerVez)
+        {
+            gemas += EconomiaManager.GEMAS_PRIMERA_VEZ;
+            motivos.Add("First clear");
+
+            // Último nivel de un bloque de 5 (niveles 5, 10, 15…)
+            if ((nivel + 1) % 5 == 0)
+            {
+                gemas += EconomiaManager.GEMAS_BLOQUE;
+                motivos.Add("Block complete");
+            }
+        }
+
+        // 3 estrellas: solo la primera vez que se consiguen en ese nivel
+        if (gano && estrellas == 3 && MejoresEstrellas(nivel) < 3)
+        {
+            gemas += EconomiaManager.GEMAS_TRES_ESTRELLAS;
+            motivos.Add("3 stars");
+        }
+
+        if (nuevoRecord)
+        {
+            gemas += EconomiaManager.GEMAS_POR_RECORD;
+            motivos.Add("New record");
+        }
+        return gemas;
+    }
+
+    int MejoresEstrellas(int nivel) =>
+        datosJugador.estrellasNivel != null && nivel >= 0 && nivel < datosJugador.estrellasNivel.Length
+            ? datosJugador.estrellasNivel[nivel] : 0;
+
+    void GuardarEstrellas(int nivel, int estrellas)
+    {
+        if (nivel < 0) return;
+        var arr = datosJugador.estrellasNivel ?? new int[0];
+        if (arr.Length <= nivel) System.Array.Resize(ref arr, nivel + 1);
+        arr[nivel] = Mathf.Max(arr[nivel], estrellas);
+        datosJugador.estrellasNivel = arr;
     }
 
     // ── UI ────────────────────────────────────────────────────────────────────
@@ -861,21 +959,26 @@ public class GameManager : MonoBehaviour
             textoEstadoFinal.color = gano ? Color.green : Color.red;
         }
 
-        // Récord personal
-        bool nuevoRecord = alturaMaxima > datosJugador.mejorAltura;
-        if (nuevoRecord) datosJugador.mejorAltura = alturaMaxima;
+        // Récord personal, medido en CUBOS: en metros dependía del tamaño de la
+        // plataforma (con cubos más grandes cualquier torre batía el récord)
+        float alturaCubos = alturaMaxima / (LevelManager.CUBO * Mathf.Max(0.01f, SetupFase.EscalaSeleccionada));
+        bool nuevoRecord  = alturaCubos > datosJugador.mejorAlturaCubos + 0.01f && alturaCubos >= 1f;
+        if (nuevoRecord)
+        {
+            datosJugador.mejorAlturaCubos = alturaCubos;
+            datosJugador.mejorAltura      = alturaMaxima;
+        }
 
         if (textoRecordFinal)
         {
             textoRecordFinal.text  = nuevoRecord ? "NEW RECORD!"
-                                    : "Best: " + datosJugador.mejorAltura.ToString("F2") + " m";
+                                    : "Best: " + Mathf.FloorToInt(datosJugador.mejorAlturaCubos) + " cubes";
             textoRecordFinal.color = nuevoRecord ? new Color(1f, 0.84f, 0f) : Color.white;
         }
 
         // Rating — imágenes de estrellas + texto de respaldo
+        int estrellas = CalcularEstrellas();
         {
-            float ratio    = metaAlturaNivel > 0 ? alturaMaxima / metaAlturaNivel : 0;
-            int estrellas  = ratio >= 1f ? 3 : ratio >= 0.66f ? 2 : ratio >= 0.33f ? 1 : 0;
 
             // Imágenes (si el usuario las asignó en el Inspector)
             if (imagenesEstrellas != null)
@@ -914,12 +1017,18 @@ public class GameManager : MonoBehaviour
 
         // ── Economía ─────────────────────────────────────────────────────────
         int monedasGanadas = 0;
-        int gemasGanadas   = 0;
+
+        // ¿Es la primera vez que el jugador completa este nivel?
+        bool primerVez = LevelManager.NivelSeleccionado >= datosJugador.nivelMaximoDesbloqueado;
+
+        // Gemas: se calculan antes de guardar las estrellas (la regla de 3
+        // estrellas compara con el mejor resultado anterior del nivel)
+        var motivosGemas = new System.Collections.Generic.List<string>();
+        int gemasGanadas = CalcularGemas(gano, primerVez, estrellas, nuevoRecord, motivosGemas);
+        if (gano) GuardarEstrellas(LevelManager.NivelSeleccionado, estrellas);
 
         if (gano)
         {
-            // ¿Es la primera vez que el jugador completa este nivel?
-            bool primerVez = LevelManager.NivelSeleccionado >= datosJugador.nivelMaximoDesbloqueado;
             // Avanzar el nivel máximo (sin retroceder si repite un nivel anterior)
             datosJugador.nivelMaximoDesbloqueado = Mathf.Max(
                 datosJugador.nivelMaximoDesbloqueado,
@@ -928,23 +1037,23 @@ public class GameManager : MonoBehaviour
             monedasGanadas = EconomiaManager.MONEDAS_POR_GANAR;
             if (nuevoRecord) monedasGanadas += EconomiaManager.MONEDAS_BONUS_RECORD;
 
-            // GEMAS: primera vez este nivel = +2, nuevo récord de altura = +1
-            if (primerVez)   gemasGanadas += 2;
-            if (nuevoRecord) gemasGanadas += EconomiaManager.GEMAS_POR_RECORD;
-
             // Animar ANTES de sumar: la animación retiene las monedas y el
             // contador sube con cada una que llega, en vez de saltar al total
             AnimadorMonedas.AnimarDesdeCentro(monedasGanadas);
             EconomiaManager.Instance?.GanarMonedas(monedasGanadas);
             MensajeFlotante.MonedasGanadas(monedasGanadas);
-
-            if (gemasGanadas > 0)
-            {
-                EconomiaManager.Instance?.GanarGemas(gemasGanadas);
-                StartCoroutine(MensajeGemasTras(1.2f, gemasGanadas));
-            }
         }
-        else
+
+        // Las gemas se suman ya (nada se pierde si se cierra la app), pero su
+        // animación y el mensaje con el motivo llegan después de las monedas
+        if (gemasGanadas > 0)
+        {
+            AnimadorMonedas.AnimarGemasDesdeCentro(gemasGanadas, RetrasoGemas);
+            EconomiaManager.Instance?.GanarGemas(gemasGanadas);
+            StartCoroutine(MensajeGemasTras(RetrasoGemas, gemasGanadas, string.Join(" · ", motivosGemas)));
+        }
+
+        if (!gano)
         {
             // La vida ya se cobró al iniciar la partida (IniciarPartida).
             // El escudo no evita el cobro: lo compensa devolviendo la vida.

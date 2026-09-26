@@ -31,6 +31,9 @@ public class GruaController : MonoBehaviour
     /// <summary>Altura Y del punto donde impacta el retículo (para que GameManager detecte si está en la cima).</summary>
     public float ReticuloAlturaHit { get; private set; } = -999f;
 
+    // True si la mira está sobre una cara superior (de un cubo o de la plataforma)
+    private bool _apuntandoCaraSuperior;
+
     // Referencia al Renderer del retículo (prefab plano — color cambia al llegar a zona de drop)
     private Renderer reticuloRenderer;
 
@@ -246,6 +249,10 @@ public class GruaController : MonoBehaviour
             ReticuloAlturaHit = golpe.point.y;
             reticuloActual.SetActive(true);
 
+            // Cara de arriba = la normal apunta hacia arriba (cos 45° ≈ 0.7).
+            // En un lateral la normal es horizontal: ahí la mira nunca es verde.
+            _apuntandoCaraSuperior = golpe.normal.y > 0.7f;
+
             // Posición: pegada a la superficie
             reticuloActual.transform.position = golpe.point + golpe.normal * 0.003f;
 
@@ -265,6 +272,7 @@ public class GruaController : MonoBehaviour
         {
             ReticuloAlturaHit = -999f;
             reticuloActual.SetActive(false);
+            _apuntandoCaraSuperior = false;
         }
 
         if (cuboActual != null)
@@ -276,10 +284,14 @@ public class GruaController : MonoBehaviour
             if (dir != Vector3.zero)
                 cuboActual.transform.rotation = Quaternion.Lerp(cuboActual.transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * 10f);
 
-            bool listo = rendererCuboActual != null &&
+            // Verde = el cubo llegó a su sitio Y la mira está sobre una cara de
+            // arriba. Antes solo se miraba lo primero, así que apuntando al lateral
+            // de un cubo la mira se ponía verde y el cubo caía medio encajado al
+            // lado. Soltar sigue permitido en rojo (decisión del 2026-09-22).
+            bool listo = rendererCuboActual != null && _apuntandoCaraSuperior &&
                          Vector3.Distance(cuboActual.transform.position, objetivoCubo) <= distanciaParaListo;
 
-            // Retículo: ROJO cuando lejos, VERDE cuando el cubo está listo para soltarse
+            // Retículo: ROJO cuando lejos o en un lateral, VERDE cuando está listo
             if (reticuloRenderer != null && reticuloActual.activeSelf)
             {
                 reticuloRenderer.material.color = listo

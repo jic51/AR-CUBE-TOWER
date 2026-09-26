@@ -70,7 +70,11 @@ public class MensajeFlotante : MonoBehaviour
     // ── Shortcuts ─────────────────────────────────────────────────────────────
     public static void SnapPerfecto()  => Mostrar("** Snap Perfect!",     new Color(0.30f, 0.80f, 1.00f));
     public static void MetaAlcanzada() => Mostrar("GOAL REACHED!",         new Color(0.15f, 0.90f, 0.25f));
-    public static void GemasGanadas(int cantidad)   => Mostrar($"+{cantidad} gems  New Record!", new Color(1.00f, 0.84f, 0.00f));
+    // El motivo va en el mensaje: antes decía siempre "New Record!", también
+    // cuando la gema era por completar un nivel, y no se entendía de dónde salía
+    public static void GemasGanadas(int cantidad, string motivo = "")
+        => Mostrar(string.IsNullOrEmpty(motivo) ? $"+{cantidad} gems" : $"+{cantidad} gems  ·  {motivo}",
+                   new Color(0.45f, 0.95f, 1.00f));
     public static void MonedasGanadas(int cantidad) => Mostrar($"+{cantidad} coins",             new Color(0.95f, 0.80f, 0.10f));
     public static void CuboPlomoActivo()            => Mostrar("Lead Block",                     new Color(0.70f, 0.70f, 0.80f));
 

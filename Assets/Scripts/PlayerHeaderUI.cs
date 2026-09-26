@@ -72,6 +72,25 @@ public class PlayerHeaderUI : MonoBehaviour
         Instance?.Refrescar();
     }
 
+    // Mismo mecanismo para las gemas
+    private static int s_gemasEnVuelo;
+
+    public static int GemasMostradas =>
+        Mathf.Max(0, (EconomiaManager.Instance?.Gemas ?? 0) - s_gemasEnVuelo);
+
+    public static void RetenerGemas(int cantidad)
+    {
+        if (cantidad <= 0) return;
+        s_gemasEnVuelo += cantidad;
+        Instance?.Refrescar();
+    }
+
+    public static void LiberarGemas(int cantidad)
+    {
+        s_gemasEnVuelo = Mathf.Max(0, s_gemasEnVuelo - cantidad);
+        Instance?.Refrescar();
+    }
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -79,6 +98,7 @@ public class PlayerHeaderUI : MonoBehaviour
 
         // Una recarga de escena corta cualquier animación a medias
         s_monedasEnVuelo = 0;
+        s_gemasEnVuelo   = 0;
     }
 
     // Delegates guardados como campos para poder desuscribirse correctamente
@@ -117,7 +137,7 @@ public class PlayerHeaderUI : MonoBehaviour
         if (EconomiaManager.Instance == null) return;
 
         if (textoMonedas) textoMonedas.text = MonedasMostradas.ToString();
-        if (textoGemas)   textoGemas.text   = EconomiaManager.Instance.Gemas.ToString();
+        if (textoGemas)   textoGemas.text   = GemasMostradas.ToString();
         if (textoVidas)
         {
             textoVidas.text  = EconomiaManager.Instance.Vidas + "/" + EconomiaManager.MAX_VIDAS;

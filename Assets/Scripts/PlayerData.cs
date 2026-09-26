@@ -33,6 +33,11 @@ public class PlayerData
     public string ultimoDiaAds;  // "yyyy-MM-dd" — resetea el contador cada día
     public int    adsVistosHoy;
 
+    // ── Gemas (reglas del 2026-09-22) ────────────────────────────────────────
+    public int[] estrellasNivel;     // mejores estrellas (0-3) por índice de nivel
+    public float mejorAlturaCubos;   // récord medido en cubos: no depende del tamaño de plataforma
+    public int   rachaDias;          // días seguidos abriendo el juego
+
     // ────────────────────────────────────────────────────────────────────────
     public PlayerData()
     {
@@ -52,5 +57,9 @@ public class PlayerData
         ultimoDiaJugado             = "";
         ultimoDiaAds                = "";
         adsVistosHoy                = 0;
+
+        estrellasNivel              = new int[0];   // crece al completar niveles
+        mejorAlturaCubos            = 0f;
+        rachaDias                   = 0;
     }
 }
