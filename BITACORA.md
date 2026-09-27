@@ -48,6 +48,29 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs` | ✅ Resuelto el 2026-09-26, sin probar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
+### Decisiones e ideas del 2026-09-27
+
+**Decidido**
+
+| Tema | Decisión |
+|---|---|
+| Técnica de interfaz | **Reconstruir con UI Toolkit.** El usuario prefiere más trabajo ahora a cambio de un mejor resultado a largo plazo |
+| Identidad visual | **La landing manda.** La app usa su paleta (azul marino `#0e1124`, superficie `#1b2142`, dorado `#ffc94d`, celeste `#7fd4ff`, coral `#ff8a6b`), sus tipografías (Space Grotesk + Inter) y sus cubos isométricos. La pantalla de inicio muestra el logo y la ilustración de la landing |
+| Grúa | **No existe en el juego**, así que se quitó de la landing. En su lugar el cubo entra desde fuera del encuadre, se alinea sobre la mira y se posa, en bucle |
+| Notificaciones | **Una sola franja bajo el header**: entra deslizándose desde la derecha, se queda 4 s y sale igual. La usan monedas, gemas, comodines, tiempo extra, estrellas y avisos como "Platform descending". Se encolan de una en una |
+
+**Plan de economía y progresión — por analizar, nada decidido**
+
+Ideas del usuario (2026-09-27), inspiradas en Clash of Clans:
+
+- **Menos gemas regaladas.** Hoy se dan por completar niveles; pasarían a darse **solo por metas concretas**, no por avanzar
+- **Precios en tres monedas**: vidas y comodines podrían costar monedas, gemas o **dinero real**
+- **Regalar comodines** como enganche: por racha diaria, por logros, por ver anuncios
+- **Más comodines y más usos de las gemas** (ver la propuesta del 2026-09-26)
+- **Insignias por logros**: investigar un catálogo de badges que el jugador gana al cumplir metas, visibles en su perfil
+
+Al tocar esto hay que revisar la decisión del 2026-09-22 sobre las gemas (+1 por primera vez, +1 por 3 estrellas, +2 por bloque, +1 por récord, +2 por racha), que quedaría sustituida.
+
 ### Comodines nuevos propuestos — sin aprobar (2026-09-26)
 
 Los 4 actuales ya funcionan bien. Estos cuatro cubren huecos que el juego tiene hoy; ninguno está implementado.
