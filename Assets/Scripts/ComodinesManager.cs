@@ -58,8 +58,24 @@ public class ComodinesManager : MonoBehaviour
     /// <summary>Llamar desde GameManager.FinalizarJuego() para ocultar el panel.</summary>
     public void TerminarPartida()
     {
+        DevolverNoUsados();
         MostrarPanel(false);
         ResetearEstadosActivos();
+    }
+
+    /// <summary>
+    /// Devuelve al inventario los comodines que se activaron pero nunca llegaron
+    /// a usarse. El jugador los pagó: quedarse con un escudo sin gastar porque
+    /// ganó la partida sería cobrarle por nada.
+    /// </summary>
+    void DevolverNoUsados()
+    {
+        var eco = EconomiaManager.Instance;
+        if (eco == null) return;
+
+        if (snapPerfectoActivo) eco.GanarComodin(0);
+        if (cuboPlomoPendiente) eco.GanarComodin(2);
+        if (escudoActivo)       eco.GanarComodin(3);
     }
 
     public void MostrarPanel(bool mostrar)
@@ -85,56 +101,123 @@ public class ComodinesManager : MonoBehaviour
                 botonesComodin[i].interactable = cantidad > 0;
         }
 
-        // Indicadores de estado activo
+        // Indicadores de estado activo (objetos opcionales del Editor)
         if (indicadorSnapActivo)    indicadorSnapActivo.SetActive(snapPerfectoActivo);
         if (indicadorEscudoActivo)  indicadorEscudoActivo.SetActive(escudoActivo);
         if (indicadorPlomoPendiente) indicadorPlomoPendiente.SetActive(cuboPlomoPendiente);
+
+        // Respaldo que no depende del Editor: los tres indicadores de arriba
+        // están SIN ASIGNAR en la escena, así que hasta ahora no había ninguna
+        // señal de que un comodín estuviera armado. El propio botón se ilumina.
+        PintarBoton(0, snapPerfectoActivo, ColorSnap);
+        PintarBoton(2, cuboPlomoPendiente, ColorPlomo);
+        PintarBoton(3, escudoActivo,       ColorEscudo);
     }
 
+    // Color base de cada botón, guardado una sola vez (si se leyera cada vez,
+    // acabaría guardando el color de "armado" como si fuera el normal)
+    private readonly System.Collections.Generic.Dictionary<int, Color> _colorBase = new();
+
+    void PintarBoton(int slot, bool armado, Color color)
+    {
+        if (imagenBoton == null || slot >= imagenBoton.Length || imagenBoton[slot] == null) return;
+
+        if (!_colorBase.ContainsKey(slot)) _colorBase[slot] = imagenBoton[slot].color;
+        imagenBoton[slot].color = armado ? color : _colorBase[slot];
+
+        if (armado) IniciarLatido(slot);
+    }
+
+    private readonly System.Collections.Generic.Dictionary<int, Coroutine> _latidos = new();
+
+    void IniciarLatido(int slot)
+    {
+        if (_latidos.TryGetValue(slot, out var c) && c != null) return;   // ya late
+        _latidos[slot] = StartCoroutine(Latir(slot));
+    }
+
+    /// <summary>Latido suave del botón mientras su comodín siga armado.</summary>
+    System.Collections.IEnumerator Latir(int slot)
+    {
+        var img = imagenBoton[slot];
+        Transform t = img.transform;
+        Vector3 escalaBase = t.localScale;
+
+        while (SlotArmado(slot) && img != null)
+        {
+            float p = 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 5f);
+            t.localScale = escalaBase * p;
+            yield return null;
+        }
+        if (t != null) t.localScale = escalaBase;
+        _latidos[slot] = null;
+    }
+
+    bool SlotArmado(int slot) => slot switch
+    {
+        0 => snapPerfectoActivo,
+        2 => cuboPlomoPendiente,
+        3 => escudoActivo,
+        _ => false,
+    };
+
     // ── Activación de comodines (llamados por los botones del HUD) ───────────
+
+    // Colores de aviso al activar cada comodín
+    private static readonly Color ColorSnap   = new Color(0.25f, 0.85f, 1.00f);
+    private static readonly Color ColorTiempo = new Color(0.40f, 0.90f, 0.50f);
+    private static readonly Color ColorPlomo  = new Color(0.75f, 0.78f, 0.85f);
+    private static readonly Color ColorEscudo = new Color(0.45f, 0.70f, 1.00f);
 
     /// <summary>Slot 0: Snap Perfecto — el próximo drop va exacto al centro.</summary>
     public void ActivarSnapPerfecto()
     {
         if (EconomiaManager.Instance == null) return;
+        // Ya armado: no gastar otro. Antes se consumía y se perdía.
+        if (snapPerfectoActivo) { MensajeFlotante.Mostrar("Perfect Snap already armed", ColorSnap, 1.4f); return; }
         if (!EconomiaManager.Instance.UsarComodin(0)) return;
 
         snapPerfectoActivo = true;
         ActualizarBadges();
-        Debug.Log("[Comodin] Snap Perfecto activado");
+        MensajeFlotante.Mostrar("Perfect Snap armed  ·  next drop", ColorSnap, 1.8f);
     }
 
     /// <summary>Slot 1: +30 segundos — efecto inmediato en el timer.</summary>
     public void ActivarTiempoExtra()
     {
         if (EconomiaManager.Instance == null) return;
+        // En niveles sin reloj no hay tiempo que añadir: no dejar gastarlo
+        if (GameManager.Instance != null && !GameManager.Instance.TieneReloj)
+        { MensajeFlotante.Mostrar("This level has no timer", ColorTiempo, 1.6f); return; }
         if (!EconomiaManager.Instance.UsarComodin(1)) return;
 
         GameManager.Instance?.AgregarTiempo(30f);
         ActualizarBadges();
-        Debug.Log("[Comodin] +30s activado");
+        MensajeFlotante.Mostrar("+30 seconds", ColorTiempo, 1.8f);
     }
 
-    /// <summary>Slot 2: Cubo Plomo — el próximo cubo tiene masa 80 y cae rápido.</summary>
+    /// <summary>Slot 2: Cubo Plomo — el próximo cubo es de plomo y pesa 80.</summary>
     public void ActivarCuboPlomo()
     {
         if (EconomiaManager.Instance == null) return;
+        if (cuboPlomoPendiente) { MensajeFlotante.Mostrar("Heavy Cube already queued", ColorPlomo, 1.4f); return; }
         if (!EconomiaManager.Instance.UsarComodin(2)) return;
 
         cuboPlomoPendiente = true;
         ActualizarBadges();
-        Debug.Log("[Comodin] Cubo Plomo pendiente");
+        MensajeFlotante.Mostrar("Heavy Cube  ·  next block", ColorPlomo, 1.8f);
     }
 
     /// <summary>Slot 3: Escudo — la próxima derrota no cuesta vida.</summary>
     public void ActivarEscudo()
     {
         if (EconomiaManager.Instance == null) return;
+        if (escudoActivo) { MensajeFlotante.Mostrar("Shield already active", ColorEscudo, 1.4f); return; }
         if (!EconomiaManager.Instance.UsarComodin(3)) return;
 
         escudoActivo = true;
         ActualizarBadges();
-        Debug.Log("[Comodin] Escudo activado");
+        MensajeFlotante.Mostrar("Shield active  ·  keeps your life", ColorEscudo, 1.8f);
     }
 
     // ── Consumo de estados (llamados por GruaController/GameManager) ─────────
@@ -171,5 +254,16 @@ public class ComodinesManager : MonoBehaviour
         snapPerfectoActivo  = false;
         escudoActivo        = false;
         cuboPlomoPendiente  = false;
+
+        // Devolver los botones a su color y tamaño: si el panel se desactiva con
+        // un latido en marcha, la corrutina se corta y el botón se quedaría
+        // agrandado y coloreado la próxima partida
+        foreach (var kv in _colorBase)
+            if (imagenBoton != null && kv.Key < imagenBoton.Length && imagenBoton[kv.Key] != null)
+            {
+                imagenBoton[kv.Key].color = kv.Value;
+                imagenBoton[kv.Key].transform.localScale = Vector3.one;
+            }
+        _latidos.Clear();
     }
 }

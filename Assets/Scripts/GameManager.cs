@@ -469,6 +469,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public float ObtenerAlturaSuelo() => basePlataforma != null ? basePlataforma.position.y : 0f;
 
+    /// <summary>False en niveles sin límite de tiempo (EFFICIENCY).</summary>
+    public bool TieneReloj => tiempoLimite > 0f;
+
     /// <summary>Añade segundos al timer. Llamado por ComodinesManager (+30s) y flujo de rescate.</summary>
     public void AgregarTiempo(float segundos)
     {

@@ -34,6 +34,9 @@ public class GruaController : MonoBehaviour
     // True si la mira está sobre una cara superior (de un cubo o de la plataforma)
     private bool _apuntandoCaraSuperior;
 
+    // True mientras el cubo en vuelo es el del comodín Cubo Plomo
+    private bool _plomoForzado;
+
     // Referencia al Renderer del retículo (prefab plano — color cambia al llegar a zona de drop)
     private Renderer reticuloRenderer;
 
@@ -147,6 +150,14 @@ public class GruaController : MonoBehaviour
         // ── Elegir tipo: el cubo actual toma el "próximo" pre-generado ────────
         tipoActual  = tipoProximo;
         tipoProximo = ElegirTipoAleatorio();   // ya visible en el indicador UI
+
+        // Comodín Cubo Plomo: fuerza el TIPO, no solo la masa. Antes solo se
+        // cambiaba la masa al soltar, así que el jugador pagaba por un cubo
+        // pesado y recibía uno que parecía de plumas. Ahora se ve de plomo y
+        // se comporta como tal (el extra de masa se aplica en SoltarCubo).
+        _plomoForzado = ComodinesManager.Instance != null &&
+                        ComodinesManager.Instance.ConsumeCuboPlomo();
+        if (_plomoForzado) tipoActual = TipoCubo.Plomo;
         ConfigTipoCubo cfg = ObtenerConfig(tipoActual);
         colorCuboVolando = cfg?.colorEnVuelo ?? new Color(0.6f, 0.6f, 0.6f, 0.85f);
 
@@ -294,9 +305,15 @@ public class GruaController : MonoBehaviour
             // Retículo: ROJO cuando lejos o en un lateral, VERDE cuando está listo
             if (reticuloRenderer != null && reticuloActual.activeSelf)
             {
-                reticuloRenderer.material.color = listo
-                    ? new Color(0.2f, 0.95f, 0.35f, 0.90f)   // verde = listo
-                    : new Color(0.85f, 0.25f, 0.25f, 0.90f);  // rojo = en vuelo
+                // Cian = Snap Perfecto armado: el jugador ve que el comodín está
+                // activo ANTES de soltar, no solo en el botón del panel
+                bool snapArmado = ComodinesManager.Instance != null &&
+                                  ComodinesManager.Instance.SnapPerfectoActivo;
+
+                reticuloRenderer.material.color =
+                      !listo      ? new Color(0.85f, 0.25f, 0.25f, 0.90f)   // rojo  = en vuelo o lateral
+                    : snapArmado  ? new Color(0.25f, 0.85f, 1.00f, 0.95f)   // cian  = snap perfecto
+                                  : new Color(0.20f, 0.95f, 0.35f, 0.90f);  // verde = listo
             }
 
             if (listo) TutorialManager.Instance?.IrAPaso(3);
@@ -372,12 +389,14 @@ public class GruaController : MonoBehaviour
         // ── Física del tipo de cubo (se aplica ANTES del comodín para que el comodín pueda override) ──
         AplicarFisicaTipoEnVuelo(rb, tipoActual);
 
-        // ── Comodín Cubo Plomo (override: aplica encima del tipo) ─────────────
-        if (ComodinesManager.Instance != null && ComodinesManager.Instance.ConsumeCuboPlomo())
+        // ── Comodín Cubo Plomo: extra de masa sobre el plomo normal ───────────
+        // El tipo ya se forzó al generar el cubo (GenerarNuevoCubo)
+        if (_plomoForzado)
         {
             rb.mass           = 80f;
             rb.linearDamping  = 2f;
             rb.angularDamping = 4f;
+            _plomoForzado     = false;
         }
         // ─────────────────────────────────────────────────────────────────────
 
