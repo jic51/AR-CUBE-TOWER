@@ -48,6 +48,24 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs` | ✅ Resuelto el 2026-09-26, sin probar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
+### Ideas de cubos para analizar — V2 / V3 (2026-09-26)
+
+Ideas del usuario, **sin decidir ni implementar**. Revisar en conjunto antes de tocar nada: varias cambian el equilibrio del juego.
+
+| Idea | Detalle |
+|---|---|
+| Agua + Fuego | Deja **cenizas**: partículas negras que caen y desaparecen. El cubo de agua se va como vapor |
+| Agua + Lava | La lava se convierte en roca **con vetas de lava** todavía visibles dentro. El agua se va como vapor |
+| Nube, caída | Al soltarla tarda mucho en bajar (casi sin peso) |
+| Nube, aplastada | Cualquier cubo que le caiga encima la hace desaparecer |
+| Nube + Agua (en cualquier orden) | La nube **crece**, se vuelve negra y le salen rayos |
+| Nube + Hierba | La hierba pasa a verde oscuro y se convierte en **hierba lluviosa**: le caen gotas constantemente, como un bosque lluvioso |
+| Hierba + Agua (en cualquier orden) | La hierba **crece** y se hace notablemente más grande |
+| Gelatina | Se une con el agua · se derrite con fuego y lava · se aplasta según el peso del cubo de encima |
+| Perder altura al mezclar | El usuario lo ve bien: "este juego debe ser como Tetris, no todas las piezas te sirven en todo momento". **Revisar la decisión del 2026-09-26** de que el agua no se destruya al apagar el fuego: el usuario prefiere que el agua desaparezca como vapor |
+
+**Decisión pendiente — orden de los cubos.** Hoy `GruaController.ElegirTipoAleatorio()` usa `Random.Range` sin semilla, con pesos por tipo. Cada jugador y cada partida reciben secuencias distintas, y al ser tiradas independientes puede salir una racha larga de un mismo tipo. Dos opciones a futuro: dejarlo así (más caótico), o usar una secuencia con semilla por nivel — todos los jugadores reciben los mismos cubos en el mismo orden, lo que permite comparar puntuaciones y competir de forma justa, como en Tetris.
+
 ### Pendiente — Funciones nuevas (pedidas el 2026-09-22)
 
 | # | Función | Estado |
