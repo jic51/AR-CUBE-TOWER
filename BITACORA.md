@@ -45,7 +45,7 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 2 | **Modo supervivencia** — no existe. Lo único que apunta a él es `LevelManager.cs:10`, donde `tiempoLimite = 0` ya significa "sin límite": es la base sobre la que construirlo | nuevo | No empezado |
 | 3 | **Toggle de idioma** — cero ocurrencias de idioma/language/localization en todo `Assets/Scripts` | `PanelConfiguracion.cs` | **Aplazado** — decisión del 2026-09-21: la interfaz queda solo en inglés por ahora |
 | 4 | Verificar en dispositivo que el bug de destrucción en cascada quedó resuelto | `CuboInteligente.cs:251-253` | Umbral presente (`caída > 3× la altura del cubo` **y** `velocidad > 2 m/s`), falta probar |
-| 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs:244-288` | Decidido, por implementar |
+| 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs` | ✅ Resuelto el 2026-09-26, sin probar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
 ### Pendiente — Funciones nuevas (pedidas el 2026-09-22)
@@ -58,8 +58,8 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | F4 | **Rediseño del panel de comodines** — hoy se ve poco profesional | Por diseñar |
 | F5 | Sistema de sonido (ver tarea de código 1) | No empezado |
 | F6 | **Grabación de partidas con el fondo real difuminado o pixelado** — pedido el 2026-09-22. El jugador puede grabar su partida, pero en el video el fondo de la cámara (la habitación) sale difuminado o pixelado y los cubos y la plataforma nítidos. Motivo: que no se vea lo que no queremos mostrar y que los jóvenes no graben su casa o su cuarto. Viable técnicamente: en ARFoundation la imagen de la cámara se dibuja en una pasada separada (`ARCameraBackground`), así que se puede difuminar solo esa capa sin tocar los objetos virtuales y sin segmentación. El video necesita un codificador nativo de Android (plugin propio con `MediaCodec`/`MediaRecorder`, o uno comercial). Afecta a la política de privacidad: habrá que declarar dónde se guardan los videos | Anotado, por diseñar |
-| F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez. **Reglas aprobadas el 2026-09-22:** +2 al completar un nivel por primera vez · +1 extra si es con 3 estrellas · +5 al terminar cada bloque de 5 niveles · +1 por récord de altura · +3 el séptimo día seguido jugando. Cada una con animación y mensaje con el motivo | Aprobado, por implementar |
-| F8 | **Los 6 tipos de cubo V2 no tienen comportamiento** — Gelatina, Lava, Hierba, Agua, Nube y Piedra aparecen en partida (1–3 % cada uno) con descripciones que prometen efectos ("Melts Ice and chars Normal blocks"), pero `CuboInteligente` no tiene ni una línea para ellos: son cubos normales recoloreados | Por implementar |
+| F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez. **Reglas aprobadas el 2026-09-22:** +2 al completar un nivel por primera vez · +1 extra si es con 3 estrellas · +5 al terminar cada bloque de 5 niveles · +1 por récord de altura · +3 el séptimo día seguido jugando. Cada una con animación y mensaje con el motivo | ✅ Resuelto el 2026-09-26, sin probar |
+| F8 | **Los 6 tipos de cubo V2 no tienen comportamiento** — Gelatina, Lava, Hierba, Agua, Nube y Piedra aparecen en partida (1–3 % cada uno) con descripciones que prometen efectos ("Melts Ice and chars Normal blocks"), pero `CuboInteligente` no tenía ni una línea para ellos | ✅ Resuelto el 2026-09-26, sin probar |
 | F9 | **Comodines** — solo 4, sin límite de uso por partida ni indicación visual en el cubo o la mira cuando están activos | Por diseñar |
 | F10 | **Rediseño visual de todos los menús y pantallas** (11 paneles, 257 elementos de interfaz) y de la presentación de los cubos. **Decidido el 2026-09-22:** primero maquetas visuales para aprobar el estilo; después se elige la técnica (UI Toolkit o mejorar la interfaz actual) | Por diseñar: maquetas |
 | F11 | **Landing con más ilustraciones** (vidas, gemas, monedas) y capturas reales del juego | Esperar a F10 para capturar la versión nueva |
@@ -196,6 +196,40 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-09-26 (Mac) — Fase 1: mira, gemas y los 6 cubos V2
+
+Continuación del plan del 2026-09-22. El usuario probó la versión anterior: confirmó que los cubos caen en el filo, que las monedas se suman bien y que **el resize funciona**. Reportó un bug nuevo del pozo.
+
+**Corregido**
+
+| Problema | Causa | Arreglo |
+|---|---|---|
+| La plataforma bajaba al mirar al suelo fuera de ella | El criterio nuevo del 2026-09-22 solo miraba si la cima quedaba por encima del encuadre; mirando al suelo, eso se cumple siempre | Exige además que algún tramo de la torre esté dentro del encuadre. No se pide ver la base: con torres altas queda fuera justo cuando más falta hace bajar |
+| La mira se ponía verde en los laterales | El color dependía solo de si el cubo había llegado a su sitio; el rayo aceptaba cualquier cara | Verde solo si la normal apunta hacia arriba. En un lateral queda roja y deja soltar igual, como se decidió |
+| Las gemas aparecían sin avisar | Se sumaban sin animación y el mensaje decía siempre "New Record!" | Animación hacia su contador reutilizando el animador de monedas, y mensaje con el motivo. Salen 1,2 s después de las monedas para que cada una se lea |
+| Toda victoria daba 3 estrellas | Bastaba `altura/meta ≥ 1`; las de 1 y 2 solo salían al perder, así que la regla de gemas por 3 estrellas no significaba nada | Meta = ★, 125 % = ★★, 150 % = ★★★. Se guardan las mejores estrellas por nivel |
+| El récord se batía agrandando la plataforma | Se medía en metros y los cubos crecen con ella | Se mide en cubos (`mejorAlturaCubos`) |
+| Bug latente encontrado de paso | `FlashTexto` guardaba el color "original" en cada llamada: con dos monedas seguidas el contador se quedaba dorado para siempre | Valores originales capturados una sola vez por objeto |
+
+**Gemas — reglas ya en código:** +1 primera vez que se completa un nivel · +1 extra la primera vez con 3 estrellas · +2 al cerrar un bloque de 5 · +1 por récord · +2 cada 7 días seguidos (con racha guardada en `PlayerData.rachaDias`).
+
+**Los 6 cubos V2 ya hacen lo que prometen**
+
+| Cubo | Comportamiento |
+|---|---|
+| Gelatina | Rebota, frena en seco al cubo que le cae encima, se aplasta y recupera, no se rompe al caer |
+| Lava | Masa 22, funde hielo, quema plumas y gelatina, chamusca los normales, onda expansiva |
+| Hierba | Material adherente, umbral de vuelco 0,62 en vez de 0,45 |
+| Agua | Resbala; sobre fuego o lava lo apaga con vapor y lo convierte en piedra sin destruir el cubo |
+| Nube | Masa 0,3, sale despedida con las ondas expansivas, no se rompe al caer |
+| Piedra | Masa 60 y amortiguación alta |
+
+El umbral de vuelco pasa a depender del tipo de cubo.
+
+**Sin compilar ni probar.** Queda la fase 2 (comodines) y luego el rediseño visual.
+
+---
 
 ### 2026-09-22 (Mac) — Bugs de jugabilidad, niveles, landing y legales
 
