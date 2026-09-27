@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AR Cube Tower — Stack Cubes in Augmented Reality</title>
-  <meta name="description" content="AR Cube Tower is an augmented reality stacking game for Android. Place a virtual platform on any flat surface, drop cubes from a crane and build your tower to the goal before time runs out. Coming soon to Google Play.">
+  <meta name="description" content="AR Cube Tower is an augmented reality stacking game for Android. Place a virtual platform on any flat surface, catch the cubes as they arrive and build your tower to the goal before time runs out. Coming soon to Google Play.">
   <meta name="theme-color" content="#0e1124">
   <link rel="canonical" href="https://jic51.github.io/AR-CUBE-TOWER/">
 
@@ -54,7 +54,7 @@
         <div class="hero-copy">
           <span class="eyebrow">Augmented reality stacking game</span>
           <h1 id="hero-title">AR Cube Tower</h1>
-          <p class="lead">Turn your table into a construction site. Drop cubes from a crane, balance every block and reach the goal before the clock runs out.</p>
+          <p class="lead">Turn your table into a construction site. Cubes arrive one by one. Aim, drop, balance every block and reach the goal before the clock runs out.</p>
           <div class="hero-actions">
             <span class="badge-soon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 5 3.5z"/></svg>
@@ -67,7 +67,7 @@
 
         <div class="hero-art">
           <svg viewBox="0 0 500 650" role="img" aria-labelledby="art-title">
-            <title id="art-title">Illustration of a tower of colorful cubes on a virtual platform, with a crane lowering another cube</title>
+            <title id="art-title">Illustration of a tower of colorful cubes on a virtual platform, with another cube arriving from above</title>
             <defs>
               <g id="cube">
                 <polygon points="0,0 40,20 0,40 -40,20" style="fill:var(--t)" stroke="rgba(0,0,0,.18)" stroke-width="1"/>
@@ -109,20 +109,11 @@
             <use href="#cube" class="c-water"   transform="translate(246,198)"/>
 
             <!-- aim reticle on top of tower -->
-            <ellipse cx="246" cy="218" rx="24" ry="12" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="5 5"/>
+            <ellipse class="aim-reticle" cx="246" cy="218" rx="24" ry="12" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="5 5"/>
 
-            <!-- crane -->
-            <rect x="120" y="0" width="380" height="12" fill="#ffc94d"/>
-            <g stroke="#1a1405" stroke-width="2" opacity=".5">
-              <line x1="140" y1="0" x2="160" y2="12"/><line x1="180" y1="0" x2="200" y2="12"/>
-              <line x1="220" y1="0" x2="240" y2="12"/><line x1="300" y1="0" x2="320" y2="12"/>
-              <line x1="340" y1="0" x2="360" y2="12"/><line x1="380" y1="0" x2="400" y2="12"/>
-              <line x1="420" y1="0" x2="440" y2="12"/><line x1="460" y1="0" x2="480" y2="12"/>
-            </g>
-            <rect x="236" y="10" width="28" height="12" rx="3" fill="#c9d0d8"/>
-            <g class="hook-cube">
-              <line x1="250" y1="22" x2="250" y2="58" stroke="#c9d0d8" stroke-width="3"/>
-              <path d="M242 58h16l-3 8h-10z" fill="#c9d0d8"/>
+            <!-- Cubo entrante: entra por la derecha y baja hasta la mira, como en
+                 el juego. No hay grúa visible: en la app el cubo llega solo. -->
+            <g class="incoming-cube">
               <use href="#cube" class="c-jelly" transform="translate(250,70)"/>
             </g>
           </svg>
@@ -149,7 +140,7 @@
           </li>
           <li class="card step">
             <h3>Stack</h3>
-            <p>A crane delivers cubes one by one. Aim with the crosshair, release, and build up to the goal height before time runs out.</p>
+            <p>Cubes arrive one by one. Aim with the crosshair, release, and build up to the goal height before time runs out.</p>
           </li>
         </ol>
         <p class="tip"><strong>Watch your balance:</strong> if a cube lands with half of it hanging in the air, it falls.</p>

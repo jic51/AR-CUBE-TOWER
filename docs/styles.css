@@ -237,14 +237,35 @@ p { margin: 0 0 1em; }
 }
 .hero-art svg { display: block; width: 100%; height: auto; }
 
-.hook-cube { animation: dangle 3.2s ease-in-out infinite; transform-origin: 250px 0; }
-@keyframes dangle {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
+/* El cubo entra desde fuera del encuadre y baja hasta la mira, igual que en
+   el juego: no hay grúa, el cubo llega solo y se suelta donde apuntas. */
+.incoming-cube { animation: deliver 4.4s cubic-bezier(.34, .06, .28, 1) infinite; }
+@keyframes deliver {
+  /* Coordenadas del viewBox 0 0 500 650. El cubo parte en (250,70) y la cima
+     de la torre está en y=198: un escalón por encima son 46 px, así que el
+     cubo se posa en y=152, es decir 82 px de caída. */
+  0%   { transform: translate(165px, -46px); opacity: 0; }
+  10%  { transform: translate(148px, -40px); opacity: 1; }   /* entra por la derecha */
+  36%  { transform: translate(0, 0); }                        /* alineado sobre la mira */
+  52%  { transform: translate(0, 0); }                        /* pausa: el jugador apunta */
+  68%  { transform: translate(-4px, 82px); }                  /* cae sobre la torre */
+  72%  { transform: translate(-4px, 74px); }                  /* rebote corto */
+  76%  { transform: translate(-4px, 82px); opacity: 1; }
+  92%, 100% { transform: translate(-4px, 82px); opacity: 0; } /* se funde con la torre */
 }
+
+/* La mira late justo mientras el cubo está encima, esperando el toque */
+.aim-reticle { animation: aim-pulse 4.4s ease-in-out infinite; transform-origin: 246px 218px; }
+@keyframes aim-pulse {
+  0%, 30%   { opacity: .45; transform: scale(1); }
+  38%, 60%  { opacity: 1;   transform: scale(1.12); }
+  70%, 100% { opacity: .45; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .hook-cube { animation: none; }
+  .incoming-cube { animation: none; }
+  .aim-reticle { animation: none; }
 }
 
 @media (min-width: 860px) {
