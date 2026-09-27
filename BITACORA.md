@@ -48,6 +48,19 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs` | ✅ Resuelto el 2026-09-26, sin probar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
+### Comodines nuevos propuestos — sin aprobar (2026-09-26)
+
+Los 4 actuales ya funcionan bien. Estos cuatro cubren huecos que el juego tiene hoy; ninguno está implementado.
+
+| Comodín | Qué hace | Por qué hace falta |
+|---|---|---|
+| **Congelar** | La torre queda inmóvil 8 segundos: nada se tambalea ni se cae | Hoy, cuando la torre empieza a bambolearse, el jugador solo puede mirar. Es el momento de más tensión y no hay nada que hacer |
+| **Deshacer** | Quita el último cubo colocado y lo devuelve a la grúa | Un mal suelto arruina la partida entera; da una segunda oportunidad sin regalar el nivel |
+| **Cámara lenta** | 15 segundos con el cubo cayendo a media velocidad | Ayuda en los niveles rápidos (TIME TRIAL), donde la grúa entrega cada 0,7 s |
+| **Pegamento** | El próximo cubo se adhiere como la hierba: aguanta colgando mucho más | Convierte un tipo de cubo bueno (Hierba) en algo que el jugador puede elegir |
+
+Cada uno necesita: precio en la tienda, icono, y una fila en el panel de la tienda (trabajo de Editor o del rediseño de interfaz).
+
 ### Ideas de cubos para analizar — V2 / V3 (2026-09-26)
 
 Ideas del usuario, **sin decidir ni implementar**. Revisar en conjunto antes de tocar nada: varias cambian el equilibrio del juego.
@@ -78,7 +91,7 @@ Ideas del usuario, **sin decidir ni implementar**. Revisar en conjunto antes de 
 | F6 | **Grabación de partidas con el fondo real difuminado o pixelado** — pedido el 2026-09-22. El jugador puede grabar su partida, pero en el video el fondo de la cámara (la habitación) sale difuminado o pixelado y los cubos y la plataforma nítidos. Motivo: que no se vea lo que no queremos mostrar y que los jóvenes no graben su casa o su cuarto. Viable técnicamente: en ARFoundation la imagen de la cámara se dibuja en una pasada separada (`ARCameraBackground`), así que se puede difuminar solo esa capa sin tocar los objetos virtuales y sin segmentación. El video necesita un codificador nativo de Android (plugin propio con `MediaCodec`/`MediaRecorder`, o uno comercial). Afecta a la política de privacidad: habrá que declarar dónde se guardan los videos | Anotado, por diseñar |
 | F7 | **Gemas con animación y motivo visible** — hoy se suman sin animación y el mensaje dice siempre "New Record!", aunque la gema sea por completar un nivel por primera vez. **Reglas aprobadas el 2026-09-22:** +2 al completar un nivel por primera vez · +1 extra si es con 3 estrellas · +5 al terminar cada bloque de 5 niveles · +1 por récord de altura · +3 el séptimo día seguido jugando. Cada una con animación y mensaje con el motivo | ✅ Resuelto el 2026-09-26, sin probar |
 | F8 | **Los 6 tipos de cubo V2 no tienen comportamiento** — Gelatina, Lava, Hierba, Agua, Nube y Piedra aparecen en partida (1–3 % cada uno) con descripciones que prometen efectos ("Melts Ice and chars Normal blocks"), pero `CuboInteligente` no tenía ni una línea para ellos | ✅ Resuelto el 2026-09-26, sin probar |
-| F9 | **Comodines** — solo 4, sin límite de uso por partida ni indicación visual en el cubo o la mira cuando están activos | Por diseñar |
+| F9 | **Comodines** — comportamiento y señales visuales | ✅ Mejorado el 2026-09-26, sin probar. Quedan por decidir los comodines nuevos (abajo) |
 | F10 | **Rediseño visual de todos los menús y pantallas** (11 paneles, 257 elementos de interfaz) y de la presentación de los cubos. **Decidido el 2026-09-22:** primero maquetas visuales para aprobar el estilo; después se elige la técnica (UI Toolkit o mejorar la interfaz actual) | Por diseñar: maquetas |
 | F11 | **Landing con más ilustraciones** (vidas, gemas, monedas) y capturas reales del juego | Esperar a F10 para capturar la versión nueva |
 
