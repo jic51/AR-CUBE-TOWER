@@ -25,7 +25,9 @@ public class CuboInteligente : MonoBehaviour
     [Tooltip("Opcional — si está vacío se crea en Start() con bounciness 0.35")]
     public PhysicsMaterial materialBotador;     // Plumas
     [Tooltip("Opcional — si está vacío se crea en Start() con friction 0.02")]
-    public PhysicsMaterial materialResbaladizo; // Hielo
+    public PhysicsMaterial materialResbaladizo; // Hielo y Agua
+    public PhysicsMaterial materialGelatina;    // Gelatina — rebota
+    public PhysicsMaterial materialAdherente;   // Hierba — se agarra
 
     // ── Efectos ───────────────────────────────────────────────────────────────
     [Header("Efectos")]
@@ -79,6 +81,30 @@ public class CuboInteligente : MonoBehaviour
                 bounciness      = 0.05f,
                 frictionCombine = PhysicsMaterialCombine.Minimum,
                 bounceCombine   = PhysicsMaterialCombine.Maximum
+            };
+        }
+        if (materialGelatina == null)
+        {
+            // Rebota de verdad, pero con mucho rozamiento para que no se escape
+            materialGelatina = new PhysicsMaterial("Gelatina")
+            {
+                dynamicFriction = 0.9f,
+                staticFriction  = 0.9f,
+                bounciness      = 0.62f,
+                frictionCombine = PhysicsMaterialCombine.Maximum,
+                bounceCombine   = PhysicsMaterialCombine.Maximum
+            };
+        }
+        if (materialAdherente == null)
+        {
+            // Hierba: se agarra a lo que toca, cuesta mucho moverla
+            materialAdherente = new PhysicsMaterial("Hierba")
+            {
+                dynamicFriction = 1.6f,
+                staticFriction  = 2.0f,
+                bounciness      = 0f,
+                frictionCombine = PhysicsMaterialCombine.Maximum,
+                bounceCombine   = PhysicsMaterialCombine.Minimum
             };
         }
     }
@@ -242,9 +268,18 @@ public class CuboInteligente : MonoBehaviour
             // Detect a falling cube landing on top of me → trigger interaction
             var cuboEncima = collision.gameObject.GetComponent<CuboInteligente>();
             if (cuboEncima != null && !cuboEncima.HaAterrizado)
+            {
                 AplicarEfectoDeImpacto(cuboEncima.tipo);
 
-            if (!yaExploto && alturaMaximaAlcanzada > float.MinValue)
+                // Gelatina: "absorbs impact". Frena en seco al que le cae encima
+                // para que no rebote ni se rompa, y se aplasta un momento.
+                if (tipo == TipoCubo.Gelatina) AmortiguarImpacto(cuboEncima);
+            }
+
+            // La gelatina y la nube son blandas: no se rompen al caer
+            bool seRompeAlCaer = tipo != TipoCubo.Gelatina && tipo != TipoCubo.Nube;
+
+            if (!yaExploto && seRompeAlCaer && alturaMaximaAlcanzada > float.MinValue)
             {
                 float caida     = alturaMaximaAlcanzada - transform.position.y;
                 float velBajada = rb != null ? Mathf.Max(0f, -rb.linearVelocity.y) : 0f;
@@ -335,11 +370,12 @@ public class CuboInteligente : MonoBehaviour
         // ── Física según tipo ─────────────────────────────────────────────────
         AplicarFisicaAterrizaje();
 
-        // ── Efecto especial Fuego: sacudir cubos vecinos ──────────────────────
-        if (tipo == TipoCubo.Fuego)
+        // ── Fuego y Lava: onda expansiva que sacude a los vecinos ─────────────
+        // La nube, con masa 0.3, sale despedida: es su "can be displaced by blasts"
+        if (tipo == TipoCubo.Fuego || tipo == TipoCubo.Lava)
             EfectoFuego();
 
-        if (overhangRatio < UmbralVuelco)
+        if (overhangRatio < UmbralVuelcoDelTipo())
         {
             // ── ESTABLE: menos de la mitad colgando ──────────────────────────
             // Rotación completamente congelada. El cubo NUNCA se caerá por sí solo.
@@ -460,12 +496,79 @@ public class CuboInteligente : MonoBehaviour
                 StartCoroutine(PulsarEmisionFuego());   // emisión viva al reposar
                 break;
 
+            // ── V2 ────────────────────────────────────────────────────────────
+
+            case TipoCubo.Gelatina:
+                // "Bouncy! Absorbs impact without breaking": rebota y amortigua
+                // lo que le cae encima (ver AmortiguarImpacto)
+                col.material      = materialGelatina;
+                rb.mass           = 6f;
+                rb.linearDamping  = 2.0f;
+                rb.angularDamping = 6.0f;
+                break;
+
+            case TipoCubo.Lava:
+                // "Molten rock": versión pesada del fuego, funde lo que toca
+                col.material      = materialPegajoso;
+                rb.mass           = 22f;
+                rb.linearDamping  = 8.0f;
+                rb.angularDamping = 20.0f;
+                StartCoroutine(PulsarEmisionFuego());
+                break;
+
+            case TipoCubo.Hierba:
+                // "Natural adhesion. Very hard to topple"
+                col.material      = materialAdherente;
+                rb.mass           = 14f;
+                rb.linearDamping  = 10.0f;
+                rb.angularDamping = 25.0f;
+                break;
+
+            case TipoCubo.Agua:
+                // "Fluid and slippery": resbala como el hielo pero pesa menos
+                col.material      = materialResbaladizo;
+                rb.mass           = 8f;
+                rb.linearDamping  = 0.8f;
+                rb.angularDamping = 1.5f;
+                break;
+
+            case TipoCubo.Nube:
+                // "Barely there. Floats": casi sin masa y con mucha resistencia
+                // al aire, así cualquier empujón la desplaza y cae despacio
+                col.material      = materialBotador;
+                rb.mass           = 0.3f;
+                rb.linearDamping  = 6.0f;
+                rb.angularDamping = 10.0f;
+                break;
+
+            case TipoCubo.Piedra:
+                // "Dense and immovable. Nothing shifts a Stone block"
+                col.material      = materialPegajoso;
+                rb.mass           = 60f;
+                rb.linearDamping  = 12.0f;
+                rb.angularDamping = 30.0f;
+                break;
+
             default: // Normal
                 col.material      = materialPegajoso;
                 rb.mass           = 10.0f;
                 break;
         }
     }
+
+    /// <summary>
+    /// Umbral de vuelco propio del tipo. La gelatina y la hierba se agarran
+    /// mejor, la nube casi no se sostiene. Sobre 0.45 por defecto.
+    /// </summary>
+    float UmbralVuelcoDelTipo() => tipo switch
+    {
+        TipoCubo.Hierba   => 0.62f,   // adherente: aguanta mucho más colgando
+        TipoCubo.Gelatina => 0.55f,   // se deforma y se agarra
+        TipoCubo.Piedra   => 0.50f,   // su peso la asienta
+        TipoCubo.Nube     => 0.35f,   // apenas se sostiene
+        TipoCubo.Hielo    => 0.40f,   // resbala antes de volcar
+        _                 => UmbralVuelco,
+    };
 
     // ── Efecto Fuego: mini-explosión radial ───────────────────────────────────
 
@@ -503,7 +606,9 @@ public class CuboInteligente : MonoBehaviour
         Color colorBase = rend.material.color;
         float t = 0f;
 
-        while (!yaExploto && rend != null)
+        // También se corta si deja de arder (el agua lo convierte en piedra):
+        // si no, el pulso seguiría encendiendo un cubo ya apagado
+        while (!yaExploto && rend != null && (tipo == TipoCubo.Fuego || tipo == TipoCubo.Lava))
         {
             t += Time.deltaTime;
             // Pulso irregular: mezcla de 2 senos con frecuencias distintas
@@ -622,7 +727,113 @@ public class CuboInteligente : MonoBehaviour
                 StartCoroutine(DerretirHielo()); break;
             case TipoCubo.Normal when tipoCuboArriba == TipoCubo.Fuego:
                 StartCoroutine(CalentarBase()); break;
+
+            // ── V2: la lava funde como el fuego, pero también la piedra ──────
+            case TipoCubo.Hielo  when tipoCuboArriba == TipoCubo.Lava:
+                StartCoroutine(DerretirHielo()); break;
+            case TipoCubo.Plumas when tipoCuboArriba == TipoCubo.Lava:
+                StartCoroutine(QuemarPlumas()); break;
+            case TipoCubo.Normal when tipoCuboArriba == TipoCubo.Lava:
+                StartCoroutine(CalentarBase()); break;
+            case TipoCubo.Gelatina when tipoCuboArriba == TipoCubo.Fuego
+                                     || tipoCuboArriba == TipoCubo.Lava:
+                StartCoroutine(QuemarPlumas()); break;   // la gelatina también se consume
+
+            // ── V2: el agua apaga lo que arde ────────────────────────────────
+            case TipoCubo.Fuego when tipoCuboArriba == TipoCubo.Agua:
+            case TipoCubo.Lava  when tipoCuboArriba == TipoCubo.Agua:
+                StartCoroutine(ApagarConAgua()); break;
         }
+    }
+
+    /// <summary>
+    /// La gelatina absorbe el golpe del cubo que le cae encima: le corta la
+    /// velocidad de caída y se aplasta y recupera, como un colchón.
+    /// </summary>
+    void AmortiguarImpacto(CuboInteligente cuboEncima)
+    {
+        var rbArriba = cuboEncima.GetComponent<Rigidbody>();
+        if (rbArriba != null && !rbArriba.isKinematic)
+        {
+            Vector3 v = rbArriba.linearVelocity;
+            v.y *= 0.15f;                 // casi toda la caída se absorbe
+            rbArriba.linearVelocity = v;
+            rbArriba.angularVelocity *= 0.3f;
+        }
+        StartCoroutine(AplastarYRecuperar());
+    }
+
+    System.Collections.IEnumerator AplastarYRecuperar()
+    {
+        Vector3 original = transform.localScale;
+        Vector3 aplastado = new Vector3(original.x * 1.12f, original.y * 0.72f, original.z * 1.12f);
+
+        float t = 0f;
+        while (t < 0.10f)
+        {
+            t += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(original, aplastado, t / 0.10f);
+            yield return null;
+        }
+        // Rebote elástico de vuelta al tamaño original
+        t = 0f;
+        while (t < 0.28f)
+        {
+            t += Time.deltaTime;
+            float p = t / 0.28f;
+            float elastico = 1f - Mathf.Cos(p * Mathf.PI * 2.5f) * (1f - p) * 0.5f;
+            transform.localScale = Vector3.Lerp(aplastado, original, Mathf.Clamp01(elastico));
+            yield return null;
+        }
+        transform.localScale = original;
+    }
+
+    /// <summary>
+    /// Agua sobre Fuego o Lava: se apaga y queda convertido en piedra.
+    /// El cubo NO se destruye a propósito — perder altura por un acierto del
+    /// jugador se sentiría como un castigo.
+    /// </summary>
+    System.Collections.IEnumerator ApagarConAgua()
+    {
+        if (yaExploto) yield break;
+
+        // Vapor: polvo blanco subiendo desde la cara de arriba
+        if (prefabDust != null)
+        {
+            Vector3 arriba = transform.position + Vector3.up * transform.localScale.y * 0.5f;
+            var vapor = Instantiate(prefabDust, arriba, Quaternion.identity);
+            var ps    = vapor.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                var main = ps.main;
+                main.startColor      = new Color(0.92f, 0.95f, 1f, 0.85f);
+                main.gravityModifier = -0.5f;   // el vapor sube
+            }
+            Destroy(vapor, 2f);
+        }
+
+        // Pasa a comportarse como piedra: se acabó el fuego
+        tipo = TipoCubo.Piedra;
+
+        var rend = GetComponent<Renderer>();
+        if (rend != null)
+        {
+            Material mat = rend.material;
+            Color destino = new Color(0.32f, 0.32f, 0.34f);
+            Color inicio  = mat.color;
+            if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", Color.black);
+
+            float t = 0f;
+            while (t < 0.6f)
+            {
+                t += Time.deltaTime;
+                mat.color = Color.Lerp(inicio, destino, t / 0.6f);
+                yield return null;
+            }
+            mat.color = destino;
+        }
+
+        AplicarFisicaAterrizaje();   // adopta la masa y el rozamiento de la piedra
     }
 
     System.Collections.IEnumerator ComprimirPlumas()
