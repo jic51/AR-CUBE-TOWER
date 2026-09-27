@@ -228,6 +228,30 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 
 ## Sesiones
 
+### 2026-09-27 (Mac) — Revisión de 2 videos y maquetas de interfaz
+
+115 fotogramas de dos grabaciones (4:56 y 4:31). **Funciona lo de la fase 1**: la lista de niveles con scroll, el reloj `--` en niveles sin tiempo, el contador `1/13` de cubos limitados, y las monedas con su animación.
+
+**Errores y problemas de comunicación detectados**
+
+| # | Qué se ve | Causa / arreglo |
+|---|---|---|
+| V1 | El resultado muestra **3 estrellas doradas con la etiqueta "Bronze"**, y en una derrota salieron 2 estrellas con "No rating" | `imagenesEstrellas` tiene **una sola imagen** asignada (el gráfico de las 3 estrellas entero): el código la tiñe de dorado y se encienden las tres. Hay que asignar 3 imágenes separadas o dibujarlas desde código |
+| V2 | Nivel 1 perdido con 3 cubos: 0,44 m contra una meta de 0,45 m | La meta es exacta al milímetro y los cubos se asientan con holguras mínimas. Falta una tolerancia (~2 %) o contar cubos en vez de metros |
+| V3 | El resultado dice tu altura pero **no cuánto pedía el nivel** | No hay forma de saber si te quedaste cerca o lejos. Añadir meta y barra de progreso |
+| V4 | El panel de rescate deja el botón de monedas apagado sin explicar por qué | Decir cuántas monedas faltan; poner primero la opción gratis del anuncio |
+| V5 | El menú principal no muestra monedas, gemas ni vidas, ni tiene acceso a ajustes | Por eso el bono diario "aparece de la nada". El título dice "Main Menu" en vez del nombre del juego |
+| V6 | Las filas de la lista de niveles están apretadas y el texto es ilegible | Rediseño: fila más alta, estrellas por nivel (ya se guardan) y modos especiales explicados |
+| V7 | El pack de vidas sigue mostrando 50 y cuesta 120 | Falta asignar `textoPrecioVidaPack` en el Inspector (tarea de Editor ya listada) |
+| V8 | El botón de anclar es pequeño, rojo y está en una esquina | Debe ser la acción principal, grande y abajo; los 3 pasos con el actual marcado |
+| V9 | Los comodines son círculos sin nombre ni cantidad | No se entiende qué hace cada uno ni cuántos quedan |
+| V10 | **El HUD tapa la cámara con paneles azules opacos** | En un juego AR la interfaz debe dejar ver la cámara: superficies oscuras translúcidas |
+| V11 | Tras "Retry" el entorno se ve negro | Ya anotado: propio de XR Simulation al recargar, falta confirmarlo en el teléfono |
+
+**Maquetas de interfaz** — 8 pantallas en un lienzo de diseño: menú principal, selección de nivel, tienda, ajustes con perfil, colocar plataforma, HUD en partida, rescate y resultado. Dirección: fondo sólido oscuro en los menús, superficies translúcidas sobre la cámara durante la partida, tipografías Space Grotesk (títulos) y Outfit (texto), y los colores del juego (ámbar monedas, violeta gemas, rojo vidas, cian acción). Pendiente de aprobación antes de construir nada en Unity.
+
+---
+
 ### 2026-09-26 (Mac) — Fase 1: mira, gemas y los 6 cubos V2
 
 Continuación del plan del 2026-09-22. El usuario probó la versión anterior: confirmó que los cubos caen en el filo, que las monedas se suman bien y que **el resize funciona**. Reportó un bug nuevo del pozo.
