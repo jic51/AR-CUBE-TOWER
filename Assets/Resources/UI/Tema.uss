@@ -1,0 +1,143 @@
+/* =========================================================================
+   AR CUBE TOWER — Tema de interfaz
+   =========================================================================
+   Fuente única de verdad del aspecto del juego. Los mismos valores que la
+   landing (docs/styles.css), para que app y web se vean como el mismo
+   producto. Cambiar un color aquí lo cambia en toda la interfaz nueva.
+
+   Convenciones:
+     --color-*   color            --espacio-*  separación
+     --radio-*   esquinas         --texto-*    tamaño de letra
+   ========================================================================= */
+
+:root {
+    /* Fondos y superficies */
+    --color-fondo:          rgb(14, 17, 36);     /* #0e1124 */
+    --color-fondo-2:        rgb(21, 26, 51);     /* #151a33 */
+    --color-superficie:     rgb(27, 33, 66);     /* #1b2142 */
+    --color-superficie-2:   rgb(35, 42, 82);     /* #232a52 */
+    --color-borde:          rgb(47, 56, 103);    /* #2f3867 */
+
+    /* Texto */
+    --color-texto:          rgb(238, 240, 250);  /* #eef0fa */
+    --color-texto-suave:    rgb(185, 191, 219);  /* #b9bfdb */
+    --color-texto-tenue:    rgb(143, 150, 189);  /* #8f96bd */
+    --color-tinta:          rgb(26, 20, 5);      /* sobre dorado */
+
+    /* Acentos con significado fijo en todo el juego */
+    --color-oro:            rgb(255, 201, 77);   /* monedas, acción principal */
+    --color-cielo:          rgb(127, 212, 255);  /* acción secundaria, snap */
+    --color-gema:           rgb(236, 116, 187);  /* gemas */
+    --color-vida:           rgb(255, 138, 107);  /* vidas, peligro */
+    --color-exito:          rgb(143, 224, 98);   /* meta alcanzada */
+
+    /* Superficies translúcidas: en AR la cámara SIEMPRE tiene que verse */
+    --color-vidrio:         rgba(14, 17, 36, 0.72);
+    --color-vidrio-borde:   rgba(255, 255, 255, 0.10);
+
+    --radio-s: 10px;
+    --radio-m: 14px;
+    --radio-l: 18px;
+    --radio-pildora: 999px;
+
+    --espacio-xs: 4px;
+    --espacio-s:  8px;
+    --espacio-m:  12px;
+    --espacio-l:  18px;
+    --espacio-xl: 26px;
+
+    --texto-s:  22px;
+    --texto-m:  26px;
+    --texto-l:  32px;
+    --texto-xl: 44px;
+}
+
+/* =========================================================================
+   NOTIFICACIONES
+   Una sola franja bajo el header. Entra deslizándose desde la derecha, se
+   queda y sale igual. Todas las recompensas usan este sitio, así el jugador
+   siempre sabe dónde mirar.
+   ========================================================================= */
+
+.capa-notificaciones {
+    position: absolute;
+    top: 190px;                 /* justo debajo del header */
+    right: 0;
+    left: 0;
+    align-items: flex-end;      /* pegadas a la derecha */
+    padding-right: 24px;
+    padding-left: 90px;
+}
+
+.notificacion {
+    flex-direction: row;
+    align-items: center;
+    min-height: 92px;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+
+    background-color: var(--color-vidrio);
+    border-width: 2px;
+    border-color: var(--color-borde);
+    border-radius: var(--radio-m);
+
+    /* Estado de reposo: fuera de pantalla, a la derecha */
+    translate: 420px 0;
+    opacity: 0;
+
+    transition-property: translate, opacity;
+    transition-duration: 0.25s, 0.25s;
+    transition-timing-function: ease-out-cubic, ease-out;
+}
+
+/* El controlador añade esta clase para que entre, y la quita para que salga */
+.notificacion--visible {
+    translate: 0 0;
+    opacity: 1;
+}
+
+.notificacion__icono {
+    width: 46px;
+    height: 46px;
+    margin-right: 14px;
+    border-radius: var(--radio-s);
+}
+
+.notificacion__texto {
+    flex-grow: 1;
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+    white-space: normal;
+}
+
+.notificacion__valor {
+    margin-left: 14px;
+    font-size: var(--texto-m);
+    -unity-font-style: bold;
+}
+
+/* Un color por tipo de recompensa: el jugador reconoce qué ganó sin leer */
+.notificacion--monedas  { border-color: var(--color-oro); }
+.notificacion--monedas  .notificacion__icono { background-color: var(--color-oro); }
+.notificacion--monedas  .notificacion__valor { color: var(--color-oro); }
+
+.notificacion--gemas    { border-color: var(--color-gema); }
+.notificacion--gemas    .notificacion__icono { background-color: var(--color-gema); }
+.notificacion--gemas    .notificacion__valor { color: var(--color-gema); }
+
+.notificacion--vidas    { border-color: var(--color-vida); }
+.notificacion--vidas    .notificacion__icono { background-color: var(--color-vida); }
+.notificacion--vidas    .notificacion__valor { color: var(--color-vida); }
+
+.notificacion--comodin  { border-color: var(--color-cielo); }
+.notificacion--comodin  .notificacion__icono { background-color: var(--color-cielo); }
+.notificacion--comodin  .notificacion__valor { color: var(--color-cielo); }
+
+.notificacion--tiempo   { border-color: var(--color-exito); }
+.notificacion--tiempo   .notificacion__icono { background-color: var(--color-exito); }
+.notificacion--tiempo   .notificacion__valor { color: var(--color-exito); }
+
+.notificacion--aviso    { border-color: var(--color-borde); }
+.notificacion--aviso    .notificacion__icono { background-color: var(--color-texto-tenue); }
+.notificacion--aviso    .notificacion__valor { color: var(--color-texto-suave); }

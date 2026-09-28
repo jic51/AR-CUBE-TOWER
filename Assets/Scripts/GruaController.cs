@@ -357,8 +357,7 @@ public class GruaController : MonoBehaviour
             // jugador perdía el comodín y la partida.
             if (snapArmado && _soporteApuntado == null)
             {
-                MensajeFlotante.Mostrar("Aim at the top of a cube to use Perfect Snap",
-                                        new Color(0.25f, 0.85f, 1f), 2f);
+                NotificacionesUI.Comodin("Aim at the top of a cube", "Perfect Snap still armed");
                 return;
             }
 

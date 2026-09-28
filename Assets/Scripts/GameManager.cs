@@ -559,7 +559,7 @@ public class GameManager : MonoBehaviour
             pozoTargetY       -= cubeSize;
             pozoUltimoDescenso = Time.time;
             tiempoSinVerCima   = 0f;
-            MensajeFlotante.Mostrar("Platform descending...", new Color(1f, 0.7f, 0.2f), 1.5f);
+            NotificacionesUI.Aviso("Platform descending", "aim higher");
         }
 
         // Lerp suave hacia el target
@@ -636,8 +636,7 @@ public class GameManager : MonoBehaviour
         datosJugador.ultimoDiaJugado = hoy;
         AnimadorMonedas.AnimarDesdeCentro(MonedasBonusDiario);
         EconomiaManager.Instance?.GanarMonedas(MonedasBonusDiario);
-        MensajeFlotante.Mostrar($"Daily bonus  +{MonedasBonusDiario} coins  ·  Day {datosJugador.rachaDias}",
-                                new Color(0.95f, 0.80f, 0.10f), 2.5f);
+        NotificacionesUI.Monedas(MonedasBonusDiario, $"Daily bonus · day {datosJugador.rachaDias}");
 
         // Cada 7 días seguidos: gemas, con su animación después de las monedas
         if (premioRacha)
@@ -670,7 +669,7 @@ public class GameManager : MonoBehaviour
     System.Collections.IEnumerator MensajeGemasTras(float segundos, int cantidad, string motivo)
     {
         yield return new WaitForSecondsRealtime(segundos);
-        MensajeFlotante.GemasGanadas(cantidad, motivo);
+        NotificacionesUI.Gemas(cantidad, string.IsNullOrEmpty(motivo) ? "Reward" : motivo);
     }
 
     int CalcularEstrellas()
@@ -1063,7 +1062,7 @@ public class GameManager : MonoBehaviour
             // contador sube con cada una que llega, en vez de saltar al total
             AnimadorMonedas.AnimarDesdeCentro(monedasGanadas);
             EconomiaManager.Instance?.GanarMonedas(monedasGanadas);
-            MensajeFlotante.MonedasGanadas(monedasGanadas);
+            NotificacionesUI.Monedas(monedasGanadas, "Level cleared");
         }
 
         // Las gemas se suman ya (nada se pierde si se cierra la app), pero su
@@ -1083,7 +1082,7 @@ public class GameManager : MonoBehaviour
             if (tieneEscudo)
             {
                 EconomiaManager.Instance?.GanarVida(1);
-                MensajeFlotante.Mostrar("Shield saved your life!", new Color(0.30f, 0.80f, 1f), 2f);
+                NotificacionesUI.Vidas(1, "Shield saved your life");
             }
         }
 
@@ -1196,7 +1195,7 @@ public class GameManager : MonoBehaviour
         if (eco == null) return true;   // sin economía cargada no bloqueamos el juego
         if (eco.TieneVidas()) return true;
 
-        MensajeFlotante.Mostrar("No lives left!", new Color(0.91f, 0.27f, 0.27f), 2f);
+        NotificacionesUI.Aviso("No lives left", "visit the store");
         TiendaManager.Instance?.AbrirTiendaVidas();
         return false;
     }

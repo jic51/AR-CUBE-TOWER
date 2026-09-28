@@ -174,12 +174,12 @@ public class ComodinesManager : MonoBehaviour
     {
         if (EconomiaManager.Instance == null) return;
         // Ya armado: no gastar otro. Antes se consumía y se perdía.
-        if (snapPerfectoActivo) { MensajeFlotante.Mostrar("Perfect Snap already armed", ColorSnap, 1.4f); return; }
+        if (snapPerfectoActivo) { NotificacionesUI.Comodin("Perfect Snap already armed"); return; }
         if (!EconomiaManager.Instance.UsarComodin(0)) return;
 
         snapPerfectoActivo = true;
         ActualizarBadges();
-        MensajeFlotante.Mostrar("Perfect Snap armed  ·  next drop", ColorSnap, 1.8f);
+        NotificacionesUI.Comodin("Perfect Snap armed", "next drop");
     }
 
     /// <summary>Slot 1: +30 segundos — efecto inmediato en el timer.</summary>
@@ -188,36 +188,36 @@ public class ComodinesManager : MonoBehaviour
         if (EconomiaManager.Instance == null) return;
         // En niveles sin reloj no hay tiempo que añadir: no dejar gastarlo
         if (GameManager.Instance != null && !GameManager.Instance.TieneReloj)
-        { MensajeFlotante.Mostrar("This level has no timer", ColorTiempo, 1.6f); return; }
+        { NotificacionesUI.Aviso("This level has no timer"); return; }
         if (!EconomiaManager.Instance.UsarComodin(1)) return;
 
         GameManager.Instance?.AgregarTiempo(30f);
         ActualizarBadges();
-        MensajeFlotante.Mostrar("+30 seconds", ColorTiempo, 1.8f);
+        NotificacionesUI.Tiempo(30);
     }
 
     /// <summary>Slot 2: Cubo Plomo — el próximo cubo es de plomo y pesa 80.</summary>
     public void ActivarCuboPlomo()
     {
         if (EconomiaManager.Instance == null) return;
-        if (cuboPlomoPendiente) { MensajeFlotante.Mostrar("Heavy Cube already queued", ColorPlomo, 1.4f); return; }
+        if (cuboPlomoPendiente) { NotificacionesUI.Comodin("Heavy Cube already queued"); return; }
         if (!EconomiaManager.Instance.UsarComodin(2)) return;
 
         cuboPlomoPendiente = true;
         ActualizarBadges();
-        MensajeFlotante.Mostrar("Heavy Cube  ·  next block", ColorPlomo, 1.8f);
+        NotificacionesUI.Comodin("Heavy Cube", "next block");
     }
 
     /// <summary>Slot 3: Escudo — la próxima derrota no cuesta vida.</summary>
     public void ActivarEscudo()
     {
         if (EconomiaManager.Instance == null) return;
-        if (escudoActivo) { MensajeFlotante.Mostrar("Shield already active", ColorEscudo, 1.4f); return; }
+        if (escudoActivo) { NotificacionesUI.Comodin("Shield already active"); return; }
         if (!EconomiaManager.Instance.UsarComodin(3)) return;
 
         escudoActivo = true;
         ActualizarBadges();
-        MensajeFlotante.Mostrar("Shield active  ·  keeps your life", ColorEscudo, 1.8f);
+        NotificacionesUI.Comodin("Shield active", "keeps your life");
     }
 
     // ── Consumo de estados (llamados por GruaController/GameManager) ─────────
