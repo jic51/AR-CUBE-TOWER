@@ -84,9 +84,19 @@ public class BotonBajarUI : MonoBehaviour
         if (_capa != null) _capa.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
+    // Altura de torre a partir de la cual el botón aparece. Con uno o dos cubos
+    // la torre entra entera en pantalla y no hay nada que bajar: el botón solo
+    // ocupaba sitio y confundía (en el nivel 1, de tres cubos, no pinta nada).
+    private const int CubosParaMostrar = 3;
+
     void Update()
     {
         if (!_visible || _boton == null) return;
+
+        var gm = GameManager.Instance;
+        bool util = gm != null && gm.AlturaEnCubos >= CubosParaMostrar;
+        _capa.style.display = util ? DisplayStyle.Flex : DisplayStyle.None;
+        if (!util) return;
 
         bool listo = Time.unscaledTime >= _listoEn;
         _boton.SetEnabled(listo);

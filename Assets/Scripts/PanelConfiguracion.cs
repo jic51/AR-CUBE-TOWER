@@ -160,6 +160,7 @@ public class PanelConfiguracion : MonoBehaviour
         PlayerPrefs.DeleteAll();
 
         // Recargar la escena para empezar desde cero
+        AnclaTorre.Liberar();   // soltar el ancla AR antes de que muera el manager
         UnityEngine.SceneManagement.SceneManager.LoadScene(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }

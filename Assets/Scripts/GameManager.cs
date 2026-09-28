@@ -388,10 +388,10 @@ public class GameManager : MonoBehaviour
 
     public void IniciarPartida(Transform plataforma)
     {
-        // La vida se cobra aquí: la partida arranca de verdad en este punto.
-        // El control de disponibilidad ya se hizo en BotonIrASetup().
-        EconomiaManager.Instance?.GastarVida();
-
+        // La vida NO se cobra al empezar (cambio del 2026-09-27). Se cobra solo
+        // al perder, en MostrarGameOver(). Cobrar por partida castigaba jugar:
+        // quien encadenaba diez niveles sin fallar se quedaba sin vidas igual
+        // que quien perdía diez veces. Una vida es lo que cuesta una derrota.
         AplicarDatosNivel();
 
         basePlataforma          = plataforma;
@@ -987,6 +987,19 @@ public class GameManager : MonoBehaviour
         HudUI.Mostrar(false);
         BotonBajarUI.Mostrar(false);
 
+        // La vida se paga aquí y solo aquí: perder cuesta una vida, jugar no.
+        // Va antes de TerminarPartida() porque ahí se devuelven los comodines
+        // sin usar, y el escudo tiene que consumirse primero — si no, se
+        // devolvería al inventario Y además salvaría la vida.
+        if (!gano)
+        {
+            bool escudo = ComodinesManager.Instance != null &&
+                          ComodinesManager.Instance.ConsumeEscudo();
+
+            if (escudo) NotificacionesUI.Comodin("Shield used", "no life lost");
+            else        EconomiaManager.Instance?.GastarVida();
+        }
+
         if (miGrua != null) miGrua.DesactivarGrúa();
         ComodinesManager.Instance?.TerminarPartida();
 
@@ -1227,8 +1240,8 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Punto de entrada único a una partida. Comprueba que el jugador tenga vidas
     /// antes de dejarle entrar al setup AR.
-    /// La vida NO se descuenta aquí sino en IniciarPartida(), cuando la partida
-    /// arranca de verdad: si el jugador abandona durante el setup no pierde nada.
+    /// Aquí solo se COMPRUEBA que tenga al menos una: la vida se descuenta al
+    /// perder, en MostrarGameOver(). Jugar es gratis; equivocarse es lo que cuesta.
     /// </summary>
     public void BotonIrASetup()
     {
@@ -1259,6 +1272,7 @@ public class GameManager : MonoBehaviour
         LevelManager.preservarNivel = true;
         saltarDirectoASetup = true;
         Time.timeScale = 1;
+        AnclaTorre.Liberar();   // soltar el ancla AR antes de que muera el manager
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -1266,6 +1280,7 @@ public class GameManager : MonoBehaviour
     {
         saltarDirectoASetup = false;
         Time.timeScale = 1;
+        AnclaTorre.Liberar();   // soltar el ancla AR antes de que muera el manager
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -1289,6 +1304,7 @@ public class GameManager : MonoBehaviour
     {
         saltarDirectoASetup = false;
         Time.timeScale = 1;
+        AnclaTorre.Liberar();   // soltar el ancla AR antes de que muera el manager
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -1307,6 +1323,7 @@ public class GameManager : MonoBehaviour
 
         saltarDirectoASetup = true;
         Time.timeScale = 1;
+        AnclaTorre.Liberar();   // soltar el ancla AR antes de que muera el manager
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

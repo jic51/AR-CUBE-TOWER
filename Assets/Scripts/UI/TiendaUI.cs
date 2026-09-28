@@ -82,9 +82,9 @@ public class TiendaUI : MonoBehaviour
 
         var saldos = new VisualElement { pickingMode = PickingMode.Ignore };
         saldos.AddToClassList("tienda__saldos");
-        _saldoMonedas = Chip(saldos, "chip--monedas");
-        _saldoGemas   = Chip(saldos, "chip--gemas");
-        _saldoVidas   = Chip(saldos, "chip--vidas");
+        _saldoMonedas = Chip(saldos, "chip--monedas", Iconos.Icono.Moneda,  HudUI.ColorOro);
+        _saldoGemas   = Chip(saldos, "chip--gemas",   Iconos.Icono.Gema,    HudUI.ColorGema);
+        _saldoVidas   = Chip(saldos, "chip--vidas",   Iconos.Icono.Corazon, HudUI.ColorVida);
         cabecera.Add(saldos);
         _fondo.Add(cabecera);
 
@@ -103,14 +103,14 @@ public class TiendaUI : MonoBehaviour
         _capa.style.display = DisplayStyle.None;
     }
 
-    static Label Chip(VisualElement padre, string clase)
+    static Label Chip(VisualElement padre, string clase, Iconos.Icono icono, Color color)
     {
         var chip = new VisualElement { pickingMode = PickingMode.Ignore };
         chip.AddToClassList("chip");
         chip.AddToClassList(clase);
-        var punto = new VisualElement { pickingMode = PickingMode.Ignore };
-        punto.AddToClassList("chip__punto");
-        chip.Add(punto);
+        var figura = Iconos.Crear(icono, color, 22f);
+        figura.AddToClassList("chip__icono");
+        chip.Add(figura);
         var valor = new Label("0") { pickingMode = PickingMode.Ignore };
         valor.AddToClassList("chip__valor");
         chip.Add(valor);
@@ -148,19 +148,23 @@ public class TiendaUI : MonoBehaviour
     void PintarComodines(EconomiaManager eco)
     {
         Fila(eco, "Perfect Snap", "Your next cube lands dead center",
-             EconomiaManager.PRECIO_SNAP_MONEDAS, eco.ObtenerComodin(0), "cielo",
+             EconomiaManager.PRECIO_SNAP_MONEDAS, eco.ObtenerComodin(0),
+             Iconos.Icono.Mira, HudUI.ColorCielo,
              () => TiendaManager.Instance?.ComprarSnap());
 
         Fila(eco, "+30 seconds", "Adds time during a run",
-             EconomiaManager.PRECIO_TIEMPO_MONEDAS, eco.ObtenerComodin(1), "exito",
+             EconomiaManager.PRECIO_TIEMPO_MONEDAS, eco.ObtenerComodin(1),
+             Iconos.Icono.Reloj, HudUI.ColorExito,
              () => TiendaManager.Instance?.ComprarTiempoExtra());
 
         Fila(eco, "Heavy Cube", "Next cube is lead: steadies your tower",
-             EconomiaManager.PRECIO_PLOMO_MONEDAS, eco.ObtenerComodin(2), "plomo",
+             EconomiaManager.PRECIO_PLOMO_MONEDAS, eco.ObtenerComodin(2),
+             Iconos.Icono.Pesa, HudUI.ColorPlomo,
              () => TiendaManager.Instance?.ComprarCuboPlomo());
 
         Fila(eco, "Shield", "Keeps your life if you lose",
-             EconomiaManager.PRECIO_ESCUDO_MONEDAS, eco.ObtenerComodin(3), "gema",
+             EconomiaManager.PRECIO_ESCUDO_MONEDAS, eco.ObtenerComodin(3),
+             Iconos.Icono.Escudo, HudUI.ColorGema,
              () => TiendaManager.Instance?.ComprarEscudo());
     }
 
@@ -179,13 +183,15 @@ public class TiendaUI : MonoBehaviour
         }
 
         Fila(eco, "1 Life", hueco > 0 ? "Fits now" : "Your lives are full",
-             EconomiaManager.PRECIO_VIDA_MONEDAS, -1, "vida",
+             EconomiaManager.PRECIO_VIDA_MONEDAS, -1,   // el saldo de arriba ya dice 4/5
+             Iconos.Icono.Corazon, HudUI.ColorVida,
              () => TiendaManager.Instance?.ComprarVida1(),
              bloqueo: hueco < 1 ? "full" : null);
 
         Fila(eco, $"Life Pack ×{EconomiaManager.VIDAS_POR_PACK}",
              hueco >= EconomiaManager.VIDAS_POR_PACK ? "Fills three at once" : $"Only {hueco} would fit",
-             EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS, -1, "vida",
+             EconomiaManager.PRECIO_PACK_VIDAS_MONEDAS, -1,
+             Iconos.Icono.Corazon, HudUI.ColorVida,
              () => TiendaManager.Instance?.ComprarVidaPack(),
              bloqueo: hueco < EconomiaManager.VIDAS_POR_PACK ? "no room" : null);
 
@@ -205,7 +211,7 @@ public class TiendaUI : MonoBehaviour
 
     /// <summary>Una fila de compra. inventario &lt; 0 = no se muestra "You have".</summary>
     void Fila(EconomiaManager eco, string nombre, string detalle, int precio, int inventario,
-              string color, Action comprar, string bloqueo = null)
+              Iconos.Icono icono, Color color, Action comprar, string bloqueo = null)
     {
         bool sinMonedas = !eco.TieneMonedas(precio);
         bool disponible = bloqueo == null && !sinMonedas;
@@ -214,10 +220,11 @@ public class TiendaUI : MonoBehaviour
         fila.AddToClassList("fila");
         if (!disponible) fila.AddToClassList("fila--apagada");
 
-        var icono = new VisualElement { pickingMode = PickingMode.Ignore };
-        icono.AddToClassList("fila__icono");
-        icono.AddToClassList("fila__icono--" + color);
-        fila.Add(icono);
+        // El cuadro de color no decía qué se compraba: la figura sí
+        var marco = new VisualElement { pickingMode = PickingMode.Ignore };
+        marco.AddToClassList("fila__icono");
+        marco.Add(Iconos.Crear(icono, color, 48f));
+        fila.Add(marco);
 
         var textos = new VisualElement { pickingMode = PickingMode.Ignore };
         textos.AddToClassList("fila__textos");
@@ -248,9 +255,15 @@ public class TiendaUI : MonoBehaviour
         boton.AddToClassList("fila__boton");
         boton.SetEnabled(disponible);
 
+        // Precio con su moneda: "50" a secas no decía en qué se paga, ahora que
+        // también se puede pagar con gemas
+        var linePrecio = new VisualElement { pickingMode = PickingMode.Ignore };
+        linePrecio.AddToClassList("fila__precio-linea");
+        linePrecio.Add(Iconos.Crear(Iconos.Icono.Moneda, HudUI.ColorOro, 22f));
         var precioLbl = new Label(precio.ToString()) { pickingMode = PickingMode.Ignore };
         precioLbl.AddToClassList("fila__precio");
-        boton.Add(precioLbl);
+        linePrecio.Add(precioLbl);
+        boton.Add(linePrecio);
 
         if (motivo != null)
         {
@@ -271,10 +284,10 @@ public class TiendaUI : MonoBehaviour
         fila.AddToClassList("fila");
         if (!disponible) fila.AddToClassList("fila--apagada");
 
-        var icono = new VisualElement { pickingMode = PickingMode.Ignore };
-        icono.AddToClassList("fila__icono");
-        icono.AddToClassList("fila__icono--gema");
-        fila.Add(icono);
+        var marco = new VisualElement { pickingMode = PickingMode.Ignore };
+        marco.AddToClassList("fila__icono");
+        marco.Add(Iconos.Crear(Iconos.Icono.Gema, HudUI.ColorGema, 48f));
+        fila.Add(marco);
 
         var lbl = new Label(texto) { pickingMode = PickingMode.Ignore };
         lbl.AddToClassList("fila__nombre");
@@ -285,9 +298,13 @@ public class TiendaUI : MonoBehaviour
         boton.AddToClassList("fila__boton");
         boton.SetEnabled(disponible);
 
-        var val = new Label(coste + (coste == 1 ? " gem" : " gems")) { pickingMode = PickingMode.Ignore };
+        var linePrecio = new VisualElement { pickingMode = PickingMode.Ignore };
+        linePrecio.AddToClassList("fila__precio-linea");
+        linePrecio.Add(Iconos.Crear(Iconos.Icono.Gema, HudUI.ColorGema, 22f));
+        var val = new Label(coste.ToString()) { pickingMode = PickingMode.Ignore };
         val.AddToClassList("fila__precio");
-        boton.Add(val);
+        linePrecio.Add(val);
+        boton.Add(linePrecio);
 
         string motivo = bloqueo ?? (sinGemas ? "need " + (coste - eco.Gemas) : null);
         if (motivo != null)

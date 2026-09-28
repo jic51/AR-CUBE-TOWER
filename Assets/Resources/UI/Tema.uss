@@ -333,6 +333,53 @@
     flex-direction: row;
 }
 
+/* ── Riel de comodines ───────────────────────────────────────────────────
+   Antes el inventario solo se veía abriendo la tienda. Aquí, justo debajo de
+   los recursos, se ve subir el número al comprar y durante la partida se sabe
+   con qué se cuenta sin salir del juego. */
+
+.hud__comodines {
+    position: absolute;
+    top: 368px;
+    right: 24px;
+    flex-direction: row;
+}
+
+.comodin {
+    width: 62px;
+    height: 62px;
+    margin-left: 10px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-vidrio);
+    border-width: 1px;
+    border-color: var(--color-vidrio-borde);
+    border-radius: var(--radio-m);
+}
+
+/* Sin ninguno queda visible pero apagado: así el jugador sabe que el comodín
+   existe y puede comprarlo, en vez de descubrirlo solo en la tienda. */
+.comodin--vacio { opacity: 0.38; }
+
+.comodin__cuenta {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    min-width: 28px;
+    padding: 1px 7px;
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--color-tinta);
+    background-color: var(--color-cielo);
+    border-radius: var(--radio-pildora);
+}
+
+.comodin--vacio .comodin__cuenta {
+    color: var(--color-texto-suave);
+    background-color: var(--color-superficie-2);
+}
+
 .chip {
     flex-direction: row;
     align-items: center;
@@ -344,12 +391,9 @@
     border-radius: var(--radio-pildora);
 }
 
-.chip__punto {
-    width: 18px;
-    height: 18px;
-    margin-right: 9px;
-    border-radius: var(--radio-pildora);
-}
+/* El punto de color se sustituyó por la figura dibujada (Iconos.cs): el color
+   solo no bastaba para saber si un chip era monedas, gemas o vidas. */
+.chip__icono { margin-right: 9px; }
 
 .chip__valor {
     font-size: var(--texto-s);
@@ -357,8 +401,6 @@
     color: var(--color-texto);
 }
 
-.chip--monedas .chip__punto { background-color: var(--color-oro); }
-.chip--vidas   .chip__punto { background-color: var(--color-vida); }
 
 /* ── Próximo cubo ─────────────────────────────────────────────────────── */
 
@@ -403,7 +445,6 @@
     max-width: 480px;
 }
 
-.chip--gemas .chip__punto { background-color: var(--color-gema); }
 
 /* =========================================================================
    TIENDA
@@ -494,17 +535,22 @@
 
 .fila--apagada { opacity: 0.55; }
 
+/* El cuadro de color se queda como fondo del icono dibujado: da una base
+   uniforme para figuras de siluetas muy distintas (corazón, reloj, pesa). */
 .fila__icono {
     width: 74px; height: 74px;
     margin-right: 18px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-superficie-2);
     border-radius: var(--radio-m);
 }
 
-.fila__icono--cielo { background-color: rgba(127, 212, 255, 0.85); }
-.fila__icono--exito { background-color: rgba(143, 224, 98, 0.85); }
-.fila__icono--plomo { background-color: rgba(201, 208, 216, 0.85); }
-.fila__icono--gema  { background-color: rgba(236, 116, 187, 0.85); }
-.fila__icono--vida  { background-color: rgba(255, 138, 107, 0.85); }
+.fila__precio-linea {
+    flex-direction: row;
+    align-items: center;
+}
+
 
 .fila__textos { flex-grow: 1; }
 .fila__linea  { flex-direction: row; align-items: center; }
@@ -549,6 +595,7 @@
 }
 
 .fila__precio {
+    margin-left: 8px;
     font-size: var(--texto-s);
     -unity-font-style: bold;
     color: var(--color-tinta);

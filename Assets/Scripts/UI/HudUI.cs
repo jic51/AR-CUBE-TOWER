@@ -21,7 +21,10 @@ public class HudUI : MonoBehaviour
     private VisualElement _capa;
     private Label _tiempo, _cubos, _monedas, _gemas, _vidas, _proxNombre, _proxDetalle;
     private VisualElement _barra, _proxColor;
+    private VisualElement[] _comodines;
+    private Label[] _comodinCuenta;
     private bool _visible;
+    private float _giroCubo;
 
     public static void Mostrar(bool visible)
     {
@@ -84,9 +87,9 @@ public class HudUI : MonoBehaviour
         // ── Recursos ──────────────────────────────────────────────────────
         var recursos = new VisualElement { pickingMode = PickingMode.Ignore };
         recursos.AddToClassList("hud__recursos");
-        _monedas = ChipRecurso(recursos, "chip--monedas", "0");
-        _gemas   = ChipRecurso(recursos, "chip--gemas", "0");
-        _vidas   = ChipRecurso(recursos, "chip--vidas", "0");
+        _monedas = ChipRecurso(recursos, "chip--monedas", Iconos.Icono.Moneda, ColorOro);
+        _gemas   = ChipRecurso(recursos, "chip--gemas",   Iconos.Icono.Gema,   ColorGema);
+        _vidas   = ChipRecurso(recursos, "chip--vidas",   Iconos.Icono.Corazon, ColorVida);
         _capa.Add(recursos);
 
         // Las monedas y gemas animadas vuelan hasta estos contadores. El header
@@ -94,6 +97,20 @@ public class HudUI : MonoBehaviour
         // invisible y el efecto se perdería.
         AnimadorMonedas.ObjetivoMonedasPantalla = () => PuntoPantalla(_monedas);
         AnimadorMonedas.ObjetivoGemasPantalla   = () => PuntoPantalla(_gemas);
+
+        // ── Comodines ─────────────────────────────────────────────────────
+        // El inventario solo se veía abriendo la tienda. Puesto bajo los
+        // recursos, el jugador ve al comprar cómo sube el número y en partida
+        // sabe con qué cuenta sin salir del juego.
+        var riel = new VisualElement { pickingMode = PickingMode.Ignore };
+        riel.AddToClassList("hud__comodines");
+        _comodines     = new VisualElement[4];
+        _comodinCuenta = new Label[4];
+        _comodines[0] = CasillaComodin(riel, 0, Iconos.Icono.Mira,   ColorCielo, "Perfect Snap");
+        _comodines[1] = CasillaComodin(riel, 1, Iconos.Icono.Reloj,  ColorExito, "+30 seconds");
+        _comodines[2] = CasillaComodin(riel, 2, Iconos.Icono.Pesa,   ColorPlomo, "Heavy Cube");
+        _comodines[3] = CasillaComodin(riel, 3, Iconos.Icono.Escudo, ColorGema,  "Shield");
+        _capa.Add(riel);
 
         // ── Próximo cubo ──────────────────────────────────────────────────
         var prox = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -119,22 +136,50 @@ public class HudUI : MonoBehaviour
         _capa.style.display = DisplayStyle.None;
     }
 
-    static Label ChipRecurso(VisualElement padre, string claseColor, string valor)
+    // Los mismos colores del tema, aquí en código porque Painter2D no lee USS
+    public static readonly Color ColorOro   = new Color(1f, 0.788f, 0.302f);
+    public static readonly Color ColorGema  = new Color(0.925f, 0.455f, 0.733f);
+    public static readonly Color ColorVida  = new Color(1f, 0.541f, 0.420f);
+    public static readonly Color ColorCielo = new Color(0.498f, 0.831f, 1f);
+    public static readonly Color ColorExito = new Color(0.561f, 0.878f, 0.384f);
+    public static readonly Color ColorPlomo = new Color(0.788f, 0.816f, 0.847f);
+
+    static Label ChipRecurso(VisualElement padre, string claseColor, Iconos.Icono icono, Color color)
     {
         var chip = new VisualElement { pickingMode = PickingMode.Ignore };
         chip.AddToClassList("chip");
         chip.AddToClassList(claseColor);
 
-        var punto = new VisualElement { pickingMode = PickingMode.Ignore };
-        punto.AddToClassList("chip__punto");
-        chip.Add(punto);
+        // Un punto de color no decía nada: había que recordar que el rosa eran
+        // gemas. Con la figura dibujada se lee sin aprenderse el código de color.
+        var figura = Iconos.Crear(icono, color, 22f);
+        figura.AddToClassList("chip__icono");
+        chip.Add(figura);
 
-        var etiqueta = new Label(valor) { pickingMode = PickingMode.Ignore };
+        var etiqueta = new Label("0") { pickingMode = PickingMode.Ignore };
         etiqueta.AddToClassList("chip__valor");
         chip.Add(etiqueta);
 
         padre.Add(chip);
         return etiqueta;
+    }
+
+    /// <summary>Una casilla de comodín del riel: icono, contador y apagado si no queda ninguno.</summary>
+    VisualElement CasillaComodin(VisualElement padre, int slot, Iconos.Icono icono, Color color, string nombre)
+    {
+        var casilla = new VisualElement { pickingMode = PickingMode.Ignore };
+        casilla.AddToClassList("comodin");
+        casilla.tooltip = nombre;
+
+        casilla.Add(Iconos.Crear(icono, color, 34f));
+
+        var cuenta = new Label("0") { pickingMode = PickingMode.Ignore };
+        cuenta.AddToClassList("comodin__cuenta");
+        casilla.Add(cuenta);
+        _comodinCuenta[slot] = cuenta;
+
+        padre.Add(casilla);
+        return casilla;
     }
 
     void _Mostrar(bool visible)
@@ -176,7 +221,19 @@ public class HudUI : MonoBehaviour
             _monedas.text = PlayerHeaderUI.MonedasMostradas.ToString();
             _gemas.text   = PlayerHeaderUI.GemasMostradas.ToString();
             _vidas.text   = eco.Vidas.ToString();
+
+            for (int i = 0; i < _comodines.Length; i++)
+            {
+                int n = eco.ObtenerComodin(i);
+                _comodinCuenta[i].text = n.ToString();
+                _comodines[i].EnableInClassList("comodin--vacio", n <= 0);
+            }
         }
+
+        // El giro usa tiempo sin escalar: en pausa el juego se congela, pero el
+        // HUD no se ve ahí, y así no se queda trabado si algo toca timeScale
+        _giroCubo = (_giroCubo + 38f * Time.unscaledDeltaTime) % 360f;
+        _proxColor.MarkDirtyRepaint();
 
         ActualizarProximo();
     }
@@ -184,43 +241,14 @@ public class HudUI : MonoBehaviour
     private Color _colorProximo = Color.clear;
 
     /// <summary>
-    /// Dibuja el próximo cubo como un cubo isométrico de tres caras, el mismo
-    /// de la landing. Un cuadrado de color plano no se leía como un cubo: con
-    /// los tipos claros (Normal, Plumas) parecía un recuadro blanco vacío.
+    /// El próximo cubo, girando en 3D como en la app anterior. Un cuadro de
+    /// color plano no se leía como un cubo: con los tipos claros (Normal,
+    /// Plumas) parecía un recuadro blanco vacío.
     /// </summary>
     void DibujarCubo(MeshGenerationContext ctx)
     {
-        Rect r = ctx.visualElement.contentRect;
-        if (r.width < 8f || r.height < 8f) return;
-
-        Color baseCol = _colorProximo == Color.clear ? new Color(0.7f, 0.7f, 0.75f) : _colorProximo;
-        baseCol.a = 1f;
-        Color cara   = baseCol;
-        Color arriba = new Color(Mathf.Min(1f, baseCol.r * 1.30f), Mathf.Min(1f, baseCol.g * 1.30f),
-                                 Mathf.Min(1f, baseCol.b * 1.30f));
-        Color derecha = new Color(baseCol.r * 0.62f, baseCol.g * 0.62f, baseCol.b * 0.62f);
-
-        // Geometría del cubo isométrico de la landing (80 × 86), encajada aquí
-        float k  = Mathf.Min(r.width / 80f, r.height / 86f);
-        float cx = r.width * 0.5f;
-        float cy = (r.height - 86f * k) * 0.5f;
-        Vector2 P(float x, float y) => new Vector2(cx + x * k, cy + y * k);
-
-        var p = ctx.painter2D;
-
-        void Cara(Color c, params Vector2[] puntos)
-        {
-            p.fillColor = c;
-            p.BeginPath();
-            p.MoveTo(puntos[0]);
-            for (int i = 1; i < puntos.Length; i++) p.LineTo(puntos[i]);
-            p.ClosePath();
-            p.Fill();
-        }
-
-        Cara(arriba,  P(0, 0),   P(40, 20), P(0, 40),  P(-40, 20));   // tapa
-        Cara(cara,    P(-40, 20), P(0, 40), P(0, 86),  P(-40, 66));   // izquierda
-        Cara(derecha, P(0, 40),  P(40, 20), P(40, 66), P(0, 86));     // derecha
+        Color c = _colorProximo == Color.clear ? new Color(0.7f, 0.7f, 0.75f) : _colorProximo;
+        CuboGiratorio.Dibujar(ctx, c, _giroCubo);
     }
 
     /// <summary>

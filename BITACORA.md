@@ -240,6 +240,17 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 Decisiones que ya están tomadas y no hay que volver a discutir. Si alguna se revisa, se anota aquí la fecha y el motivo.
 
+### Decisión: las vidas se pagan al perder, no al jugar — 2026-09-27
+
+**Propuesta del usuario, aceptada.** Antes se descontaba una vida al empezar cada partida (`GameManager.IniciarPartida`). Ahora se descuenta en `MostrarGameOver(gano: false)` y solo ahí.
+
+**Por qué:** cobrar por partida castigaba jugar bien. Quien encadenaba diez niveles sin fallar acababa sin vidas igual que quien perdía diez veces, y la vida dejaba de significar nada. Una vida es lo que cuesta una derrota; el jugador que no falla no debería toparse nunca con el muro.
+
+**Efectos:**
+- El comodín Escudo (80 monedas, "keeps your life if you lose") **por fin hace algo**. Antes la vida ya estaba cobrada cuando se activaba, así que `escudoActivo` no se leía en ninguna parte: se compraba, se activaba y no protegía nada. Ahora `ComodinesManager.ConsumeEscudo()` se llama al perder, antes de devolver los comodines no usados.
+- Se juega más por sesión, así que se ven más anuncios y el embudo de la tienda se alimenta de derrotas, que es cuando el jugador tiene motivo para comprar.
+- El riesgo, a vigilar cuando haya datos: un jugador muy bueno podría no gastar vidas nunca. Aceptable — ese jugador ya no era cliente del muro de vidas.
+
 ### Decisión: identificador de la aplicación — 2026-09-21
 
 **`io.github.jic51.arcubetower`**, aplicado en `ProjectSettings.asset:173`. `companyName` pasa de `DefaultCompany` a `jic51`.
@@ -271,6 +282,23 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-09-27 (Mac, noche) — Tienda, iconos y el cambio de las vidas
+
+**Lo que se logró**
+
+1. **Tienda nueva en UI Toolkit** (`Assets/Scripts/UI/TiendaUI.cs`). El saldo de monedas, gemas y vidas siempre visible arriba; cada fila dice cuántos tienes; el botón bloqueado explica el motivo ("need 60", "no room", "full"); filas de cambio de gemas. Los precios salen de las constantes de `EconomiaManager`: el pack de vidas mostraba 50 en la escena y cobraba 120.
+2. **Iconos vectoriales** (`Assets/Scripts/UI/Iconos.cs`). Corazones, monedas, gemas, mira, reloj, pesa y escudo dibujados con `Painter2D`. Dibujados y no PNG por las licencias de imágenes, que siguen siendo un hallazgo abierto de la auditoría; además escalan sin perder nitidez y no pesan en el APK.
+3. **El próximo cubo vuelve a girar en 3D** (`Assets/Scripts/UI/CuboGiratorio.cs`). Se proyectan los 8 vértices a mano y se pintan las caras visibles con sombreado por normal. No usa el `CuboPreview3D` viejo a propósito: aquel necesitaba cámara extra, RenderTexture, layer reservado y dos luces, caro en AR para un adorno de 86 px.
+4. **Riel de comodines en el HUD.** Cuatro casillas con icono y contador bajo los recursos; apagadas al llegar a cero, pero visibles, para que se sepa que el comodín existe.
+5. **El botón de bajar la plataforma solo aparece con 3 cubos o más.** El usuario lo vio en el nivel 1 (tres cubos) y preguntó por qué, si la bajada automática empieza en el 6. Eran dos cosas distintas —el botón siempre estuvo disponible— pero con la torre entera en pantalla no sirve de nada.
+6. **Vidas al perder, no al jugar** — ver *Decisiones permanentes*. Esto revive el Escudo, que hasta hoy no hacía nada.
+7. **`MissingReferenceException` del `ARAnchorManager` al cerrar** (`AnclaTorre.Liberar()`). Unity destruía el manager antes que el ancla y `ARAnchor.OnDisable` se daba de baja contra un objeto muerto. Se suelta ahora al salir, al recargar la escena y antes de crear un ancla nueva. No rompía nada, pero llenaba la consola y tapaba errores de verdad.
+
+**Lo que queda**
+
+- Migrar a UI Toolkit la pantalla de resultado, el menú principal, la selección de niveles y el panel de comodines (el riel del HUD es solo lectura por ahora).
+- La pantalla de ajustes sigue sin existir, y la política de privacidad depende de ella.
 
 ### 2026-09-27 (Mac, tarde) — Primera capa del rediseño y arreglos de juego
 

@@ -31,6 +31,10 @@ public class AnclaTorre : MonoBehaviour
     private const float UmbralMetros = 0.003f;
     private const float UmbralGrados = 0.3f;
 
+    // Ancla viva. Al cerrar la app o recargar la escena hay que soltarla a mano
+    // (ver Liberar), y para eso hace falta saber cuál es.
+    private static AnclaTorre _actual;
+
     private ARAnchor  _ancla;
     private Transform _plataforma;
     private bool      _tieneReferencia;
@@ -46,6 +50,8 @@ public class AnclaTorre : MonoBehaviour
     {
         if (plataforma == null || origenXR == null) return null;
 
+        Liberar();   // nunca dos anclas a la vez
+
         if (origenXR.GetComponent<ARAnchorManager>() == null)
             origenXR.AddComponent<ARAnchorManager>();
 
@@ -55,7 +61,44 @@ public class AnclaTorre : MonoBehaviour
         var comp = go.AddComponent<AnclaTorre>();
         comp._plataforma = plataforma;
         comp._ancla      = go.AddComponent<ARAnchor>();
+
+        _actual = comp;
+        Application.quitting += Liberar;
         return comp;
+    }
+
+    /// <summary>
+    /// Suelta el ancla mientras el ARAnchorManager todavía existe.
+    ///
+    /// Sin esto, al cerrar la app o recargar la escena Unity destruye el manager
+    /// antes que el ancla, y ARAnchor.OnDisable intenta darse de baja en un
+    /// objeto ya destruido:
+    ///   MissingReferenceException: ARAnchorManager has been destroyed
+    /// No rompía nada —pasa al apagar— pero llenaba la consola y tapaba errores
+    /// de verdad. Se llama al salir, al recargar la escena y antes de crear
+    /// un ancla nueva.
+    /// </summary>
+    public static void Liberar()
+    {
+        Application.quitting -= Liberar;
+
+        var a = _actual;
+        _actual = null;
+        if (a == null) return;
+
+        // Primero el componente (se da de baja con el manager aún vivo),
+        // después el objeto que lo contenía
+        if (a._ancla != null) Destroy(a._ancla);
+        if (a.gameObject != null) Destroy(a.gameObject);
+    }
+
+    void OnDestroy()
+    {
+        if (_actual == this)
+        {
+            _actual = null;
+            Application.quitting -= Liberar;
+        }
     }
 
     void LateUpdate()

@@ -231,6 +231,22 @@ public class ComodinesManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Consume el escudo al perder: esa derrota no cuesta vida. True si había uno.
+    ///
+    /// Hasta ahora nadie llamaba a esto y el escudo no hacía absolutamente nada:
+    /// la vida se cobraba al empezar la partida, así que no quedaba nada que
+    /// proteger. Con la vida cobrada al perder (cambio del 2026-09-27) el
+    /// comodín por fin cumple lo que promete.
+    /// </summary>
+    public bool ConsumeEscudo()
+    {
+        if (!escudoActivo) return false;
+        escudoActivo = false;
+        ActualizarBadges();
+        return true;
+    }
+
     /// <summary>Consume el cubo plomo pendiente. GruaController lo llama al generar nuevo cubo.</summary>
     public bool ConsumeCuboPlomo()
     {
