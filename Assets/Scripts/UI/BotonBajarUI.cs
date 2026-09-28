@@ -52,11 +52,10 @@ public class BotonBajarUI : MonoBehaviour
 
     void Construir()
     {
-        // Esta capa SÍ acepta toques: tiene un botón
-        _capa = CapaUI.NuevaCapa("capa-bajar", aceptaToques: true);
+        _capa = CapaUI.NuevaCapa("capa-bajar");
         _capa.AddToClassList("capa-bajar");
 
-        _anillo = new VisualElement();
+        _anillo = new VisualElement { pickingMode = PickingMode.Ignore };
         _anillo.AddToClassList("bajar__anillo");
         _anillo.generateVisualContent += DibujarAnillo;
 
@@ -66,11 +65,11 @@ public class BotonBajarUI : MonoBehaviour
 
         // Flecha hacia abajo dibujada con dos barras giradas: sin sprites, así
         // el botón no depende de ninguna imagen con licencia
-        var flecha = new VisualElement();
+        var flecha = new VisualElement { pickingMode = PickingMode.Ignore };
         flecha.AddToClassList("bajar__flecha");
         _boton.Add(flecha);
 
-        var contenedor = new VisualElement();
+        var contenedor = new VisualElement { pickingMode = PickingMode.Ignore };
         contenedor.AddToClassList("bajar__contenedor");
         contenedor.Add(_anillo);
         contenedor.Add(_boton);

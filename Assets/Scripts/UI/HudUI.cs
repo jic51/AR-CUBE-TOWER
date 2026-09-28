@@ -41,25 +41,25 @@ public class HudUI : MonoBehaviour
 
     void Construir()
     {
-        _capa = CapaUI.NuevaCapa("capa-hud", aceptaToques: true);
+        _capa = CapaUI.NuevaCapa("capa-hud");
         _capa.AddToClassList("capa-hud");
 
         // ── Barra superior ────────────────────────────────────────────────
-        var barraSup = new VisualElement();
+        var barraSup = new VisualElement { pickingMode = PickingMode.Ignore };
         barraSup.AddToClassList("hud__barra");
 
         var pausa = new Button(() => GameManager.Instance?.BotonPausar());
         pausa.AddToClassList("hud__pausa");
         pausa.tooltip = "Pause";
-        var icoPausa = new VisualElement();
+        var icoPausa = new VisualElement { pickingMode = PickingMode.Ignore };
         icoPausa.AddToClassList("hud__pausa-icono");
         pausa.Add(icoPausa);
         barraSup.Add(pausa);
 
-        var centro = new VisualElement();
+        var centro = new VisualElement { pickingMode = PickingMode.Ignore };
         centro.AddToClassList("hud__centro");
 
-        var fila = new VisualElement();
+        var fila = new VisualElement { pickingMode = PickingMode.Ignore };
         fila.AddToClassList("hud__fila");
 
         _cubos = new Label("0 of 0 cubes");
@@ -71,9 +71,9 @@ public class HudUI : MonoBehaviour
         fila.Add(_tiempo);
         centro.Add(fila);
 
-        var pista = new VisualElement();
+        var pista = new VisualElement { pickingMode = PickingMode.Ignore };
         pista.AddToClassList("hud__pista");
-        _barra = new VisualElement();
+        _barra = new VisualElement { pickingMode = PickingMode.Ignore };
         _barra.AddToClassList("hud__progreso");
         pista.Add(_barra);
         centro.Add(pista);
@@ -82,7 +82,7 @@ public class HudUI : MonoBehaviour
         _capa.Add(barraSup);
 
         // ── Recursos ──────────────────────────────────────────────────────
-        var recursos = new VisualElement();
+        var recursos = new VisualElement { pickingMode = PickingMode.Ignore };
         recursos.AddToClassList("hud__recursos");
         _monedas = ChipRecurso(recursos, "chip--monedas", "0");
         _gemas   = ChipRecurso(recursos, "chip--gemas", "0");
@@ -96,14 +96,14 @@ public class HudUI : MonoBehaviour
         AnimadorMonedas.ObjetivoGemasPantalla   = () => PuntoPantalla(_gemas);
 
         // ── Próximo cubo ──────────────────────────────────────────────────
-        var prox = new VisualElement();
+        var prox = new VisualElement { pickingMode = PickingMode.Ignore };
         prox.AddToClassList("hud__proximo");
 
-        _proxColor = new VisualElement();
+        _proxColor = new VisualElement { pickingMode = PickingMode.Ignore };
         _proxColor.AddToClassList("hud__proximo-color");
         prox.Add(_proxColor);
 
-        var textos = new VisualElement();
+        var textos = new VisualElement { pickingMode = PickingMode.Ignore };
         textos.AddToClassList("hud__proximo-textos");
         var etiqueta = new Label("NEXT");
         etiqueta.AddToClassList("hud__proximo-etiqueta");
@@ -120,15 +120,15 @@ public class HudUI : MonoBehaviour
 
     static Label ChipRecurso(VisualElement padre, string claseColor, string valor)
     {
-        var chip = new VisualElement();
+        var chip = new VisualElement { pickingMode = PickingMode.Ignore };
         chip.AddToClassList("chip");
         chip.AddToClassList(claseColor);
 
-        var punto = new VisualElement();
+        var punto = new VisualElement { pickingMode = PickingMode.Ignore };
         punto.AddToClassList("chip__punto");
         chip.Add(punto);
 
-        var etiqueta = new Label(valor);
+        var etiqueta = new Label(valor) { pickingMode = PickingMode.Ignore };
         etiqueta.AddToClassList("chip__valor");
         chip.Add(etiqueta);
 

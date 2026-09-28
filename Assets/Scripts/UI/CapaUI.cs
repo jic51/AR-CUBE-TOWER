@@ -26,14 +26,18 @@ public class CapaUI : MonoBehaviour
 
     /// <summary>
     /// Crea una capa hija a pantalla completa.
-    /// aceptaToques=false (lo normal) deja pasar los toques al juego.
+    ///
+    /// La capa NUNCA captura toques, y tampoco deben hacerlo los contenedores
+    /// que se le cuelguen: solo los controles concretos (Button). Una capa a
+    /// pantalla completa que captura se traga el toque de soltar el cubo — pasó
+    /// el 2026-09-27 y dejó el juego injugable.
     /// </summary>
-    public static VisualElement NuevaCapa(string nombre, bool aceptaToques = false)
+    public static VisualElement NuevaCapa(string nombre)
     {
         var capa = new VisualElement
         {
             name = nombre,
-            pickingMode = aceptaToques ? PickingMode.Position : PickingMode.Ignore
+            pickingMode = PickingMode.Ignore
         };
         // Clase, no estilo en línea: los estilos en línea mandan sobre el USS y
         // una capa no podría reposicionarse desde el tema

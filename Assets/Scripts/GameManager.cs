@@ -835,6 +835,7 @@ public class GameManager : MonoBehaviour
     IEnumerator FlujoRescate()
     {
         _enRescate = true;   // se libera en CambiarEstado() o MostrarGameOver()
+        BotonBajarUI.Mostrar(false);   // la partida está detenida
         if (miGrua != null) miGrua.DesactivarGrúa();
 
         // Mostrar panel de rescate
@@ -914,6 +915,7 @@ public class GameManager : MonoBehaviour
 
         // Pantalla limpia: ocultar todo para que el ad sea el único foco
         PlayerHeaderUI.Mostrar(false);
+        HudUI.Mostrar(false);
         ComodinesManager.Instance?.MostrarPanel(false);
         Time.timeScale = 0; // pausa física y timer — el ad usa unscaledTime, no se afecta
 
@@ -977,6 +979,12 @@ public class GameManager : MonoBehaviour
     {
         estadoActual = EstadoJuego.GameOver;
         _enRescate   = false;
+
+        // Este método NO pasa por CambiarEstado, así que la interfaz de partida
+        // hay que apagarla aquí: si no, el HUD y el botón de bajar se quedan
+        // encima del panel de resultado
+        HudUI.Mostrar(false);
+        BotonBajarUI.Mostrar(false);
 
         if (miGrua != null) miGrua.DesactivarGrúa();
         ComodinesManager.Instance?.TerminarPartida();
