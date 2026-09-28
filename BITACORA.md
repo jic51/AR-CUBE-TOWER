@@ -272,6 +272,39 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 
 ## Sesiones
 
+### 2026-09-27 (Mac, tarde) — Primera capa del rediseño y arreglos de juego
+
+**Bug que costaba dinero al jugador — arreglado**
+
+El usuario perdió una partida usando el Snap Perfecto: lo activó, apuntó al cubo (que apenas se veía porque la plataforma no había bajado), soltó, y el cubo se resbaló. La causa: el código colocaba el cubo **en el punto de la mira**, no en el centro del soporte, mientras la tienda promete "lands dead center". Ahora:
+
+- Se centra en la cara superior del soporte.
+- Si no se apunta a una cara de arriba **no se suelta ni se gasta**: avisa y lo deja armado.
+- El cubo del snap se agarra aunque sea de hielo y no vuelca.
+
+Regla de diseño que sale de aquí: **un comodín usado tiene que funcionar**. Si el jugador sospecha que gastar es perder, deja de gastar.
+
+**Plataforma**
+
+- Baja sola cada 6 s a partir del nivel 6 (antes había que mirarla y esperar, y ese tiempo salía del reloj).
+- **Botón gratis "bajar ahora"** con enfriamiento de 8 s y anillo de carga dibujado con Painter2D. Se descartó la idea del recurso acumulable tipo elixir: en AR las manos están ocupadas apuntando y administrar un recurso más compite con lo único que importa. Y si costara algo, el jugador sentiría que le cobran por ver su propia torre.
+
+**Interfaz nueva (UI Toolkit) — primera capa**
+
+| Pieza | Qué hace |
+|---|---|
+| `Assets/Resources/UI/Tema.uss` | Fuente única del aspecto: los colores y tipografías de la landing. Cambiar un color ahí lo cambia en toda la interfaz nueva |
+| `CapaUI` | Un solo panel compartido por todas las piezas; varios paneles se pelean por los toques |
+| `NotificacionesUI` | La franja bajo el header: entra desde la derecha, 4 s, sale. Un color por tipo, encoladas de una en una |
+| `BotonBajarUI` | El botón de bajar con su anillo |
+| `HudUI` | HUD de partida en vidrio translúcido: reloj, cubos, **barra de progreso hacia la meta** (verde al alcanzarla) y próximo cubo con nombre y efecto |
+
+En partida se apagan el panel azul del HUD viejo y el header viejo. Para no perder la animación de monedas, el animador acepta ahora un destino en coordenadas de pantalla y el HUD publica dónde están sus contadores.
+
+Nada de esto está compilado ni probado.
+
+---
+
 ### 2026-09-27 (Mac) — Revisión de 2 videos y maquetas de interfaz
 
 115 fotogramas de dos grabaciones (4:56 y 4:31). **Funciona lo de la fase 1**: la lista de niveles con scroll, el reloj `--` en niveles sin tiempo, el contador `1/13` de cubos limitados, y las monedas con su animación.
