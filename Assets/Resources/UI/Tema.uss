@@ -53,6 +53,21 @@
 }
 
 /* =========================================================================
+   CAPAS
+   Cada pieza de interfaz vive en una capa a pantalla completa dentro del
+   panel compartido. Las clases que vienen después en este archivo pueden
+   reposicionarla, porque ganan por orden de declaración.
+   ========================================================================= */
+
+.capa-pantalla {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+/* =========================================================================
    NOTIFICACIONES
    Una sola franja bajo el header. Entra deslizándose desde la derecha, se
    queda y sale igual. Todas las recompensas usan este sitio, así el jugador
@@ -141,3 +156,74 @@
 .notificacion--aviso    { border-color: var(--color-borde); }
 .notificacion--aviso    .notificacion__icono { background-color: var(--color-texto-tenue); }
 .notificacion--aviso    .notificacion__valor { color: var(--color-texto-suave); }
+
+/* =========================================================================
+   BOTÓN "BAJAR LA PLATAFORMA"
+   Gratis, limitado solo por su enfriamiento. Abajo a la derecha, donde llega
+   el pulgar sin tapar la torre ni el próximo cubo (que va abajo a la izquierda).
+   ========================================================================= */
+
+.capa-bajar {
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding-right: 42px;
+    padding-bottom: 150px;
+}
+
+.bajar__contenedor {
+    width: 132px;
+    height: 132px;
+    align-items: center;
+    justify-content: center;
+}
+
+.bajar__anillo {
+    position: absolute;
+    width: 132px;
+    height: 132px;
+}
+
+.bajar__boton {
+    width: 104px;
+    height: 104px;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+
+    background-color: var(--color-vidrio);
+    border-width: 2px;
+    border-color: var(--color-vidrio-borde);
+    border-radius: var(--radio-pildora);
+
+    transition-property: scale, background-color;
+    transition-duration: 0.12s;
+}
+
+/* Enfriando: apagado y sin invitar a pulsar */
+.bajar__boton:disabled {
+    opacity: 0.45;
+}
+
+/* Listo: se nota que se puede usar */
+.bajar__boton--listo {
+    background-color: rgba(127, 212, 255, 0.18);
+    border-color: var(--color-cielo);
+}
+
+.bajar__boton:active {
+    scale: 0.92;
+}
+
+/* Flecha hacia abajo, sin imágenes: un cuadrado girado 45° al que se le ven
+   dos lados hace una punta de flecha limpia a cualquier resolución */
+.bajar__flecha {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 10px;
+    rotate: 45deg;
+    border-right-width: 6px;
+    border-bottom-width: 6px;
+    border-right-color: var(--color-texto);
+    border-bottom-color: var(--color-texto);
+}

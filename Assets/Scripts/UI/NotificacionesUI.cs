@@ -80,32 +80,10 @@ public class NotificacionesUI : MonoBehaviour
 
     void Construir()
     {
-        // El panel se crea en código para no depender de assets montados a mano
-        var ajustes = ScriptableObject.CreateInstance<PanelSettings>();
-        ajustes.themeStyleSheet   = Resources.Load<ThemeStyleSheet>("UI/TemaRuntime");
-        ajustes.scaleMode         = PanelScaleMode.ScaleWithScreenSize;
-        ajustes.referenceResolution = new Vector2Int(1080, 1920);
-        ajustes.screenMatchMode   = PanelScreenMatchMode.MatchWidthOrHeight;
-        ajustes.match             = 0.5f;
-        ajustes.sortingOrder      = 100;   // por encima del HUD actual
-
-        if (ajustes.themeStyleSheet == null)
-            Debug.LogWarning("[NotificacionesUI] Falta Assets/Resources/UI/TemaRuntime.tss: " +
-                             "la interfaz se verá sin estilo base.");
-
-        var doc = gameObject.AddComponent<UIDocument>();
-        doc.panelSettings = ajustes;
-
-        var raiz = doc.rootVisualElement;
-        raiz.pickingMode = PickingMode.Ignore;   // no robar toques al juego
-
-        var hoja = Resources.Load<StyleSheet>("UI/Tema");
-        if (hoja != null) raiz.styleSheets.Add(hoja);
-        else Debug.LogWarning("[NotificacionesUI] No se encontró Assets/Resources/UI/Tema.uss");
-
-        _capa = new VisualElement { name = "capa-notificaciones", pickingMode = PickingMode.Ignore };
+        // El panel es compartido (CapaUI): varias capas superpuestas se
+        // pelearían por los toques y costarían memoria de más
+        _capa = CapaUI.NuevaCapa("capa-notificaciones");
         _capa.AddToClassList("capa-notificaciones");
-        raiz.Add(_capa);
     }
 
     // ── Cola ──────────────────────────────────────────────────────────────

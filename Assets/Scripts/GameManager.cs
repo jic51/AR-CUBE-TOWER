@@ -299,6 +299,9 @@ public class GameManager : MonoBehaviour
                          || nuevoEstado == EstadoJuego.Pausa;
         Screen.sleepTimeout = sesionActiva ? SleepTimeout.NeverSleep : SleepTimeout.SystemSetting;
 
+        // El botón de bajar la plataforma solo tiene sentido jugando
+        BotonBajarUI.Mostrar(nuevoEstado == EstadoJuego.Jugando);
+
         if (panelMenuPrincipal) panelMenuPrincipal.SetActive(false);
         if (panelJuegoHUD)      panelJuegoHUD.SetActive(false);
         if (panelPausa)         panelPausa.SetActive(false);
@@ -379,6 +382,7 @@ public class GameManager : MonoBehaviour
         yaUsoRescate             = false;
         _adMostradoEstaPartida   = false;
         _adOfrecidoEnRescate     = false;
+        BotonBajarUI.Reiniciar();
         metaAlcanzadaMostrada    = false;
         CuboInteligente.comboConsecutivo = 0;
 
@@ -476,6 +480,20 @@ public class GameManager : MonoBehaviour
     /// Los cubos se destruyen si caen más de margenCaidaFuera por debajo de este punto.
     /// </summary>
     public float ObtenerAlturaSuelo() => basePlataforma != null ? basePlataforma.position.y : 0f;
+
+    /// <summary>
+    /// Baja la plataforma un cubo al instante. Lo llama el botón de la interfaz.
+    /// Devuelve false si todavía no hay partida o torre que bajar.
+    /// </summary>
+    public bool BajarPlataformaAhora()
+    {
+        if (estadoActual != EstadoJuego.Jugando || basePlataforma == null) return false;
+
+        pozoTargetY       -= 0.15f * SetupFase.EscalaSeleccionada;   // un cubo
+        pozoUltimoDescenso = Time.time;
+        tiempoSinVerCima   = 0f;
+        return true;
+    }
 
     /// <summary>False en niveles sin límite de tiempo (EFFICIENCY).</summary>
     public bool TieneReloj => tiempoLimite > 0f;
