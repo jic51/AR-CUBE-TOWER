@@ -262,10 +262,26 @@ p { margin: 0 0 1em; }
   70%, 100% { opacity: .45; transform: scale(1); }
 }
 
+/* La meta se pone verde en cuanto el cubo se posa: el jugador ve el logro,
+   no solo una línea de referencia. Va sincronizada con la caída (68 %). */
+.goal-line  { animation: goal-reached 4.4s ease-in-out infinite; }
+.goal-label { animation: goal-reached-text 4.4s ease-in-out infinite; }
+@keyframes goal-reached {
+  0%, 66%   { stroke: #ffc94d; stroke-width: 2; }
+  70%, 88%  { stroke: #8fe062; stroke-width: 3; }
+  94%, 100% { stroke: #ffc94d; stroke-width: 2; }
+}
+@keyframes goal-reached-text {
+  0%, 66%   { fill: #ffc94d; }
+  70%, 88%  { fill: #8fe062; }
+  94%, 100% { fill: #ffc94d; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .incoming-cube { animation: none; }
   .aim-reticle { animation: none; }
+  .goal-line, .goal-label { animation: none; }
 }
 
 @media (min-width: 860px) {

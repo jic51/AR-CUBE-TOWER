@@ -48,6 +48,23 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | 5 | **La mira se pone verde apuntando al lateral de un cubo** — el color solo depende de si el cubo llegó a su posición, nunca de *dónde* apunta; el raycast acepta cualquier cara porque no mira `golpe.normal`. **Decidido el 2026-09-22:** verde solo en la cara de arriba; en un lateral la mira queda roja, pero el jugador puede soltar igual (con su riesgo) | `GruaController.cs` | ✅ Resuelto el 2026-09-26, sin probar |
 | 6 | **Licencias de imágenes** — hay imágenes de icons8, pngegg y Pngtree en `Assets/Imagenes`. Esos sitios suelen exigir atribución o licencia de pago para uso comercial, o prohíben ese uso. Riesgo de retirada en Play Store | `Assets/Imagenes/` | Detectado el 2026-09-22 — sustituir dentro del rediseño visual |
 
+### Modo sin fin (Endless / Survivor) — propuesta sin aprobar (2026-09-27)
+
+El modo existe como idea desde hace tiempo pero **nunca se definió cuándo pierde el jugador ni cuándo acaba la partida**, que es justo lo que falta para poder construirlo. Propuesta escrita para poder discutirla:
+
+| Regla | Propuesta | Por qué |
+|---|---|---|
+| Cámara / altura | La plataforma baja un cubo cada pocos cubos colocados | La torre nunca se sale de la pantalla; es lo que ya hace el pozo |
+| Derrota | Cuando **caen 3 cubos** de la torre, no al primer error | Un fallo aislado no arruina 10 minutos de partida |
+| Dificultad | El reloj **cuenta hacia arriba** y cada 10 cubos la grúa entrega más rápido | Da una curva sin necesidad de niveles |
+| Recompensa | Monedas por altura; **gemas solo al batir tu propio récord** | Encaja con el plan de dar menos gemas y solo por metas |
+
+Sin decidir: si el modo cuesta una vida, si hay tabla de récords y si se desbloquea al terminar un bloque.
+
+### Cuentas de usuario — implicación legal (2026-09-27)
+
+El usuario pidió poder **entrar con Google o con correo y contraseña**. Antes de construirlo hay que saber que **invalida la política de privacidad actual**, que dice literalmente que no hay cuentas y que ningún dato sale del teléfono. Si se implementa hay que: declarar los datos recogidos en el formulario Data Safety de Play, reescribir las secciones de datos, borrado y GDPR/CCPA, y añadir un backend o un servicio gestionado (Play Games Services, Firebase). No es solo una pantalla de login.
+
 ### Decisiones e ideas del 2026-09-27
 
 **Decidido**
@@ -57,6 +74,7 @@ Reverificado contra el código real el 2026-09-21. Los cuatro siguen abiertos.
 | Técnica de interfaz | **Reconstruir con UI Toolkit.** El usuario prefiere más trabajo ahora a cambio de un mejor resultado a largo plazo |
 | Identidad visual | **La landing manda.** La app usa su paleta (azul marino `#0e1124`, superficie `#1b2142`, dorado `#ffc94d`, celeste `#7fd4ff`, coral `#ff8a6b`), sus tipografías (Space Grotesk + Inter) y sus cubos isométricos. La pantalla de inicio muestra el logo y la ilustración de la landing |
 | Grúa | **No existe en el juego**, así que se quitó de la landing. En su lugar el cubo entra desde fuera del encuadre, se alinea sobre la mira y se posa, en bucle |
+| Línea GOAL | Se pone **verde** en cuanto el cubo se posa, en la landing y en el juego |
 | Notificaciones | **Una sola franja bajo el header**: entra deslizándose desde la derecha, se queda 4 s y sale igual. La usan monedas, gemas, comodines, tiempo extra, estrellas y avisos como "Platform descending". Se encolan de una en una |
 
 **Plan de economía y progresión — por analizar, nada decidido**
