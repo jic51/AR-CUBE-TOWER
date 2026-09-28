@@ -92,8 +92,20 @@ public class BotonBajarUI : MonoBehaviour
         _boton.SetEnabled(listo);
         _boton.EnableInClassList("bajar__boton--listo", listo);
 
-        // Redibujar el anillo mientras carga
-        if (!listo) _anillo.MarkDirtyRepaint();
+        if (listo)
+        {
+            // Latido suave al estar listo: en pleno juego, mirando la torre, un
+            // simple cambio de color pasaba desapercibido
+            float p = 1f + 0.06f * Mathf.Sin(Time.unscaledTime * 4.5f);
+            _boton.style.scale = new StyleScale(new Scale(new Vector2(p, p)));
+        }
+        else
+        {
+            _boton.style.scale = new StyleScale(new Scale(Vector2.one));
+        }
+
+        // El anillo se redibuja siempre: cargando avanza, y listo late
+        _anillo.MarkDirtyRepaint();
     }
 
     void Pulsar()
@@ -130,11 +142,19 @@ public class BotonBajarUI : MonoBehaviour
 
         if (progreso <= 0f) return;
 
-        // Progreso, desde arriba y en sentido horario
-        pintor.strokeColor = progreso >= 1f
-            ? new Color(0.50f, 0.83f, 1f, 1f)      // listo: cian
-            : new Color(0.50f, 0.83f, 1f, 0.55f);  // cargando: cian apagado
-        pintor.lineWidth = 5f;
+        // Progreso, desde arriba y en sentido horario. Verde al estar listo: el
+        // cian se confundía con el resto de la interfaz y había que fijarse.
+        if (progreso >= 1f)
+        {
+            float brillo = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 4.5f);
+            pintor.strokeColor = new Color(0.56f, 0.88f, 0.38f, brillo);
+            pintor.lineWidth = 7f;
+        }
+        else
+        {
+            pintor.strokeColor = new Color(0.50f, 0.83f, 1f, 0.55f);
+            pintor.lineWidth = 5f;
+        }
         pintor.BeginPath();
         pintor.Arc(centro, radio, -90f, -90f + 360f * progreso);
         pintor.Stroke();

@@ -601,7 +601,8 @@ public class GameManager : MonoBehaviour
             pozoTargetY       -= cubeSize;
             pozoUltimoDescenso = Time.time;
             tiempoSinVerCima   = 0f;
-            NotificacionesUI.Aviso("Platform descending", "aim higher");
+            // Sin notificación: con la bajada automática salía cada pocos
+            // segundos y tapaba las recompensas. El movimiento ya se ve.
         }
 
         // Lerp suave hacia el target
@@ -1246,7 +1247,7 @@ public class GameManager : MonoBehaviour
         if (eco.TieneVidas()) return true;
 
         NotificacionesUI.Aviso("No lives left", "visit the store");
-        TiendaManager.Instance?.AbrirTiendaVidas();
+        TiendaUI.Abrir(enVidas: true);
         return false;
     }
     public void BotonPausar()       => CambiarEstado(EstadoJuego.Pausa);
@@ -1273,13 +1274,15 @@ public class GameManager : MonoBehaviour
     /// <summary>Botón "Tienda" desde menú principal o pausa.</summary>
     public void BotonAbrirTienda()
     {
-        TiendaManager.Instance?.AbrirTienda();
+        // Tienda nueva (UI Toolkit): muestra el saldo y dice por qué no se
+        // puede comprar algo. La lógica de compra sigue en TiendaManager.
+        TiendaUI.Abrir();
     }
 
     /// <summary>Botón "Comprar Vidas" desde GameOver cuando el jugador no tiene vidas.</summary>
     public void BotonAbrirTiendaVidas()
     {
-        TiendaManager.Instance?.AbrirTiendaVidas();
+        TiendaUI.Abrir(enVidas: true);
     }
 
     public void BotonSalir()

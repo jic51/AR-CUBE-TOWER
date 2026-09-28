@@ -205,10 +205,17 @@
     opacity: 0.45;
 }
 
-/* Listo: se nota que se puede usar */
+/* Listo: verde y con borde grueso. El cian se confundía con el resto de la
+   interfaz y el jugador no se daba cuenta de que ya podía pulsarlo. */
 .bajar__boton--listo {
-    background-color: rgba(127, 212, 255, 0.18);
-    border-color: var(--color-cielo);
+    background-color: rgba(143, 224, 98, 0.22);
+    border-width: 3px;
+    border-color: var(--color-exito);
+}
+
+.bajar__boton--listo .bajar__flecha {
+    border-right-color: var(--color-exito);
+    border-bottom-color: var(--color-exito);
 }
 
 .bajar__boton:active {
@@ -369,11 +376,12 @@
     border-radius: var(--radio-l);
 }
 
+/* El cubo se DIBUJA (tres caras isométricas), no es un color de fondo: un
+   cuadrado plano no se leía como un cubo con los tipos claros */
 .hud__proximo-color {
-    width: 72px;
-    height: 72px;
+    width: 86px;
+    height: 86px;
     margin-right: 16px;
-    border-radius: var(--radio-s);
 }
 
 .hud__proximo-etiqueta {
@@ -396,3 +404,160 @@
 }
 
 .chip--gemas .chip__punto { background-color: var(--color-gema); }
+
+/* =========================================================================
+   TIENDA
+   El saldo siempre visible y los botones que dicen por qué no se puede
+   comprar: antes solo se apagaban y el jugador no sabía qué le faltaba.
+   ========================================================================= */
+
+.capa-tienda { align-items: center; justify-content: center; }
+
+.tienda {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: var(--color-fondo);
+    padding: 90px 40px 40px 40px;
+}
+
+.tienda__cabecera { flex-direction: row; align-items: center; margin-bottom: 24px; }
+
+.tienda__cerrar {
+    width: 78px; height: 78px; margin: 0 20px 0 0; padding: 0;
+    font-size: var(--texto-m); color: var(--color-texto);
+    background-color: var(--color-superficie);
+    border-width: 1px; border-color: var(--color-borde);
+    border-radius: var(--radio-m);
+}
+
+.tienda__titulo {
+    flex-grow: 1;
+    font-size: var(--texto-l);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+.tienda__saldos { flex-direction: row; }
+
+.tienda__tabs {
+    flex-direction: row;
+    padding: 8px;
+    margin-bottom: 20px;
+    background-color: var(--color-fondo-2);
+    border-radius: var(--radio-m);
+}
+
+.tienda__tab {
+    flex-grow: 1;
+    height: 72px;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: var(--radio-s);
+    font-size: var(--texto-s);
+    color: var(--color-texto-suave);
+}
+
+.tienda__tab--activa {
+    background-color: var(--color-superficie-2);
+    color: var(--color-texto);
+    -unity-font-style: bold;
+}
+
+.tienda__scroll { flex-grow: 1; }
+
+.tienda__seccion {
+    margin: 22px 0 10px 4px;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--color-texto-suave);
+}
+
+.tienda__aviso {
+    margin: 0 0 12px 4px;
+    font-size: 20px;
+    color: var(--color-texto-suave);
+}
+
+/* ── Fila de producto ─────────────────────────────────────────────────── */
+
+.fila {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px;
+    margin-bottom: 14px;
+    background-color: var(--color-superficie);
+    border-width: 1px;
+    border-color: var(--color-borde);
+    border-radius: var(--radio-l);
+}
+
+.fila--apagada { opacity: 0.55; }
+
+.fila__icono {
+    width: 74px; height: 74px;
+    margin-right: 18px;
+    border-radius: var(--radio-m);
+}
+
+.fila__icono--cielo { background-color: rgba(127, 212, 255, 0.85); }
+.fila__icono--exito { background-color: rgba(143, 224, 98, 0.85); }
+.fila__icono--plomo { background-color: rgba(201, 208, 216, 0.85); }
+.fila__icono--gema  { background-color: rgba(236, 116, 187, 0.85); }
+.fila__icono--vida  { background-color: rgba(255, 138, 107, 0.85); }
+
+.fila__textos { flex-grow: 1; }
+.fila__linea  { flex-direction: row; align-items: center; }
+
+.fila__nombre {
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+.fila__inventario {
+    margin-left: 14px;
+    padding: 4px 14px;
+    font-size: 18px;
+    color: var(--color-texto-suave);
+    background-color: var(--color-superficie-2);
+    border-radius: var(--radio-pildora);
+}
+
+.fila__detalle {
+    margin-top: 4px;
+    font-size: 19px;
+    color: var(--color-texto-suave);
+    white-space: normal;
+}
+
+.fila__boton {
+    min-width: 132px;
+    margin: 0 0 0 16px;
+    padding: 12px 18px;
+    align-items: center;
+    background-color: var(--color-oro);
+    border-width: 0;
+    border-radius: var(--radio-m);
+}
+
+.fila__boton:disabled {
+    background-color: var(--color-superficie-2);
+    border-width: 1px;
+    border-color: var(--color-borde);
+    opacity: 1;                  /* el motivo tiene que leerse bien */
+}
+
+.fila__precio {
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-tinta);
+}
+
+.fila__boton:disabled .fila__precio { color: var(--color-texto-suave); }
+
+.fila__motivo {
+    margin-top: 2px;
+    font-size: 17px;
+    color: var(--color-texto-suave);
+}

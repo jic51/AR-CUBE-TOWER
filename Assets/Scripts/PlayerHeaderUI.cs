@@ -193,6 +193,7 @@ public class PlayerHeaderUI : MonoBehaviour
                 break;
 
             case ContextoBoton.CerrarPanel:
+                TiendaUI.Cerrar();
                 TiendaManager.Instance?.CerrarTienda();
                 break;
         }

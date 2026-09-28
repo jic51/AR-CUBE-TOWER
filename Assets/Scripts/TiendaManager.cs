@@ -139,6 +139,7 @@ public class TiendaManager : MonoBehaviour
 
     public void CerrarTienda()
     {
+        TiendaUI.Cerrar();
         if (panelTienda) panelTienda.SetActive(false);
         // Restaurar el botón del header a modo pausa
         PlayerHeaderUI.ModoBotonCerrar(false);
@@ -148,10 +149,14 @@ public class TiendaManager : MonoBehaviour
 
     private void AbrirTiendaEnTab(TabTienda tab)
     {
-        if (panelTienda) panelTienda.SetActive(true);
+        // La tienda que se ve es la nueva (UI Toolkit): muestra el saldo y
+        // explica por qué no se puede comprar algo. Este componente conserva
+        // la lógica de compra, que TiendaUI invoca.
+        TiendaUI.Abrir(enVidas: tab == TabTienda.Vidas);
 
-        // El botón de pausa del header se convierte en botón "Cerrar tienda"
-        PlayerHeaderUI.ModoBotonCerrar(true);
+        // El panel viejo se queda apagado; si alguien lo reactiva en el Editor
+        // seguirá funcionando, pero ya no se abre desde aquí.
+        if (panelTienda) panelTienda.SetActive(false);
 
         ActualizarUI();
         MostrarTab(tab);

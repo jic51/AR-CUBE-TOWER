@@ -112,6 +112,30 @@ public class EconomiaManager : MonoBehaviour
 
     public bool TieneMonedas(int cantidad) => (Datos?.monedas ?? 0) >= cantidad;
 
+    // ── CAMBIO DE GEMAS (tasas aprobadas el 2026-09-27) ──────────────────────
+
+    public const int GEMAS_POR_CAMBIO_MONEDAS = 1;
+    public const int MONEDAS_POR_GEMA         = 100;
+    public const int GEMAS_POR_VIDAS_LLENAS   = 3;
+
+    /// <summary>Cambia 1 gema por 100 monedas. False si no hay gemas.</summary>
+    public bool CambiarGemasPorMonedas()
+    {
+        if (!GastarGemas(GEMAS_POR_CAMBIO_MONEDAS)) return false;
+        GanarMonedas(MONEDAS_POR_GEMA);
+        return true;
+    }
+
+    /// <summary>Cambia 3 gemas por recargar todas las vidas. False si no hay gemas o ya están llenas.</summary>
+    public bool CambiarGemasPorVidas()
+    {
+        var d = Datos;
+        if (d == null || d.vidas >= MAX_VIDAS) return false;
+        if (!GastarGemas(GEMAS_POR_VIDAS_LLENAS)) return false;
+        GanarVida(MAX_VIDAS);   // GanarVida ya recorta al máximo
+        return true;
+    }
+
     // ── RECOMPENSA POR ANUNCIOS (decreciente) ────────────────────────────────
 
     // Porcentaje de la recompensa base según cuántos anuncios lleva el jugador

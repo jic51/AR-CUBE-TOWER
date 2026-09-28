@@ -101,6 +101,7 @@ public class HudUI : MonoBehaviour
 
         _proxColor = new VisualElement { pickingMode = PickingMode.Ignore };
         _proxColor.AddToClassList("hud__proximo-color");
+        _proxColor.generateVisualContent += DibujarCubo;
         prox.Add(_proxColor);
 
         var textos = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -180,6 +181,48 @@ public class HudUI : MonoBehaviour
         ActualizarProximo();
     }
 
+    private Color _colorProximo = Color.clear;
+
+    /// <summary>
+    /// Dibuja el próximo cubo como un cubo isométrico de tres caras, el mismo
+    /// de la landing. Un cuadrado de color plano no se leía como un cubo: con
+    /// los tipos claros (Normal, Plumas) parecía un recuadro blanco vacío.
+    /// </summary>
+    void DibujarCubo(MeshGenerationContext ctx)
+    {
+        Rect r = ctx.visualElement.contentRect;
+        if (r.width < 8f || r.height < 8f) return;
+
+        Color baseCol = _colorProximo == Color.clear ? new Color(0.7f, 0.7f, 0.75f) : _colorProximo;
+        baseCol.a = 1f;
+        Color cara   = baseCol;
+        Color arriba = new Color(Mathf.Min(1f, baseCol.r * 1.30f), Mathf.Min(1f, baseCol.g * 1.30f),
+                                 Mathf.Min(1f, baseCol.b * 1.30f));
+        Color derecha = new Color(baseCol.r * 0.62f, baseCol.g * 0.62f, baseCol.b * 0.62f);
+
+        // Geometría del cubo isométrico de la landing (80 × 86), encajada aquí
+        float k  = Mathf.Min(r.width / 80f, r.height / 86f);
+        float cx = r.width * 0.5f;
+        float cy = (r.height - 86f * k) * 0.5f;
+        Vector2 P(float x, float y) => new Vector2(cx + x * k, cy + y * k);
+
+        var p = ctx.painter2D;
+
+        void Cara(Color c, params Vector2[] puntos)
+        {
+            p.fillColor = c;
+            p.BeginPath();
+            p.MoveTo(puntos[0]);
+            for (int i = 1; i < puntos.Length; i++) p.LineTo(puntos[i]);
+            p.ClosePath();
+            p.Fill();
+        }
+
+        Cara(arriba,  P(0, 0),   P(40, 20), P(0, 40),  P(-40, 20));   // tapa
+        Cara(cara,    P(-40, 20), P(0, 40), P(0, 86),  P(-40, 66));   // izquierda
+        Cara(derecha, P(0, 40),  P(40, 20), P(40, 66), P(0, 86));     // derecha
+    }
+
     /// <summary>
     /// Convierte la posición de un elemento de UI Toolkit a coordenadas de
     /// pantalla, que es lo que entiende el animador de monedas (uGUI).
@@ -205,7 +248,11 @@ public class HudUI : MonoBehaviour
         ConfigTipoCubo cfg = grua.ObtenerConfig(grua.tipoProximo);
         if (cfg == null) return;
 
-        _proxColor.style.backgroundColor = cfg.colorEnVuelo;
+        if (_colorProximo != cfg.colorEnVuelo)
+        {
+            _colorProximo = cfg.colorEnVuelo;
+            _proxColor.MarkDirtyRepaint();
+        }
         _proxNombre.text  = cfg.nombreMostrar + " Block";
         _proxDetalle.text = cfg.descripcionJugador;
     }
