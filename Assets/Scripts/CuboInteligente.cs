@@ -18,6 +18,10 @@ public class CuboInteligente : MonoBehaviour
     // ── Tipo de cubo (lo asigna GruaController antes de soltar) ──────────────
     [HideInInspector] public TipoCubo tipo = TipoCubo.Normal;
 
+    // True si este cubo se soltó con el comodín Snap Perfecto. El jugador pagó
+    // por que quedara clavado: se agarra aunque sea de hielo y no vuelca.
+    [HideInInspector] public bool snapPerfecto = false;
+
     // ── Materiales ────────────────────────────────────────────────────────────
     [Header("Materiales")]
     public PhysicsMaterial materialNormal;
@@ -465,6 +469,18 @@ public class CuboInteligente : MonoBehaviour
 
     void AplicarFisicaAterrizaje()
     {
+        // El comodín manda sobre el tipo: un cubo de hielo con Snap Perfecto
+        // aterrizaba centrado y luego se deslizaba, y el jugador perdía el
+        // comodín y la partida.
+        if (snapPerfecto)
+        {
+            col.material      = materialPegajoso;
+            rb.mass           = Mathf.Max(rb.mass, 12f);
+            rb.linearDamping  = 12f;
+            rb.angularDamping = 30f;
+            return;
+        }
+
         switch (tipo)
         {
             case TipoCubo.Plomo:
@@ -560,7 +576,7 @@ public class CuboInteligente : MonoBehaviour
     /// Umbral de vuelco propio del tipo. La gelatina y la hierba se agarran
     /// mejor, la nube casi no se sostiene. Sobre 0.45 por defecto.
     /// </summary>
-    float UmbralVuelcoDelTipo() => tipo switch
+    float UmbralVuelcoDelTipo() => snapPerfecto ? 1f : tipo switch
     {
         TipoCubo.Hierba   => 0.62f,   // adherente: aguanta mucho más colgando
         TipoCubo.Gelatina => 0.55f,   // se deforma y se agarra

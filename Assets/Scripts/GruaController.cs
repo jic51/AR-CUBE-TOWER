@@ -37,6 +37,9 @@ public class GruaController : MonoBehaviour
     // True mientras el cubo en vuelo es el del comodín Cubo Plomo
     private bool _plomoForzado;
 
+    // Cubo o plataforma bajo la mira, cuando se apunta a su cara superior
+    private Transform _soporteApuntado;
+
     // Referencia al Renderer del retículo (prefab plano — color cambia al llegar a zona de drop)
     private Renderer reticuloRenderer;
 
@@ -264,6 +267,9 @@ public class GruaController : MonoBehaviour
             // En un lateral la normal es horizontal: ahí la mira nunca es verde.
             _apuntandoCaraSuperior = golpe.normal.y > 0.7f;
 
+            // Soporte apuntado: lo usa el Snap Perfecto para centrar el cubo
+            _soporteApuntado = _apuntandoCaraSuperior ? golpe.collider.transform : null;
+
             // Posición: pegada a la superficie
             reticuloActual.transform.position = golpe.point + golpe.normal * 0.003f;
 
@@ -284,6 +290,7 @@ public class GruaController : MonoBehaviour
             ReticuloAlturaHit = -999f;
             reticuloActual.SetActive(false);
             _apuntandoCaraSuperior = false;
+            _soporteApuntado       = null;
         }
 
         if (cuboActual != null)
@@ -341,21 +348,36 @@ public class GruaController : MonoBehaviour
         // ── Snap assist ──────────────────────────────────────────────────────
         if (GameManager.Instance != null)
         {
-            bool snapForzado = ComodinesManager.Instance != null &&
-                               ComodinesManager.Instance.ConsumeSnapPerfecto();
+            bool snapArmado = ComodinesManager.Instance != null &&
+                              ComodinesManager.Instance.SnapPerfectoActivo;
+
+            // Con el snap armado pero sin apuntar a una cara de arriba NO se
+            // suelta ni se gasta nada: antes se consumía el comodín, el cubo caía
+            // donde apuntara la mira —a veces medio fuera— y se resbalaba. El
+            // jugador perdía el comodín y la partida.
+            if (snapArmado && _soporteApuntado == null)
+            {
+                MensajeFlotante.Mostrar("Aim at the top of a cube to use Perfect Snap",
+                                        new Color(0.25f, 0.85f, 1f), 2f);
+                return;
+            }
+
+            bool snapForzado = snapArmado && ComodinesManager.Instance.ConsumeSnapPerfecto();
 
             if (snapForzado)
             {
-                // Snap PERFECTO: cae exactamente donde apunta el retículo.
-                // NO va al centro de la plataforma (que puede diferir de la torre
-                // si el jugador apiló cubos descentrados → causaba el bug de "se va al lado").
-                if (reticuloActual.activeSelf)
-                {
-                    cuboActual.transform.position = new Vector3(
-                        reticuloActual.transform.position.x,
-                        cuboActual.transform.position.y,
-                        reticuloActual.transform.position.z);
-                }
+                // Snap PERFECTO: al CENTRO de la cara superior del soporte, que es
+                // lo que promete la tienda ("lands dead center"). Antes iba al punto
+                // exacto de la mira, que puede estar en el borde.
+                cuboActual.transform.position = new Vector3(
+                    _soporteApuntado.position.x,
+                    cuboActual.transform.position.y,
+                    _soporteApuntado.position.z);
+
+                // Que se quede clavado aunque sea de hielo
+                var ciSnap = cuboActual.GetComponent<CuboInteligente>();
+                if (ciSnap != null) ciSnap.snapPerfecto = true;
+
                 MensajeFlotante.SnapPerfecto();  // ← feedback visual
             }
             else

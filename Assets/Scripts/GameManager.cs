@@ -143,6 +143,14 @@ public class GameManager : MonoBehaviour
              "demasiado alta y la plataforma empieza a bajar. 0.85 deja margen para ver dónde cae el cubo.")]
     [Range(0.5f, 1f)]
     public float pozoUmbralViewport     = 0.85f;
+    [Tooltip("Desde este nivel (1 = primero) la plataforma baja sola cada pozoSegundosAuto")]
+    public int   pozoAutoDesdeNivel     = 6;
+    [Tooltip("Segundos entre descensos automáticos")]
+    public float pozoSegundosAuto       = 6f;
+
+    // Gracia corta tras un cubo caído para el descenso automático: la larga
+    // (pozSegundosGraciaCaida) dejaría la plataforma quieta demasiado tiempo
+    private const float GraciaCaidaAuto = 3f;
 
     private Camera _camara;
 
@@ -530,10 +538,21 @@ public class GameManager : MonoBehaviour
         if (cimaMuyAlta) tiempoSinVerCima += Time.deltaTime;
         else             tiempoSinVerCima  = 0f;
 
-        // Condición de descenso: lleva N segundos sin ver la cima Y no cayó cubo recientemente
-        bool debesBajar = tiempoSinVerCima     >= pozSegundosSinCima
-                       && tiempoDesdeCaida     >= pozSegundosGraciaCaida
-                       && Time.time - pozoUltimoDescenso > pozoCooldown;
+        // Descenso por encuadre: la cima lleva N segundos saliéndose por arriba
+        bool bajarPorEncuadre = tiempoSinVerCima >= pozSegundosSinCima
+                             && tiempoDesdeCaida >= pozSegundosGraciaCaida
+                             && Time.time - pozoUltimoDescenso > pozoCooldown;
+
+        // Descenso automático desde el nivel indicado: a partir de cierta altura
+        // el jugador tenía que quedarse mirando la torre 3 o 4 segundos esperando
+        // a que bajara, y eso le costaba el tiempo de la partida. Ahora baja sola
+        // a un ritmo fijo y predecible.
+        bool autoActivo = LevelManager.NivelSeleccionado + 1 >= pozoAutoDesdeNivel;
+        bool bajarPorReloj = autoActivo
+                          && Time.time - pozoUltimoDescenso >= pozoSegundosAuto
+                          && tiempoDesdeCaida >= GraciaCaidaAuto;
+
+        bool debesBajar = bajarPorEncuadre || bajarPorReloj;
 
         if (debesBajar)
         {
