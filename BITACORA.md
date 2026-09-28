@@ -59,11 +59,13 @@ El modo existe como idea desde hace tiempo pero **nunca se definió cuándo pier
 | Dificultad | El reloj **cuenta hacia arriba** y cada 10 cubos la grúa entrega más rápido | Da una curva sin necesidad de niveles |
 | Recompensa | Monedas por altura; **gemas solo al batir tu propio récord** | Encaja con el plan de dar menos gemas y solo por metas |
 
-Sin decidir: si el modo cuesta una vida, si hay tabla de récords y si se desbloquea al terminar un bloque.
+**Decidido el 2026-09-27:** se pierde **cuando caen 3 cubos** de la torre. Sin decidir todavía: si el modo cuesta una vida, si hay tabla de récords y si se desbloquea al terminar un bloque.
 
 ### Cuentas de usuario — implicación legal (2026-09-27)
 
 El usuario pidió poder **entrar con Google o con correo y contraseña**. Antes de construirlo hay que saber que **invalida la política de privacidad actual**, que dice literalmente que no hay cuentas y que ningún dato sale del teléfono. Si se implementa hay que: declarar los datos recogidos en el formulario Data Safety de Play, reescribir las secciones de datos, borrado y GDPR/CCPA, y añadir un backend o un servicio gestionado (Play Games Services, Firebase). No es solo una pantalla de login.
+
+**Decidido el 2026-09-27: nada de cuentas por ahora.** El progreso se queda en el teléfono, la política de privacidad actual sigue siendo cierta y se puede publicar tal cual. Las cuentas quedan para la v2; la maqueta se guarda como referencia, marcada como aplazada.
 
 ### Decisiones e ideas del 2026-09-27
 
@@ -75,6 +77,7 @@ El usuario pidió poder **entrar con Google o con correo y contraseña**. Antes 
 | Identidad visual | **La landing manda.** La app usa su paleta (azul marino `#0e1124`, superficie `#1b2142`, dorado `#ffc94d`, celeste `#7fd4ff`, coral `#ff8a6b`), sus tipografías (Space Grotesk + Inter) y sus cubos isométricos. La pantalla de inicio muestra el logo y la ilustración de la landing |
 | Grúa | **No existe en el juego**, así que se quitó de la landing. En su lugar el cubo entra desde fuera del encuadre, se alinea sobre la mira y se posa, en bucle |
 | Línea GOAL | Se pone **verde** en cuanto el cubo se posa, en la landing y en el juego |
+| Cambio de gemas | **1 gema = 100 monedas · 3 gemas = vidas llenas** |
 | Notificaciones | **Una sola franja bajo el header**: entra deslizándose desde la derecha, se queda 4 s y sale igual. La usan monedas, gemas, comodines, tiempo extra, estrellas y avisos como "Platform descending". Se encolan de una en una |
 
 **Plan de economía y progresión — por analizar, nada decidido**
