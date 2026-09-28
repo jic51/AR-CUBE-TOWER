@@ -39,6 +39,12 @@ public class AnimadorMonedas : MonoBehaviour
 
     public enum Recompensa { Moneda, Gema }
 
+    // Destino alternativo en coordenadas de PANTALLA. Lo usa el HUD de UI
+    // Toolkit, cuyos contadores no son RectTransform y no se pueden apuntar
+    // como los del header viejo. Si devuelve null, se usa el destino normal.
+    public static System.Func<Vector2?> ObjetivoMonedasPantalla;
+    public static System.Func<Vector2?> ObjetivoGemasPantalla;
+
     // Valores originales capturados UNA vez por objeto. Si se leyeran al empezar
     // cada pulso o destello, dos íconos que llegan seguidos capturarían el valor
     // ya alterado por el anterior: el ícono quedaba agrandado (bug ya visto) y
@@ -88,7 +94,9 @@ public class AnimadorMonedas : MonoBehaviour
         if (cantidad <= 0 || prefabMoneda == null || contenedor == null) return;
 
         RectTransform destino = Destino(tipo);
-        if (destino == null) return;   // sin destino, el contador muestra el total directamente
+        bool hayDestinoPantalla =
+            (tipo == Recompensa.Moneda ? ObjetivoMonedasPantalla : ObjetivoGemasPantalla)?.Invoke() != null;
+        if (destino == null && !hayDestinoPantalla) return;   // sin destino, el contador salta al total
 
         // Retener ANTES de que se sumen: el contador arranca en el valor viejo y
         // sube con cada ícono que llega (ver PlayerHeaderUI.Retener*)
@@ -103,6 +111,18 @@ public class AnimadorMonedas : MonoBehaviour
         if (tipo == Recompensa.Moneda) return destinoMoneda;
         var icono = PlayerHeaderUI.Instance != null ? PlayerHeaderUI.Instance.iconoGemas : null;
         return icono != null ? icono.rectTransform : null;
+    }
+
+    /// <summary>Punto de pantalla al que debe volar este tipo de recompensa.</summary>
+    Vector2 PuntoDestino(Recompensa tipo, RectTransform destino)
+    {
+        var hook = tipo == Recompensa.Moneda ? ObjetivoMonedasPantalla : ObjetivoGemasPantalla;
+        Vector2? pantalla = hook?.Invoke();
+        if (pantalla.HasValue) return pantalla.Value;
+
+        return destino != null
+            ? RectTransformUtility.WorldToScreenPoint(null, destino.position)
+            : new Vector2(Screen.width * 0.9f, Screen.height * 0.92f);
     }
 
     IEnumerator Secuencia(Recompensa tipo, int total, Vector2 posOrigenPantalla, RectTransform destino, float retraso)
@@ -154,7 +174,7 @@ public class AnimadorMonedas : MonoBehaviour
             // El destino se recalcula cada fotograma: el header puede aparecer o
             // reacomodarse mientras el ícono vuela (bono diario en el menú)
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                contenedor, RectTransformUtility.WorldToScreenPoint(null, destino.position),
+                contenedor, PuntoDestino(tipo, destino),
                 null, out Vector2 destLocal);
 
             Vector2 pos = Vector2.Lerp(posInicio, destLocal, p);

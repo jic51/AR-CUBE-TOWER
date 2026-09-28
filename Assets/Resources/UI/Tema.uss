@@ -227,3 +227,172 @@
     border-right-color: var(--color-texto);
     border-bottom-color: var(--color-texto);
 }
+
+/* =========================================================================
+   HUD DE PARTIDA
+   Todo en vidrio translúcido: en AR la cámara tiene que verse siempre. El
+   HUD viejo tapaba la mesa del jugador con paneles azules opacos.
+   ========================================================================= */
+
+.capa-hud {
+    /* la capa entera no captura toques; solo lo hacen sus botones */
+    padding: 0;
+}
+
+.hud__barra {
+    position: absolute;
+    top: 90px;
+    left: 24px;
+    right: 24px;
+    flex-direction: row;
+    align-items: center;
+    padding: 18px 22px;
+    background-color: var(--color-vidrio);
+    border-width: 1px;
+    border-color: var(--color-vidrio-borde);
+    border-radius: var(--radio-l);
+}
+
+.hud__pausa {
+    width: 76px;
+    height: 76px;
+    margin: 0 18px 0 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-width: 0;
+    border-radius: var(--radio-m);
+}
+
+/* Dos barras: el icono de pausa, sin necesidad de imagen */
+.hud__pausa-icono {
+    width: 22px;
+    height: 30px;
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-left-color: var(--color-texto);
+    border-right-color: var(--color-texto);
+}
+
+.hud__centro { flex-grow: 1; }
+
+.hud__fila {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.hud__cubos {
+    flex-grow: 1;
+    font-size: var(--texto-s);
+    color: var(--color-texto);
+    -unity-font-style: bold;
+}
+
+.hud__tiempo {
+    font-size: var(--texto-l);
+    -unity-font-style: bold;
+    color: var(--color-oro);
+}
+
+.hud__tiempo--urgente { color: var(--color-vida); }
+
+.hud__pista {
+    height: 14px;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-radius: var(--radio-pildora);
+    overflow: hidden;
+}
+
+.hud__progreso {
+    height: 14px;
+    width: 0;
+    background-color: var(--color-cielo);
+    border-radius: var(--radio-pildora);
+    transition-property: width;
+    transition-duration: 0.3s;
+}
+
+/* Meta alcanzada: el color dice lo que el texto tendría que explicar */
+.hud__progreso--meta { background-color: var(--color-exito); }
+
+/* ── Recursos ─────────────────────────────────────────────────────────── */
+
+.hud__recursos {
+    position: absolute;
+    top: 268px;
+    right: 24px;
+    flex-direction: row;
+}
+
+.chip {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 16px;
+    margin-left: 10px;
+    background-color: var(--color-vidrio);
+    border-width: 1px;
+    border-color: var(--color-vidrio-borde);
+    border-radius: var(--radio-pildora);
+}
+
+.chip__punto {
+    width: 18px;
+    height: 18px;
+    margin-right: 9px;
+    border-radius: var(--radio-pildora);
+}
+
+.chip__valor {
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+.chip--monedas .chip__punto { background-color: var(--color-oro); }
+.chip--vidas   .chip__punto { background-color: var(--color-vida); }
+
+/* ── Próximo cubo ─────────────────────────────────────────────────────── */
+
+.hud__proximo {
+    position: absolute;
+    left: 24px;
+    bottom: 60px;
+    flex-direction: row;
+    align-items: center;
+    max-width: 620px;
+    padding: 16px 22px 16px 16px;
+    background-color: var(--color-vidrio);
+    border-width: 1px;
+    border-color: var(--color-vidrio-borde);
+    border-radius: var(--radio-l);
+}
+
+.hud__proximo-color {
+    width: 72px;
+    height: 72px;
+    margin-right: 16px;
+    border-radius: var(--radio-s);
+}
+
+.hud__proximo-etiqueta {
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--color-texto-suave);
+}
+
+.hud__proximo-nombre {
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+.hud__proximo-detalle {
+    font-size: 19px;
+    color: var(--color-texto-suave);
+    white-space: normal;
+    max-width: 480px;
+}
+
+.chip--gemas .chip__punto { background-color: var(--color-gema); }

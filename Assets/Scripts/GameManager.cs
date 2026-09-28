@@ -263,6 +263,25 @@ public class GameManager : MonoBehaviour
     /// <summary>Fuente única de PlayerData. EconomiaManager lee y escribe a través de aquí.</summary>
     public PlayerData GetDatos() => datosJugador;
 
+    // ── Lectura del estado de la partida (la usa el HUD de UI Toolkit) ───────
+    public float TiempoRestante  => tiempoRestante;
+    public int   CubosUsados     => cubosUsados;
+    public int   CubosMaximos    => cubosMaximos;
+    public float AlturaMaxima    => alturaMaxima;
+    public float MetaAltura      => metaAlturaNivel;
+
+    /// <summary>Cubos colocados respecto a los que pide la meta, de 0 a 1.</summary>
+    public float ProgresoMeta => metaAlturaNivel > 0.01f
+        ? Mathf.Clamp01(alturaMaxima / metaAlturaNivel) : 0f;
+
+    /// <summary>Altura de la meta expresada en cubos, que es como la ve el jugador.</summary>
+    public int MetaEnCubos => Mathf.Max(1, Mathf.RoundToInt(
+        metaAlturaNivel / (LevelManager.CUBO * Mathf.Max(0.01f, SetupFase.EscalaSeleccionada))));
+
+    /// <summary>Cubos que la torre tiene puestos ahora mismo.</summary>
+    public int AlturaEnCubos => Mathf.FloorToInt(
+        alturaMaxima / (LevelManager.CUBO * Mathf.Max(0.01f, SetupFase.EscalaSeleccionada)) + 0.05f);
+
     // ── Perfil ────────────────────────────────────────────────────────────────
 
     public void ActualizarNombreEnTiempoReal()
@@ -302,6 +321,10 @@ public class GameManager : MonoBehaviour
         // El botón de bajar la plataforma solo tiene sentido jugando
         BotonBajarUI.Mostrar(nuevoEstado == EstadoJuego.Jugando);
 
+        // HUD nuevo (UI Toolkit) durante la partida. Sustituye al panel azul
+        // opaco y al header viejo: en AR la cámara tiene que verse.
+        HudUI.Mostrar(nuevoEstado == EstadoJuego.Jugando);
+
         if (panelMenuPrincipal) panelMenuPrincipal.SetActive(false);
         if (panelJuegoHUD)      panelJuegoHUD.SetActive(false);
         if (panelPausa)         panelPausa.SetActive(false);
@@ -338,10 +361,11 @@ public class GameManager : MonoBehaviour
                 break;
 
             case EstadoJuego.Jugando:
-                panelJuegoHUD.SetActive(true);
+                // El HUD y el header viejos quedan apagados en partida: sus
+                // datos los muestra ahora HudUI sobre vidrio translúcido
+                if (panelJuegoHUD) panelJuegoHUD.SetActive(false);
                 Time.timeScale = 1;
-                // Header visible durante el juego: monedas/gemas/vidas siempre a la vista
-                PlayerHeaderUI.Mostrar(true);
+                PlayerHeaderUI.Mostrar(false);
                 break;
 
             case EstadoJuego.Pausa:
