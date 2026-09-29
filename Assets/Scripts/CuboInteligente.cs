@@ -379,7 +379,18 @@ public class CuboInteligente : MonoBehaviour
         if (tipo == TipoCubo.Fuego || tipo == TipoCubo.Lava)
             EfectoFuego();
 
-        if (overhangRatio < UmbralVuelcoDelTipo())
+        // ── Cubo Lock: se ancla y se convierte en base nueva ─────────────────
+        // Solo cuenta sobre la torre. Soltado al vacío o sobre la plataforma no
+        // sirve de nada, y ahí se comporta como cualquier otro cubo pesado.
+        bool anclado = tipo == TipoCubo.Bloqueo && sobreOtroCubo &&
+                       overhangRatio < UmbralVuelcoDelTipo();
+        if (anclado) Anclar();
+
+        if (anclado)
+        {
+            // Ya es inamovible: la física de estabilidad no le aplica
+        }
+        else if (overhangRatio < UmbralVuelcoDelTipo())
         {
             // ── ESTABLE: menos de la mitad colgando ──────────────────────────
             // Rotación completamente congelada. El cubo NUNCA se caerá por sí solo.
@@ -438,6 +449,39 @@ public class CuboInteligente : MonoBehaviour
         if (TutorialManager.Instance != null)
             StartCoroutine(CompletarTutorialTras(3.5f));
     }
+
+    /// <summary>
+    /// Ancla el cubo Lock: deja de ser un cuerpo dinámico y pasa a ser parte
+    /// fija del mundo, como la plataforma.
+    ///
+    /// Lo importante no es que no se mueva, es lo que eso hace con el peso.
+    /// Un rigidbody cinemático es, para la física, infinitamente pesado: los
+    /// cubos que se apilen encima ya no empujan nada hacia abajo. Toda la
+    /// torre que quedó debajo deja de recibir carga y no se puede venir abajo
+    /// entera por lo que se construya arriba. De ahí el nombre: a partir de
+    /// aquí se empieza de nuevo, sobre una base nueva a media altura.
+    ///
+    /// No se congela el resto de la torre a propósito: lo de abajo sigue
+    /// siendo físico y puede caerse por sí solo. El Lock protege del peso
+    /// futuro, no perdona lo que ya estaba mal puesto.
+    /// </summary>
+    void Anclar()
+    {
+        rb.linearVelocity  = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic     = true;
+        rb.constraints     = RigidbodyConstraints.FreezeAll;
+        col.material       = materialPegajoso;
+
+        _anclado = true;
+
+        NotificacionesUI.Comodin("Locked in", "new base for your tower");
+        MensajeFlotante.Mostrar("LOCKED!", new Color(0.36f, 0.47f, 0.72f), 1.8f);
+    }
+
+    /// <summary>True si este cubo es un Lock ya anclado (base fija de la torre).</summary>
+    public bool Anclado => _anclado;
+    private bool _anclado;
 
     System.Collections.IEnumerator CompletarTutorialTras(float segundos)
     {
@@ -565,6 +609,15 @@ public class CuboInteligente : MonoBehaviour
                 rb.angularDamping = 30.0f;
                 break;
 
+            case TipoCubo.Bloqueo:
+                // Estos valores solo se usan si NO llegó a anclarse (cayó al
+                // vacío o sobre la plataforma): ahí es un cubo pesado normal
+                col.material      = materialPegajoso;
+                rb.mass           = 45f;
+                rb.linearDamping  = 10.0f;
+                rb.angularDamping = 25.0f;
+                break;
+
             default: // Normal
                 col.material      = materialPegajoso;
                 rb.mass           = 10.0f;
@@ -583,6 +636,7 @@ public class CuboInteligente : MonoBehaviour
         TipoCubo.Piedra   => 0.50f,   // su peso la asienta
         TipoCubo.Nube     => 0.35f,   // apenas se sostiene
         TipoCubo.Hielo    => 0.40f,   // resbala antes de volcar
+        TipoCubo.Bloqueo  => 0.40f,   // exigente: no se ancla mal puesto
         _                 => UmbralVuelco,
     };
 
@@ -724,6 +778,17 @@ public class CuboInteligente : MonoBehaviour
     {
         if (alturaMaximaAlcanzada > float.MinValue)
             alturaMaximaAlcanzada += delta;
+
+        // Un Lock anclado es cinemático: la gravedad no lo toca. Cuando la
+        // plataforma baja, el resto de la torre la sigue cayendo y él se
+        // quedaría flotando en el aire con media torre encima. Baja con ella
+        // a mano, que es lo que hace de él una base y no un obstáculo.
+        if (_anclado && rb != null)
+        {
+            Vector3 p = transform.position + new Vector3(0f, delta, 0f);
+            rb.position = p;
+            transform.position = p;
+        }
     }
 
     // ── Interacciones entre cubos ─────────────────────────────────────────────

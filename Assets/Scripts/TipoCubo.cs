@@ -24,6 +24,11 @@ public enum TipoCubo
     Agua,       // azul transparente — fluido, se desliza, apaga fuego/lava
     Nube,       // blanco semitransparente — ultra liviano, flota, puede ser soplado
     Piedra,     // gris oscuro matte — masa 18, muy estable, nada lo mueve fácilmente
+
+    // ── V2 — Cubo de estrategia ──────────────────────────────────────────────
+    // Al asentarse sobre la torre se ancla y deja de transmitir peso hacia
+    // abajo: es una plataforma nueva a media altura. Solo desde el nivel 16.
+    Bloqueo,    // acero azulado — pesa como el plomo y no se mueve nunca más
 }
 
 /// <summary>

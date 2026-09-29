@@ -57,6 +57,7 @@ public class GruaController : MonoBehaviour
     public Material matAgua;
     public Material matNube;
     public Material matPiedra;
+    public Material matBloqueo;
 
     // ── Sistema de tipos de cubo ──────────────────────────────────────────────
     [Header("Tipos de Cubo (vacío = defaults automáticos)")]
@@ -224,6 +225,16 @@ public class GruaController : MonoBehaviour
                 if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.15f);
                 if (mat.HasProperty("_Metallic"))   mat.SetFloat("_Metallic",   0f);
                 break;
+            case TipoCubo.Bloqueo:
+                // Acero pulido con un brillo propio muy tenue: tiene que
+                // distinguirse a simple vista del plomo, que es el otro cubo
+                // gris pesado, porque hacen cosas distintas
+                mat.color = colorBase;
+                if (mat.HasProperty("_Metallic"))      mat.SetFloat("_Metallic",   0.70f);
+                if (mat.HasProperty("_Smoothness"))    mat.SetFloat("_Smoothness", 0.85f);
+                if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", colorBase * 0.25f);
+                mat.EnableKeyword("_EMISSION");
+                break;
             default:
                 mat.color = colorBase;
                 if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.3f);
@@ -248,6 +259,7 @@ public class GruaController : MonoBehaviour
             case TipoCubo.Agua:      return matAgua;
             case TipoCubo.Nube:      return matNube;
             case TipoCubo.Piedra:    return matPiedra;
+            case TipoCubo.Bloqueo:   return matBloqueo;
             default:                 return null;
         }
     }
@@ -441,8 +453,39 @@ public class GruaController : MonoBehaviour
     /// </summary>
     void InicializarTipos()
     {
-        if (configuracionesTipo != null && configuracionesTipo.Length > 0) return;
-        configuracionesTipo = new ConfigTipoCubo[]
+        var porDefecto = TiposPorDefecto();
+
+        // Se COMPLETA lo que haya en el Inspector en vez de descartarlo.
+        //
+        // Antes, si el Inspector traía aunque fuera un tipo, los valores de
+        // código no se usaban nunca. Es la misma trampa que dejó el juego con
+        // seis niveles cuando en el código había cuarenta: un tipo nuevo
+        // añadido aquí no aparecería jamás en la escena ya guardada. Ahora
+        // manda el Inspector para los tipos que él define, y los que falten
+        // se toman de aquí.
+        if (configuracionesTipo == null || configuracionesTipo.Length == 0)
+        {
+            configuracionesTipo = porDefecto;
+            return;
+        }
+
+        var faltantes = new System.Collections.Generic.List<ConfigTipoCubo>();
+        foreach (var d in porDefecto)
+            if (ObtenerConfig(d.tipo) == null) faltantes.Add(d);
+
+        if (faltantes.Count == 0) return;
+
+        var union = new System.Collections.Generic.List<ConfigTipoCubo>(configuracionesTipo);
+        union.AddRange(faltantes);
+        configuracionesTipo = union.ToArray();
+    }
+
+    /// <summary>Desde este nivel (1 = primero) puede aparecer el cubo Lock.</summary>
+    public const int NivelMinimoBloqueo = 16;
+
+    static ConfigTipoCubo[] TiposPorDefecto()
+    {
+        return new ConfigTipoCubo[]
         {
             // ── V1 ─────────────────────────────────────────────────────────────
             new ConfigTipoCubo { tipo = TipoCubo.Normal,   nombreMostrar = "Normal",
@@ -479,6 +522,9 @@ public class GruaController : MonoBehaviour
             new ConfigTipoCubo { tipo = TipoCubo.Piedra,  nombreMostrar = "Stone",
                 colorEnVuelo = new Color(0.40f, 0.40f, 0.42f, 1f),    probabilidad = 0.04f,
                 descripcionJugador = "Dense and immovable. Nothing shifts a Stone block." },
+            new ConfigTipoCubo { tipo = TipoCubo.Bloqueo, nombreMostrar = "Lock",
+                colorEnVuelo = new Color(0.36f, 0.47f, 0.72f, 1f),    probabilidad = 0.06f,
+                descripcionJugador = "Locks onto your tower and becomes a new base. Drop it on top." },
         };
     }
 
@@ -486,15 +532,29 @@ public class GruaController : MonoBehaviour
     TipoCubo ElegirTipoAleatorio()
     {
         float total = 0f;
-        foreach (var c in configuracionesTipo) total += c.probabilidad;
+        foreach (var c in configuracionesTipo)
+            if (TipoDisponible(c.tipo)) total += c.probabilidad;
+
         float r = Random.Range(0f, total);
         float acum = 0f;
         foreach (var c in configuracionesTipo)
         {
+            if (!TipoDisponible(c.tipo)) continue;
             acum += c.probabilidad;
             if (r <= acum) return c.tipo;
         }
         return TipoCubo.Normal;
+    }
+
+    /// <summary>
+    /// Tipos que este nivel puede entregar. El Lock no sale en los primeros
+    /// niveles: en una torre de cinco cubos no hace falta una base nueva, y
+    /// recibir un cubo que no se entiende ni se necesita solo confunde.
+    /// </summary>
+    static bool TipoDisponible(TipoCubo t)
+    {
+        if (t != TipoCubo.Bloqueo) return true;
+        return LevelManager.NivelSeleccionado + 1 >= NivelMinimoBloqueo;
     }
 
     /// <summary>Devuelve la configuración de un tipo. Público para que ProximoCuboIndicador lo lea.</summary>
@@ -531,6 +591,10 @@ public class GruaController : MonoBehaviour
                 rb.mass = 0.2f; rb.linearDamping = 12f; rb.angularDamping = 5.0f; break;
             case TipoCubo.Piedra:
                 rb.mass = 18f; rb.linearDamping = 0.4f; rb.angularDamping = 1.2f; break;
+            case TipoCubo.Bloqueo:
+                // Cae como el plomo: aplasta lo que pille debajo. Lo que lo hace
+                // distinto pasa al aterrizar (CuboInteligente.Aterrizar)
+                rb.mass = 45f; rb.linearDamping = 0.8f; rb.angularDamping = 2.0f; break;
         }
     }
 

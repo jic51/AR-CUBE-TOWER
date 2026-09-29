@@ -111,6 +111,8 @@ Cuatro ideas del usuario mientras probaba. Ninguna implementada; **esperan su de
 
 **1. La bajada de plataforma como comodín comprable.** Hoy es un botón gratis con 8 s de enfriamiento. La propuesta: el gratis pasa a 10–12 s y además se pueden **comprar bajadas** en la tienda, que se muestran como `×3` sobre el botón. Al pulsar se gasta una comprada si la hay, y si no, la gratis. Recomendación: **hacerlo, pero al revés** — que la comprada se guarde y se gaste primero la gratis cuando esté lista, para que nadie queme sus bajadas sin darse cuenta. Coste técnico: el inventario de comodines pasa de 4 a 5 huecos (`PlayerData.comodinesInventario`), con migración de los guardados existentes.
 
+**1-bis. APROBADO e implementado el 2026-09-28: el cubo Lock.** Sin límite por partida de momento — el usuario decidió fijarlo con el juego delante. Si al probarlo la torre deja de dar miedo, el límite natural es 2 por partida.
+
 **2. Cubo "Lock" — una plataforma nueva a media torre.** Cae como el plomo (aplasta todo, no se mueve nunca) y **corta la transmisión de peso**: los cubos de abajo dejan de recibir carga y la torre se puede seguir construyendo encima sin riesgo de que se venga abajo entera. Solo cuenta si cae **sobre** la torre, no si se suelta al vacío. Aparece a partir del nivel 16–20. Recomendación: **muy bueno**, es el primer cubo que cambia la estrategia en vez de la física de una pieza, y da un respiro natural en las torres largas. A definir antes de tocar código: si limita cuántos se pueden usar por partida (si no, la torre deja de ser frágil y el juego pierde tensión).
 
 **3. Curva de gemas en vez de recorte plano.** El usuario llegó a 31 gemas solo probando, que a 100 monedas cada una son vidas y comodines casi infinitos. Su propia corrección: no recortar de golpe, sino **regalar mucho al principio para enganchar y bajar la cantidad y la frecuencia con el tiempo**. Recomendación: de acuerdo. La forma limpia es que las gemas de "primera vez" solo se paguen hasta cierto nivel (por ejemplo el 10) y a partir de ahí queden únicamente los logros raros — 3 estrellas, bloque completo, récord, racha de 7 días. Hay que decidir el nivel de corte.
@@ -305,7 +307,18 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 
 **Y al terminar, el jugador no sabía volver.** El break lo hace girar en el mundo real; al cerrarse, el juego seguía al instante con la cuenta atrás corriendo mientras él buscaba su torre. Ahora se guarda hacia dónde miraba antes del anuncio y al cerrar aparece *"Back to the game"* con la flecha señalando el camino; el juego no continúa hasta que vuelve a mirar allí, con tope de 8 segundos para que nunca se cuelgue.
 
-**Lo que queda:** las cuatro propuestas del usuario de este día (ver arriba) esperan su aprobación.
+**Cubo Lock — aprobado e implementado.** `TipoCubo.Bloqueo`. Cae con masa 45, como el plomo. Si se asienta **sobre otro cubo** y bien apoyado (menos de 0,40 colgando), se ancla: pasa a cinemático, que para la física es peso infinito, así que los cubos que se apilen encima **dejan de cargar la torre de abajo**. Es una base nueva a media altura. Soltado al vacío o sobre la plataforma es solo un cubo pesado — como pidió el usuario.
+
+Dos detalles que no eran obvios:
+
+- Al anclarse deja de sentir la gravedad, así que cuando la plataforma baja el resto de la torre la sigue y él se quedaría **flotando** con media torre encima. Baja a mano el mismo delta, en `AjustarAlturaReferencia`.
+- Lo de abajo **no** se congela, a propósito: sigue siendo físico y puede caerse por sí solo. El Lock protege del peso futuro, no perdona lo que ya estaba mal puesto.
+
+Sale desde el nivel 16 (`GruaController.NivelMinimoBloqueo`) con probabilidad 0,06. Sin límite por partida todavía.
+
+**De paso, una trampa evitada:** `InicializarTipos()` descartaba los valores de código en cuanto el Inspector traía un solo tipo, así que el Lock no habría aparecido nunca en la escena ya guardada — es exactamente lo que dejó el juego con seis niveles cuando en el código había cuarenta. Ahora **completa** lo que hay en el Inspector en vez de rendirse.
+
+**Lo que queda:** las otras tres propuestas del usuario (bajada comprable, curva de gemas, grabación) esperan su decisión.
 
 ### 2026-09-27 (Mac, noche) — Tienda, iconos y el cambio de las vidas
 
