@@ -164,10 +164,22 @@ public class HudUI : MonoBehaviour
         return etiqueta;
     }
 
-    /// <summary>Una casilla de comodín del riel: icono, contador y apagado si no queda ninguno.</summary>
+    /// <summary>
+    /// Una casilla del riel de comodines: icono, contador y, sobre todo, un
+    /// botón que los USA.
+    ///
+    /// El panel viejo de uGUI quedaba debajo del HUD nuevo y tocarlo soltaba el
+    /// cubo en vez de activar el comodín: el jugador perdía la jugada y el
+    /// comodín no se armaba. Aquí el riel es el panel, y al ser un Button de
+    /// UI Toolkit el toque no llega al juego.
+    ///
+    /// Nunca se desactiva, ni con cero unidades: un botón deshabilitado deja
+    /// pasar el toque al juego y volveríamos al mismo problema. Con el
+    /// inventario vacío se avisa y no se gasta nada.
+    /// </summary>
     VisualElement CasillaComodin(VisualElement padre, int slot, Iconos.Icono icono, Color color, string nombre)
     {
-        var casilla = new VisualElement { pickingMode = PickingMode.Ignore };
+        var casilla = new Button(() => UsarComodin(slot, nombre)) { text = "" };
         casilla.AddToClassList("comodin");
         casilla.tooltip = nombre;
 
@@ -180,6 +192,29 @@ public class HudUI : MonoBehaviour
 
         padre.Add(casilla);
         return casilla;
+    }
+
+    static void UsarComodin(int slot, string nombre)
+    {
+        var eco = EconomiaManager.Instance;
+        if (eco != null && eco.ObtenerComodin(slot) <= 0)
+        {
+            // No abrimos la tienda: el reloj de la partida sigue corriendo y
+            // un panel modal encima sería peor que el aviso
+            NotificacionesUI.Aviso("No " + nombre + " left", "buy more in the store");
+            return;
+        }
+
+        var c = ComodinesManager.Instance;
+        if (c == null) return;
+
+        switch (slot)
+        {
+            case 0: c.ActivarSnapPerfecto(); break;
+            case 1: c.ActivarTiempoExtra();  break;
+            case 2: c.ActivarCuboPlomo();    break;
+            case 3: c.ActivarEscudo();       break;
+        }
     }
 
     void _Mostrar(bool visible)
@@ -222,11 +257,24 @@ public class HudUI : MonoBehaviour
             _gemas.text   = PlayerHeaderUI.GemasMostradas.ToString();
             _vidas.text   = eco.Vidas.ToString();
 
+            var com = ComodinesManager.Instance;
             for (int i = 0; i < _comodines.Length; i++)
             {
                 int n = eco.ObtenerComodin(i);
                 _comodinCuenta[i].text = n.ToString();
                 _comodines[i].EnableInClassList("comodin--vacio", n <= 0);
+
+                // Armado: el jugador tiene que ver que su comodín SIGUE ahí
+                // esperando. Sin esto pulsaba dos veces creyendo que no había
+                // funcionado — y la segunda le decía "already armed".
+                bool armado = com != null && i switch
+                {
+                    0 => com.SnapPerfectoActivo,
+                    2 => com.CuboPlomoPendiente,
+                    3 => com.EscudoActivo,
+                    _ => false,
+                };
+                _comodines[i].EnableInClassList("comodin--activo", armado);
             }
         }
 

@@ -25,7 +25,8 @@ public class BotonBajarUI : MonoBehaviour
     private Button        _boton;
     private VisualElement _anillo;
     private float         _listoEn;     // Time.unscaledTime en que vuelve a estar listo
-    private bool          _visible;
+    private bool          _visible;     // la partida permite mostrarlo
+    private bool          _enPantalla;  // además, este nivel y esta torre lo justifican
 
     public static void Mostrar(bool visible)
     {
@@ -36,7 +37,9 @@ public class BotonBajarUI : MonoBehaviour
     /// <summary>Reinicia el enfriamiento al empezar una partida nueva.</summary>
     public static void Reiniciar()
     {
-        if (_instancia != null) _instancia._listoEn = 0f;
+        if (_instancia == null) return;
+        _instancia._listoEn    = 0f;
+        _instancia._enPantalla = false;   // vuelve a entrar cargándose
     }
 
     static BotonBajarUI Instancia()
@@ -81,12 +84,22 @@ public class BotonBajarUI : MonoBehaviour
     void _Mostrar(bool visible)
     {
         _visible = visible;
-        if (_capa != null) _capa.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        // Oculto siempre que la partida no lo permita; cuando sí, es Update
+        // quien decide si este nivel y esta torre lo justifican
+        if (!visible) _enPantalla = false;
+        if (_capa != null) _capa.style.display = DisplayStyle.None;
     }
 
-    // Altura de torre a partir de la cual el botón aparece. Con uno o dos cubos
-    // la torre entra entera en pantalla y no hay nada que bajar: el botón solo
-    // ocupaba sitio y confundía (en el nivel 1, de tres cubos, no pinta nada).
+    // Cuándo aparece el botón. Dos condiciones, porque una sola no bastaba:
+    //
+    //   · La meta del nivel tiene que ser alta. En el nivel 1, de tres cubos,
+    //     la torre entera cabe en pantalla y no hay nada que bajar.
+    //   · La torre tiene que haber crecido de verdad. Con el primer cubo
+    //     puesto, bajar la plataforma solo aleja lo que ya se ve bien.
+    //
+    // El intento anterior miraba solo la altura de la torre, y por eso en el
+    // nivel 1 aparecía igualmente al colocar el tercer cubo.
+    private const int MetaParaMostrar  = 6;
     private const int CubosParaMostrar = 3;
 
     void Update()
@@ -94,8 +107,20 @@ public class BotonBajarUI : MonoBehaviour
         if (!_visible || _boton == null) return;
 
         var gm = GameManager.Instance;
-        bool util = gm != null && gm.AlturaEnCubos >= CubosParaMostrar;
-        _capa.style.display = util ? DisplayStyle.Flex : DisplayStyle.None;
+        bool util = gm != null
+                 && gm.MetaEnCubos   >= MetaParaMostrar
+                 && gm.AlturaEnCubos >= CubosParaMostrar;
+
+        if (util != _enPantalla)
+        {
+            _enPantalla = util;
+            _capa.style.display = util ? DisplayStyle.Flex : DisplayStyle.None;
+
+            // Al aparecer arranca su enfriamiento. Antes salía ya lleno y de
+            // golpe, sin que el jugador entendiera de dónde venía ni qué era:
+            // verlo cargarse desde cero es lo que enseña para qué sirve.
+            if (util) _listoEn = Time.unscaledTime + SegundosEnfriamiento;
+        }
         if (!util) return;
 
         bool listo = Time.unscaledTime >= _listoEn;

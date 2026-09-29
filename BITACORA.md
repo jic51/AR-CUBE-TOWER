@@ -105,6 +105,18 @@ Los 4 actuales ya funcionan bien. Estos cuatro cubren huecos que el juego tiene 
 
 Cada uno necesita: precio en la tienda, icono, y una fila en el panel de la tienda (trabajo de Editor o del rediseño de interfaz).
 
+### Propuestas del 2026-09-28 — pendientes de aprobación
+
+Cuatro ideas del usuario mientras probaba. Ninguna implementada; **esperan su decisión**.
+
+**1. La bajada de plataforma como comodín comprable.** Hoy es un botón gratis con 8 s de enfriamiento. La propuesta: el gratis pasa a 10–12 s y además se pueden **comprar bajadas** en la tienda, que se muestran como `×3` sobre el botón. Al pulsar se gasta una comprada si la hay, y si no, la gratis. Recomendación: **hacerlo, pero al revés** — que la comprada se guarde y se gaste primero la gratis cuando esté lista, para que nadie queme sus bajadas sin darse cuenta. Coste técnico: el inventario de comodines pasa de 4 a 5 huecos (`PlayerData.comodinesInventario`), con migración de los guardados existentes.
+
+**2. Cubo "Lock" — una plataforma nueva a media torre.** Cae como el plomo (aplasta todo, no se mueve nunca) y **corta la transmisión de peso**: los cubos de abajo dejan de recibir carga y la torre se puede seguir construyendo encima sin riesgo de que se venga abajo entera. Solo cuenta si cae **sobre** la torre, no si se suelta al vacío. Aparece a partir del nivel 16–20. Recomendación: **muy bueno**, es el primer cubo que cambia la estrategia en vez de la física de una pieza, y da un respiro natural en las torres largas. A definir antes de tocar código: si limita cuántos se pueden usar por partida (si no, la torre deja de ser frágil y el juego pierde tensión).
+
+**3. Curva de gemas en vez de recorte plano.** El usuario llegó a 31 gemas solo probando, que a 100 monedas cada una son vidas y comodines casi infinitos. Su propia corrección: no recortar de golpe, sino **regalar mucho al principio para enganchar y bajar la cantidad y la frecuencia con el tiempo**. Recomendación: de acuerdo. La forma limpia es que las gemas de "primera vez" solo se paguen hasta cierto nivel (por ejemplo el 10) y a partir de ahí queden únicamente los logros raros — 3 estrellas, bloque completo, récord, racha de 7 días. Hay que decidir el nivel de corte.
+
+**4. Grabar la partida con el fondo difuminado.** Ya estaba anotado como F6. El usuario insiste en que el desenfoque del mundo real **no se pueda desactivar en ajustes**: la app la usan menores y no puede ser una herramienta para grabar la casa de nadie. Técnicamente es lo más caro de los cuatro: hace falta capturar la cámara AR, aplicar el desenfoque en GPU sobre el fondo pero no sobre los cubos, y grabar a archivo en Android. Recomendación: dejarlo para después del lanzamiento, y que la primera versión grabe **solo los cubos sobre un fondo liso**, que es más barato y cumple el mismo objetivo.
+
 ### Ideas de cubos para analizar — V2 / V3 (2026-09-26)
 
 Ideas del usuario, **sin decidir ni implementar**. Revisar en conjunto antes de tocar nada: varias cambian el equilibrio del juego.
@@ -282,6 +294,18 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-09-28 (Mac) — Comodines usables, botón de bajar y el anuncio
+
+**Bug grave: los comodines no se podían usar.** El usuario los tocaba y en vez de activarse **se soltaba el cubo**: perdía la jugada y el comodín ni se armaba. Pasaba igual en el teléfono, no era cosa del Editor. Causa: el panel viejo de comodines es uGUI y quedaba por debajo del HUD nuevo; el riel que añadí ayer al HUD era decorativo (`PickingMode.Ignore`), así que el toque lo atravesaba y llegaba al juego. Arreglo: el riel del HUD **es ahora el panel** — cada casilla es un `Button` de UI Toolkit que activa su comodín, con borde encendido cuando está armado, y el panel viejo queda retirado. Las casillas nunca se deshabilitan, ni con cero unidades: un botón deshabilitado deja pasar el toque y volveríamos al mismo problema; con el inventario vacío se avisa y no se gasta nada.
+
+**El botón de bajar seguía saliendo en el nivel 1.** Mi condición anterior miraba solo la altura de la torre, y el nivel 1 tiene tres cubos: al colocar el tercero aparecía igual, y además **ya lleno**, salido de la nada. Ahora exige dos cosas —meta del nivel de 6 cubos o más **y** torre de 3 o más— y **arranca su enfriamiento al aparecer**, para que se vea cargarse y se entienda qué es.
+
+**El anuncio hacía perder la recompensa.** El botón Skip se habilitaba a los 5 segundos sin decir en ninguna parte que pulsarlo costaba las monedas y la segunda oportunidad. Ahora, cuando saltar no paga nada, la espera es el **anuncio entero** y la cuenta dice *"Reward in Ns"* en vez de *"Skip in Ns"*: el anuncio se termina solo y paga, y el botón queda solo como escape, etiquetado *"Skip — no reward"*.
+
+**Y al terminar, el jugador no sabía volver.** El break lo hace girar en el mundo real; al cerrarse, el juego seguía al instante con la cuenta atrás corriendo mientras él buscaba su torre. Ahora se guarda hacia dónde miraba antes del anuncio y al cerrar aparece *"Back to the game"* con la flecha señalando el camino; el juego no continúa hasta que vuelve a mirar allí, con tope de 8 segundos para que nunca se cuelgue.
+
+**Lo que queda:** las cuatro propuestas del usuario de este día (ver arriba) esperan su aprobación.
 
 ### 2026-09-27 (Mac, noche) — Tienda, iconos y el cambio de las vidas
 

@@ -331,8 +331,11 @@ public class GameManager : MonoBehaviour
         if (panelGameOver)      panelGameOver.SetActive(false);
         if (panelRescate)       panelRescate.SetActive(false);
 
-        // El panel de comodines solo es visible mientras se está jugando activamente
-        ComodinesManager.Instance?.MostrarPanel(nuevoEstado == EstadoJuego.Jugando);
+        // El panel viejo de comodines (uGUI) queda retirado: lo sustituye el
+        // riel del HUD. Quedaba DEBAJO de la interfaz nueva, así que tocar un
+        // comodín soltaba el cubo en vez de activarlo — el jugador perdía la
+        // jugada y el comodín ni se armaba.
+        ComodinesManager.Instance?.MostrarPanel(false);
 
         // El texto guía AR solo aparece durante el Setup — ocultarlo en cualquier otro estado
         if (miSetup != null && miSetup.textoGuiaAR != null && nuevoEstado != EstadoJuego.Setup)

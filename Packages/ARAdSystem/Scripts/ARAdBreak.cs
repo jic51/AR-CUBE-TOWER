@@ -83,8 +83,9 @@ namespace Layered.ARAdSystem
 
         private Vector2 _tamanoAdCalculado;   // tamaño final del ad (auto o manual)
 
-        private float _tiempoInicio;
-        private bool  _esperandoDireccion;
+        private float   _tiempoInicio;
+        private bool    _esperandoDireccion;
+        private Vector3 _dirJuego;   // hacia dónde miraba el jugador antes del break
         private bool  _guiaActiva;            // true = guía dinámica post-spawn activa
         private bool  _finalizado;
 
@@ -232,6 +233,10 @@ namespace Layered.ARAdSystem
             botonSkip.gameObject.SetActive(false);
             if (textoTimerSkip != null) textoTimerSkip.gameObject.SetActive(false);
 
+            // Hacia dónde miraba el jugador al empezar el break: es donde está
+            // su torre, y adonde hay que devolverlo al terminar
+            _dirJuego = _camara.forward;
+
             // Valor provisional; se reinicia en el spawn, cuando el ad se hace visible.
             _tiempoInicio       = Time.unscaledTime;
             _esperandoDireccion = true;
@@ -369,12 +374,31 @@ namespace Layered.ARAdSystem
             botonSkip.gameObject.SetActive(true);
             if (textoCuenta != null) textoCuenta.gameObject.SetActive(true);
 
-            float timerSkip = _config.duracionAntesDeSkipSegundos;
+            // Cuánto se espera antes de poder saltar.
+            //
+            // Si saltar no paga nada, se espera el anuncio ENTERO. Ofrecer a
+            // los cinco segundos un botón que cuesta la recompensa completa,
+            // sin decir en ninguna parte que la cuesta, es una trampa: el
+            // jugador lo pulsaba creyendo que era la salida normal y se
+            // quedaba sin monedas y sin segunda oportunidad. Así el anuncio
+            // termina solo y paga, y el botón solo existe como escape.
+            bool  skipPaga   = _config.monedasRecompensaSkip > 0;
+            float esperaSkip = skipPaga ? _config.duracionAntesDeSkipSegundos
+                                        : _config.duracionMaximaSegundos;
+
+            // Descontar lo ya transcurrido desde que el ad se hizo visible:
+            // si no, la espera se pasaría del final del break
+            float timerSkip = esperaSkip - (Time.unscaledTime - _tiempoInicio);
             while (timerSkip > 0f && !_finalizado)
             {
                 timerSkip -= Time.unscaledDeltaTime;
                 if (textoCuenta != null)
-                    textoCuenta.text = $"Skip in {Mathf.CeilToInt(timerSkip)}s";
+                {
+                    int s = Mathf.CeilToInt(timerSkip);
+                    // "Reward in" en vez de "Skip in": el jugador está esperando
+                    // a cobrar, no esperando a poder huir
+                    textoCuenta.text = skipPaga ? $"Skip in {s}s" : $"Reward in {s}s";
+                }
                 yield return null;
             }
 
@@ -382,7 +406,7 @@ namespace Layered.ARAdSystem
             if (!_finalizado)
             {
                 botonSkip.interactable = true;
-                if (textoCuenta != null) textoCuenta.text = "Skip";
+                if (textoCuenta != null) textoCuenta.text = skipPaga ? "Skip" : "Skip — no reward";
                 botonCTA.gameObject.SetActive(true);
             }
 
@@ -727,8 +751,57 @@ namespace Layered.ARAdSystem
             yield return StartCoroutine(CerrarObjeto(_objetoAR));
             yield return StartCoroutine(CerrarObjeto(_frameAR));
 
+            yield return StartCoroutine(EsperarVolverAlJuego());
+
             _callback?.Invoke(resultado);
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Devuelve al jugador a su torre antes de reanudar.
+        ///
+        /// El anuncio lo hace girar en el mundo real. Al cerrarse, el juego
+        /// seguía al instante y con la cuenta atrás corriendo mientras él
+        /// miraba a una pared buscando dónde estaba su torre. Aquí se le
+        /// señala el camino de vuelta con la misma flecha que lo trajo, y el
+        /// juego no continúa hasta que vuelve a mirar donde estaba —o hasta
+        /// que se agota la espera, porque el break nunca puede colgarse.
+        /// </summary>
+        IEnumerator EsperarVolverAlJuego()
+        {
+            if (_camara == null || _dirJuego == Vector3.zero) yield break;
+
+            if (textoInstruccion != null)
+            {
+                textoInstruccion.text = "Back to the game";
+                textoInstruccion.gameObject.SetActive(true);
+            }
+            if (imagenFlecha != null) imagenFlecha.gameObject.SetActive(true);
+
+            float espera = 0f;
+            while (espera < SegundosMaxEspera)
+            {
+                espera += Time.unscaledDeltaTime;
+                if (_camara == null) break;
+
+                if (Vector3.Dot(_camara.forward, _dirJuego) >= DotMinimo) break;
+
+                if (imagenFlecha != null)
+                {
+                    Vector3 camLocal = _camara.InverseTransformDirection(_dirJuego);
+                    float   angulo   = Mathf.Atan2(camLocal.x, camLocal.y) * Mathf.Rad2Deg;
+                    imagenFlecha.transform.rotation   = Quaternion.Euler(0f, 0f, -angulo);
+                    imagenFlecha.transform.localScale =
+                        Vector3.one * (0.9f + 0.15f * Mathf.Sin(Time.unscaledTime * 3f));
+                }
+                yield return null;
+            }
+
+            if (textoInstruccion != null) textoInstruccion.gameObject.SetActive(false);
+            if (imagenFlecha     != null) imagenFlecha.gameObject.SetActive(false);
+
+            // Medio segundo para situarse antes de que el reloj vuelva a correr
+            yield return new WaitForSecondsRealtime(0.5f);
         }
 
         IEnumerator CerrarObjeto(GameObject go)

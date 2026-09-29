@@ -348,13 +348,25 @@
 .comodin {
     width: 62px;
     height: 62px;
-    margin-left: 10px;
+    margin: 0 0 0 10px;
+    padding: 0;
     align-items: center;
     justify-content: center;
     background-color: var(--color-vidrio);
     border-width: 1px;
     border-color: var(--color-vidrio-borde);
     border-radius: var(--radio-m);
+    transition: border-color 0.15s ease-out, scale 0.12s ease-out;
+}
+
+.comodin:active { scale: 0.92 0.92; }
+
+/* Armado y esperando: sin esto el jugador pulsaba otra vez creyendo que no
+   había pasado nada, y la segunda vez solo le decían "already armed". */
+.comodin--activo {
+    border-width: 2px;
+    border-color: var(--color-cielo);
+    background-color: rgba(127, 212, 255, 0.22);
 }
 
 /* Sin ninguno queda visible pero apagado: así el jugador sabe que el comodín
