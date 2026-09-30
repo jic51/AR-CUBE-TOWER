@@ -297,6 +297,22 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 
 ## Sesiones
 
+### 2026-09-30 (Mac) — Dos vídeos: el Lock flotante, los combos y los avisos
+
+**El Lock se quedaba flotando.** En el primer vídeo, un trozo de torre suspendido en el aire con un hueco enorme hasta la plataforma; el cubo de abajo del trozo era el Lock. Error de concepto mío: lo dejé quieto en coordenadas del mundo, y cuando la plataforma baja, la torre la sigue y él no. Ahora guarda su desplazamiento respecto a la **plataforma** y la sigue cada fotograma, la mueva el pozo, el botón o la corrección del ancla AR. Y si se queda sin nada debajo (cinco rayos hacia abajo, uno por esquina y otro al centro) se desancla y cae. Confirmado arreglado en el segundo vídeo.
+
+**Los combos mentían.** El jugador veía "x3" con la torre en escalera. Dos causas:
+- Se medía en el **instante del choque**: un cubo podía tocar centrado, sumar la racha y deslizarse después hasta quedar medio colgando. Ahora se mide 0,45 s más tarde, ya asentado, contra el soporte real.
+- El umbral era 0,12, que en un cubo de 15 cm son casi 2 cm **por piso**, y el error se acumula: diez cubos "buenos" seguidos dan una escalera perfectamente visible. Baja a 0,07, y la racha se rompe a partir de 0,22 en vez de 0,40.
+
+**Los avisos salen del área de juego.** "Well placed!", "Aligned x3", "GOAL REACHED" y "LOCKED!" eran texto suelto en medio de la pantalla, encima de la torre: tapaban justo lo que hay que mirar para apuntar, se cruzaban con los contadores y, al ser blanco sobre la cámara, desaparecían sobre una mesa clara. Pasan a una línea dentro de la cabecera del HUD. Fuera de partida caen en las notificaciones de la derecha en vez de perderse.
+
+**Y se quita el cartel del tipo de cubo.** "Fire Block" en medio de la pantalla sobraba: el panel NEXT ya lleva el nombre y lo que hace, permanente y sin estorbar.
+
+**El icono de gema se leía como un corazón** a 22 px en los chips y los botones de la tienda — y el corazón es el otro icono rosa. Tapa más ancha y plana, punta más marcada y tres tonos de faceta: a esa escala lo que distingue es el contorno, no el detalle.
+
+**Pendiente de este día:** el usuario pide rehacer el menú principal, el de pausa y el de niveles. Con la pantalla de resultado son las cuatro que siguen en uGUI.
+
 ### 2026-09-28 (Mac) — Comodines usables, botón de bajar y el anuncio
 
 **Bug grave: los comodines no se podían usar.** El usuario los tocaba y en vez de activarse **se soltaba el cubo**: perdía la jugada y el comodín ni se armaba. Pasaba igual en el teléfono, no era cosa del Editor. Causa: el panel viejo de comodines es uGUI y quedaba por debajo del HUD nuevo; el riel que añadí ayer al HUD era decorativo (`PickingMode.Ignore`), así que el toque lo atravesaba y llegaba al juego. Arreglo: el riel del HUD **es ahora el panel** — cada casilla es un `Button` de UI Toolkit que activa su comodín, con borde encendido cuando está armado, y el panel viejo queda retirado. Las casillas nunca se deshabilitan, ni con cero unidades: un botón deshabilitado deja pasar el toque y volveríamos al mismo problema; con el inventario vacío se avisa y no se gasta nada.

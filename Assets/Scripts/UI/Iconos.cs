@@ -110,17 +110,25 @@ public static class Iconos
 
     static void Gema(Painter2D p, Punto P, Color c)
     {
-        // Cuerpo
+        // Silueta de talla brillante: tapa ANCHA y plana arriba, punta abajo.
+        //
+        // La versión anterior era más estrecha y alta y a 22 px, en el chip y
+        // en los botones de la tienda, se leía como un corazón — que es
+        // justamente el otro icono rosa de la interfaz. Lo que distingue a
+        // esta escala no es el detalle sino el contorno: cuanto más ancha y
+        // más recta la tapa, menos se parece.
         Poligono(p, c,
-            P(0.26f, 0.20f), P(0.74f, 0.20f), P(0.96f, 0.44f),
-            P(0.50f, 0.92f), P(0.04f, 0.44f));
+            P(0.20f, 0.14f), P(0.80f, 0.14f), P(1.00f, 0.40f),
+            P(0.50f, 0.95f), P(0.00f, 0.40f));
 
-        // Tabla superior más clara y facetas laterales más oscuras: sin estos
-        // dos tonos el rombo se veía plano y se confundía con el corazón
-        Poligono(p, Aclarar(c, 1.35f),
-            P(0.26f, 0.20f), P(0.74f, 0.20f), P(0.62f, 0.44f), P(0.38f, 0.44f));
-        Poligono(p, Oscurecer(c, 0.72f),
-            P(0.62f, 0.44f), P(0.96f, 0.44f), P(0.50f, 0.92f));
+        // Tres tonos: tabla clara, faceta izquierda media, derecha oscura.
+        // Las aristas se ven aunque el icono sea diminuto.
+        Poligono(p, Aclarar(c, 1.40f),
+            P(0.20f, 0.14f), P(0.80f, 0.14f), P(0.66f, 0.40f), P(0.34f, 0.40f));
+        Poligono(p, Oscurecer(c, 0.62f),
+            P(0.66f, 0.40f), P(1.00f, 0.40f), P(0.50f, 0.95f));
+        Poligono(p, Oscurecer(c, 0.84f),
+            P(0.34f, 0.40f), P(0.66f, 0.40f), P(0.50f, 0.95f));
     }
 
     static void Corazon(Painter2D p, Punto P, Color c)
