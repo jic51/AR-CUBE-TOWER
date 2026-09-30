@@ -502,6 +502,9 @@ public class GameManager : MonoBehaviour
     public float  ObtenerAlturaTorreMundo()  => basePlataforma != null ? basePlataforma.position.y + alturaMaxima : -100f;
     public Vector3 ObtenerCentroPlataforma() => basePlataforma != null ? basePlataforma.position : Vector3.zero;
 
+    /// <summary>La plataforma como transform. La usa el cubo Lock para seguirla al bajar.</summary>
+    public Transform Plataforma => basePlataforma;
+
     /// <summary>
     /// Altura de la base de la plataforma (el suelo del juego AR).
     /// Los cubos se destruyen si caen más de margenCaidaFuera por debajo de este punto.
@@ -989,6 +992,7 @@ public class GameManager : MonoBehaviour
         // encima del panel de resultado
         HudUI.Mostrar(false);
         BotonBajarUI.Mostrar(false);
+        MensajeUI.Ocultar();   // un "Well placed!" a medias sobre el resultado
 
         // La vida se paga aquí y solo aquí: perder cuesta una vida, jugar no.
         // Va antes de TerminarPartida() porque ahí se devuelven los comodines

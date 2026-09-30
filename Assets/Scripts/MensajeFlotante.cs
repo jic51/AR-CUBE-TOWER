@@ -57,14 +57,15 @@ public class MensajeFlotante : MonoBehaviour
     /// <summary>Muestra un mensaje flotante. Puede llamarse desde cualquier script.</summary>
     public static void Mostrar(string texto, Color color, float duracionOverride = -1f)
     {
-        if (Instance == null)
-        {
-            Debug.LogWarning("[MensajeFlotante] No hay instancia en la escena. " +
-                             "Adjunta este script a un TextMeshProUGUI en el Canvas del HUD.");
-            return;
-        }
-        Instance.MostrarInterno(texto, color,
-            duracionOverride > 0 ? duracionOverride : Instance.duracion);
+        // Lo pinta MensajeUI (UI Toolkit). El texto de la escena estaba anclado
+        // en el tercio superior y se cruzaba con los contadores del HUD nuevo:
+        // en los vídeos "Well placed!" pisaba el saldo de monedas. Y al ser
+        // texto blanco suelto sobre la cámara, sobre una mesa clara no se leía.
+        //
+        // Este método se conserva porque lo llaman quince sitios, y con él los
+        // atajos de abajo (SnapPerfecto, GemasGanadas...) siguen funcionando
+        // sin tocar a quien los usa.
+        MensajeUI.Mostrar(texto, color, duracionOverride > 0 ? duracionOverride : 2.0f);
     }
 
     // ── Shortcuts ─────────────────────────────────────────────────────────────
@@ -80,6 +81,8 @@ public class MensajeFlotante : MonoBehaviour
 
     // ── Implementación ────────────────────────────────────────────────────────
 
+    // Queda sin uso desde que el mensaje lo pinta MensajeUI. Se conserva por si
+    // hubiera que volver al texto de la escena.
     void MostrarInterno(string texto, Color color, float dur)
     {
         if (animacion != null) StopCoroutine(animacion);

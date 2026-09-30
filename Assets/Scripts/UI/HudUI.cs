@@ -242,10 +242,18 @@ public class HudUI : MonoBehaviour
             _tiempo.EnableInClassList("hud__tiempo--urgente", s <= 10);
         }
 
-        // Cubos: en niveles con límite manda el límite; si no, la meta
-        _cubos.text = gm.CubosMaximos > 0
-            ? gm.CubosUsados + " of " + gm.CubosMaximos + " cubes"
-            : gm.AlturaEnCubos + " of " + gm.MetaEnCubos + " cubes";
+        // Cubos: en niveles con límite manda el límite; si no, la meta.
+        //
+        // Pasada la meta ya no se cuenta contra ella: el nivel no termina al
+        // alcanzarla, sigue hasta que se acaba el tiempo, y leer "20 of 16
+        // cubes" con la barra llena parecía un error del juego en vez de un
+        // logro. Ahora dice que la meta está hecha y cuántos van.
+        if (gm.CubosMaximos > 0)
+            _cubos.text = gm.CubosUsados + " of " + gm.CubosMaximos + " cubes";
+        else if (gm.AlturaEnCubos >= gm.MetaEnCubos && gm.MetaEnCubos > 0)
+            _cubos.text = "Goal! " + gm.AlturaEnCubos + " cubes";
+        else
+            _cubos.text = gm.AlturaEnCubos + " of " + gm.MetaEnCubos + " cubes";
 
         _barra.style.width = Length.Percent(gm.ProgresoMeta * 100f);
         _barra.EnableInClassList("hud__progreso--meta", gm.ProgresoMeta >= 1f);

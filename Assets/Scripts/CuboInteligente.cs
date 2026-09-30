@@ -125,6 +125,8 @@ public class CuboInteligente : MonoBehaviour
         // El check de posición Y es seguro para cubos en la torre (están SOBRE el suelo, no bajo él).
         if (yaExploto) return;
 
+        if (_anclado) ActualizarAnclaje();
+
         // Rastrear la Y más alta alcanzada para detectar caída desde la torre
         if (haAterrizado && transform.position.y > alturaMaximaAlcanzada)
             alturaMaximaAlcanzada = transform.position.y;
@@ -475,13 +477,86 @@ public class CuboInteligente : MonoBehaviour
 
         _anclado = true;
 
+        // Queda enganchado a la PLATAFORMA, no al mundo. Estar quieto en
+        // coordenadas absolutas parecía lo correcto y era el error: en cuanto
+        // la plataforma bajaba, el resto de la torre la seguía y el Lock se
+        // quedaba flotando en el aire con media torre encima, separado por un
+        // hueco enorme. Guardando el desplazamiento respecto a la plataforma
+        // baja con ella pase lo que pase, la mueva el pozo, el botón o la
+        // corrección del ancla AR.
+        var plat = GameManager.Instance?.Plataforma;
+        if (plat != null) _offsetPlataforma = transform.position - plat.position;
+
         NotificacionesUI.Comodin("Locked in", "new base for your tower");
         MensajeFlotante.Mostrar("LOCKED!", new Color(0.36f, 0.47f, 0.72f), 1.8f);
     }
 
+    /// <summary>
+    /// Suelta el ancla y lo devuelve a la física. Se llama cuando se queda sin
+    /// nada debajo: un bloque cinemático suspendido en el vacío, con cubos
+    /// encima, no se lee como una base — se lee como que el juego se rompió.
+    /// </summary>
+    void Desanclar()
+    {
+        _anclado       = false;
+        rb.isKinematic = false;
+        rb.constraints = RigidbodyConstraints.None;
+        alturaMaximaAlcanzada = transform.position.y;
+    }
+
+    /// <summary>
+    /// Mantiene el Lock pegado a la plataforma y comprueba que siga teniendo
+    /// suelo. Se llama desde Update().
+    /// </summary>
+    void ActualizarAnclaje()
+    {
+        var plat = GameManager.Instance?.Plataforma;
+        if (plat != null)
+        {
+            Vector3 p = plat.position + _offsetPlataforma;
+            rb.position = p;
+            transform.position = p;
+        }
+
+        // El chequeo de apoyo no hace falta cada fotograma: es un raycast y el
+        // suelo no desaparece de un frame a otro
+        _proximoChequeoApoyo -= Time.deltaTime;
+        if (_proximoChequeoApoyo > 0f) return;
+        _proximoChequeoApoyo = 0.25f;
+
+        if (!TieneApoyoDebajo()) Desanclar();
+    }
+
+    /// <summary>¿Queda algo sólido justo debajo del cubo?</summary>
+    bool TieneApoyoDebajo()
+    {
+        float medio  = transform.localScale.y * 0.5f;
+        float margen = transform.localScale.y * 0.6f;   // un poco más de medio cubo
+
+        // Cuatro rayos, uno por esquina, además del centro: con uno solo, un
+        // cubo apoyado por un borde se soltaba al no encontrar nada en el eje
+        float r = transform.localScale.x * 0.35f;
+        Vector3[] desplazamientos =
+        {
+            Vector3.zero,
+            new Vector3( r, 0f,  r), new Vector3(-r, 0f,  r),
+            new Vector3( r, 0f, -r), new Vector3(-r, 0f, -r),
+        };
+
+        foreach (var d in desplazamientos)
+        {
+            Vector3 origen = transform.position + d + Vector3.down * (medio - 0.01f);
+            if (Physics.Raycast(origen, Vector3.down, out RaycastHit golpe, margen))
+                if (golpe.collider != null && golpe.collider != col) return true;
+        }
+        return false;
+    }
+
     /// <summary>True si este cubo es un Lock ya anclado (base fija de la torre).</summary>
     public bool Anclado => _anclado;
-    private bool _anclado;
+    private bool    _anclado;
+    private Vector3 _offsetPlataforma;
+    private float   _proximoChequeoApoyo;
 
     System.Collections.IEnumerator CompletarTutorialTras(float segundos)
     {
@@ -779,16 +854,10 @@ public class CuboInteligente : MonoBehaviour
         if (alturaMaximaAlcanzada > float.MinValue)
             alturaMaximaAlcanzada += delta;
 
-        // Un Lock anclado es cinemático: la gravedad no lo toca. Cuando la
-        // plataforma baja, el resto de la torre la sigue cayendo y él se
-        // quedaría flotando en el aire con media torre encima. Baja con ella
-        // a mano, que es lo que hace de él una base y no un obstáculo.
-        if (_anclado && rb != null)
-        {
-            Vector3 p = transform.position + new Vector3(0f, delta, 0f);
-            rb.position = p;
-            transform.position = p;
-        }
+        // El Lock anclado no se mueve por aquí: sigue a la plataforma cada
+        // fotograma desde ActualizarAnclaje(), que es fiable la mueva quien
+        // la mueva. Sí hay que corregirle la referencia de altura, o se
+        // detectaría como caído en cuanto la plataforma bajara.
     }
 
     // ── Interacciones entre cubos ─────────────────────────────────────────────
