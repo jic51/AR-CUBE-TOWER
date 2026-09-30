@@ -46,6 +46,25 @@ public class CapaUI : MonoBehaviour
         return capa;
     }
 
+    /// <summary>
+    /// Posición de un elemento en coordenadas de PANTALLA, que es lo que
+    /// entiende el animador de monedas (uGUI). Devuelve null si el elemento
+    /// no está visible o el panel aún no tiene medidas.
+    /// </summary>
+    public static Vector2? PuntoPantalla(VisualElement el)
+    {
+        if (el?.panel == null) return null;
+        if (el.resolvedStyle.display == DisplayStyle.None) return null;
+
+        VisualElement raiz = el.panel.visualTree;
+        float ancho = raiz.resolvedStyle.width, alto = raiz.resolvedStyle.height;
+        if (ancho < 1f || alto < 1f) return null;
+
+        Vector2 centro = el.worldBound.center;
+        return new Vector2(centro.x * (Screen.width / ancho),
+                           Screen.height - centro.y * (Screen.height / alto));
+    }
+
     static CapaUI Instancia()
     {
         if (_instancia != null) return _instancia;

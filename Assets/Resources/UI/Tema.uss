@@ -629,3 +629,178 @@
     font-size: 17px;
     color: var(--color-texto-suave);
 }
+
+/* =========================================================================
+   RESULTADO DE NIVEL
+   La pantalla que más se ve: sale en cada nivel. Era la azul plana con
+   botones de colores sueltos; aquí sigue la identidad de la landing.
+   ========================================================================= */
+
+.capa-resultado { }
+
+.resultado__fondo {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(14, 17, 36, 0.94);
+}
+
+.resultado {
+    width: 86%;
+    max-width: 900px;
+    padding: 40px 36px 34px 36px;
+    align-items: center;
+    background-color: var(--color-superficie);
+    border-width: 1px;
+    border-color: var(--color-borde);
+    border-radius: var(--radio-l);
+}
+
+/* ── Estrellas ─────────────────────────────────────────────────────────
+   Se dibujan (Painter2D): las ganadas rellenas, las que faltan con solo el
+   contorno. Antes se pintaban las tres siempre y solo cambiaban de color,
+   así que un "Bronze" enseñaba tres estrellas. */
+
+.resultado__estrellas {
+    flex-direction: row;
+    margin-bottom: var(--espacio-m);
+}
+
+.resultado__estrella {
+    width: 86px;
+    height: 86px;
+    margin: 0 6px;
+}
+
+.resultado__rating {
+    font-size: var(--texto-m);
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+}
+
+.resultado__titulo {
+    margin-top: var(--espacio-xs);
+    font-size: var(--texto-xl);
+    -unity-font-style: bold;
+    color: var(--color-exito);
+}
+
+.resultado__titulo--perdio { color: var(--color-vida); }
+
+.resultado__record {
+    margin-top: var(--espacio-xs);
+    font-size: 20px;
+    color: var(--color-texto-tenue);
+}
+
+.resultado__record--nuevo {
+    color: var(--color-oro);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+/* ── Cifras ────────────────────────────────────────────────────────────── */
+
+.resultado__cifras {
+    flex-direction: row;
+    margin-top: var(--espacio-xl);
+    margin-bottom: var(--espacio-l);
+}
+
+.cifra {
+    min-width: 200px;
+    align-items: center;
+    padding: 0 var(--espacio-l);
+}
+
+.cifra__valor {
+    font-size: var(--texto-l);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+.cifra__etiqueta {
+    margin-top: 2px;
+    font-size: 17px;
+    letter-spacing: 2px;
+    color: var(--color-texto-tenue);
+}
+
+.cifra__pie {
+    margin-top: 2px;
+    font-size: 17px;
+    color: var(--color-texto-tenue);
+}
+
+/* ── Recompensa ────────────────────────────────────────────────────────
+   Tiene su propia fila: las monedas volaban por encima del botón RETRY y
+   tapaban el texto, así que no se veía qué habías ganado. */
+
+.resultado__premio {
+    flex-direction: row;
+    margin-bottom: var(--espacio-l);
+}
+
+.premio {
+    flex-direction: row;
+    align-items: center;
+    margin: 0 6px;
+    padding: 8px 20px;
+    background-color: var(--color-superficie-2);
+    border-radius: var(--radio-pildora);
+}
+
+.premio__valor {
+    margin-left: 10px;
+    font-size: var(--texto-s);
+    -unity-font-style: bold;
+    color: var(--color-texto);
+}
+
+/* ── Botones ───────────────────────────────────────────────────────────
+   El principal es el que el jugador quiere pulsar ahora: seguir si ganó,
+   reintentar si perdió. Antes RETRY era el naranja grande de arriba
+   incluso después de completar el nivel. */
+
+.resultado__boton {
+    width: 100%;
+    margin: 0 0 var(--espacio-m) 0;
+    padding: 18px 0;
+    font-size: var(--texto-m);
+    -unity-font-style: bold;
+    border-width: 0;
+    border-radius: var(--radio-m);
+    transition: scale 0.1s ease-out;
+}
+
+.resultado__boton:active { scale: 0.97 0.97; }
+
+.resultado__boton--principal {
+    background-color: var(--color-oro);
+    color: var(--color-tinta);
+}
+
+.resultado__boton--secundario {
+    background-color: var(--color-superficie-2);
+    color: var(--color-texto);
+    border-width: 1px;
+    border-color: var(--color-borde);
+}
+
+.resultado__fila-botones {
+    flex-direction: row;
+    width: 100%;
+}
+
+.resultado__boton--plano {
+    flex-grow: 1;
+    width: auto;
+    margin: 0 5px;
+    padding: 14px 0;
+    font-size: var(--texto-s);
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--color-texto-suave);
+    border-width: 1px;
+    border-color: var(--color-borde);
+}

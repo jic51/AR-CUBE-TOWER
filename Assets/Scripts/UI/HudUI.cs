@@ -126,8 +126,13 @@ public class HudUI : MonoBehaviour
         // Las monedas y gemas animadas vuelan hasta estos contadores. El header
         // viejo se oculta en partida, así que sin esto volarían a un icono
         // invisible y el efecto se perdería.
-        AnimadorMonedas.ObjetivoMonedasPantalla = () => PuntoPantalla(_monedas);
-        AnimadorMonedas.ObjetivoGemasPantalla   = () => PuntoPantalla(_gemas);
+        // La pantalla de resultado manda cuando está abierta: ahí el HUD no se
+        // ve y las monedas volarían a un contador invisible, cruzando por
+        // encima de los botones
+        AnimadorMonedas.ObjetivoMonedasPantalla =
+            () => ResultadoUI.PuntoMonedas() ?? PuntoPantalla(_monedas);
+        AnimadorMonedas.ObjetivoGemasPantalla   =
+            () => ResultadoUI.PuntoGemas()   ?? PuntoPantalla(_gemas);
 
         // ── Comodines ─────────────────────────────────────────────────────
         // El inventario solo se veía abriendo la tienda. Puesto bajo los
@@ -348,18 +353,7 @@ public class HudUI : MonoBehaviour
     /// Convierte la posición de un elemento de UI Toolkit a coordenadas de
     /// pantalla, que es lo que entiende el animador de monedas (uGUI).
     /// </summary>
-    Vector2? PuntoPantalla(VisualElement el)
-    {
-        if (!_visible || el?.panel == null) return null;
-
-        VisualElement raiz = el.panel.visualTree;
-        float ancho = raiz.resolvedStyle.width, alto = raiz.resolvedStyle.height;
-        if (ancho < 1f || alto < 1f) return null;
-
-        Vector2 centro = el.worldBound.center;
-        return new Vector2(centro.x * (Screen.width / ancho),
-                           Screen.height - centro.y * (Screen.height / alto));
-    }
+    Vector2? PuntoPantalla(VisualElement el) => _visible ? CapaUI.PuntoPantalla(el) : null;
 
     void ActualizarProximo()
     {

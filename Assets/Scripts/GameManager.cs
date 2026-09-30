@@ -325,6 +325,10 @@ public class GameManager : MonoBehaviour
         // opaco y al header viejo: en AR la cámara tiene que verse.
         HudUI.Mostrar(nuevoEstado == EstadoJuego.Jugando);
 
+        // La pantalla de resultado la abre MostrarGameOver(), que no pasa por
+        // aquí; cualquier otro cambio de estado la cierra
+        if (nuevoEstado != EstadoJuego.GameOver) ResultadoUI.Ocultar();
+
         if (panelMenuPrincipal) panelMenuPrincipal.SetActive(false);
         if (panelJuegoHUD)      panelJuegoHUD.SetActive(false);
         if (panelPausa)         panelPausa.SetActive(false);
@@ -379,10 +383,12 @@ public class GameManager : MonoBehaviour
                 break;
 
             case EstadoJuego.GameOver:
-                panelGameOver.SetActive(true);
+                // El panel azul viejo ya no se enciende: la pantalla de
+                // resultado la pinta ResultadoUI desde MostrarGameOver()
                 Time.timeScale = 1;
-                // Header visible en game over: monedas ganadas visibles
-                PlayerHeaderUI.Mostrar(true);
+                // Header oculto: la tarjeta de resultado ya lleva su propio
+                // recuento de monedas y gemas ganadas
+                PlayerHeaderUI.Mostrar(false);
                 break;
         }
     }
@@ -1040,8 +1046,10 @@ public class GameManager : MonoBehaviour
         }
         if (gano) s_derrotasSinAd = 0;
 
-        // Si toca anuncio el panel aparece después, al terminar el break
-        if (!mostrarAd && panelGameOver) panelGameOver.SetActive(true);
+        // El panel azul viejo queda retirado: lo sustituye ResultadoUI, que se
+        // pinta al final de este método, cuando ya están calculadas las
+        // estrellas, el récord y las recompensas.
+        if (panelGameOver) panelGameOver.SetActive(false);
 
         // Estado final
         if (textoEstadoFinal)
@@ -1144,17 +1152,11 @@ public class GameManager : MonoBehaviour
             StartCoroutine(MensajeGemasTras(RetrasoGemas, gemasGanadas, string.Join(" · ", motivosGemas)));
         }
 
-        if (!gano)
-        {
-            // La vida ya se cobró al iniciar la partida (IniciarPartida).
-            // El escudo no evita el cobro: lo compensa devolviendo la vida.
-            bool tieneEscudo = ComodinesManager.Instance?.ConsumeEscudo() ?? false;
-            if (tieneEscudo)
-            {
-                EconomiaManager.Instance?.GanarVida(1);
-                NotificacionesUI.Vidas(1, "Shield saved your life");
-            }
-        }
+        // El escudo ya se resolvió arriba, antes de cobrar la vida. Aquí había
+        // un segundo bloque que volvía a consumirlo y devolvía una vida para
+        // compensar el cobro al empezar la partida; ese cobro ya no existe
+        // (las vidas se pagan al perder) y el escudo ahora evita el cobro en
+        // vez de compensarlo.
 
         if (textoMonedasGanadas)
         {
@@ -1170,13 +1172,28 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager] Guardado → nivel max desbloqueado: {datosJugador.nivelMaximoDesbloqueado} | Ganó: {gano}");
 
 
-        // Botón Siguiente Nivel
-        if (botonSiguienteNivel != null)
-        {
-            bool haySiguiente = LevelManager.Instance != null &&
-                                LevelManager.NivelSeleccionado + 1 < LevelManager.Instance.niveles.Length;
-            botonSiguienteNivel.SetActive(gano && haySiguiente);
-        }
+        bool haySiguiente = LevelManager.Instance != null &&
+                            LevelManager.NivelSeleccionado + 1 < LevelManager.Instance.niveles.Length;
+        if (botonSiguienteNivel != null) botonSiguienteNivel.SetActive(false);
+
+        // ── Pantalla de resultado ─────────────────────────────────────────
+        // Si toca anuncio se pinta después, al terminar el break, para que no
+        // aparezca medio segundo antes de que el anuncio la tape
+        _resultadoPendiente = new ResultadoUI.Datos
+            {
+                gano              = gano,
+                estrellas         = estrellas,
+                alturaMetros      = alturaMaxima,
+                metaMetros        = metaAlturaNivel,
+                cubos             = cubosUsados,
+                nuevoRecord       = nuevoRecord,
+                mejorCubos        = Mathf.FloorToInt(datosJugador.mejorAlturaCubos),
+                monedas           = monedasGanadas,
+                gemas             = gemasGanadas,
+                haySiguienteNivel = haySiguiente,
+            };
+
+        if (!mostrarAd) ResultadoUI.Mostrar(_resultadoPendiente);
 
         // ── Anuncio diferido ──────────────────────────────────────────────────
         // La partida ya está contabilizada, guardada y con el panel preparado.
@@ -1237,9 +1254,13 @@ public class GameManager : MonoBehaviour
     void CerrarAdYMostrarGameOver()
     {
         Time.timeScale = 1;
-        PlayerHeaderUI.Mostrar(true);
-        if (panelGameOver) panelGameOver.SetActive(true);
+        ResultadoUI.Mostrar(_resultadoPendiente);
     }
+
+    // Resultado calculado antes del anuncio y pintado al terminarlo: el
+    // jugador tiene que ver sus estrellas cuando vuelve, no antes de que el
+    // anuncio se las tape
+    private ResultadoUI.Datos _resultadoPendiente;
 
     // ── Botones ───────────────────────────────────────────────────────────────
 
