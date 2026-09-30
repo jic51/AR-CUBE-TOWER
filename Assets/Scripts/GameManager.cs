@@ -992,7 +992,6 @@ public class GameManager : MonoBehaviour
         // encima del panel de resultado
         HudUI.Mostrar(false);
         BotonBajarUI.Mostrar(false);
-        MensajeUI.Ocultar();   // un "Well placed!" a medias sobre el resultado
 
         // La vida se paga aquí y solo aquí: perder cuesta una vida, jugar no.
         // Va antes de TerminarPartida() porque ahí se devuelven los comodines

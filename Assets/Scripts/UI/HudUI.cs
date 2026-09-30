@@ -19,7 +19,8 @@ public class HudUI : MonoBehaviour
     private static HudUI _instancia;
 
     private VisualElement _capa;
-    private Label _tiempo, _cubos, _monedas, _gemas, _vidas, _proxNombre, _proxDetalle;
+    private Label _tiempo, _cubos, _monedas, _gemas, _vidas, _proxNombre, _proxDetalle, _aviso;
+    private float _avisoHasta;
     private VisualElement _barra, _proxColor;
     private VisualElement[] _comodines;
     private Label[] _comodinCuenta;
@@ -30,6 +31,28 @@ public class HudUI : MonoBehaviour
     {
         if (visible) Instancia()._Mostrar(true);
         else if (_instancia != null) _instancia._Mostrar(false);
+    }
+
+    /// <summary>
+    /// Un aviso corto en la cabecera: combos, meta alcanzada, cubo anclado.
+    ///
+    /// Es el único sitio donde se escriben estas cosas. Fuera de partida el
+    /// HUD no existe, así que ahí caen en las notificaciones de la derecha en
+    /// vez de perderse.
+    /// </summary>
+    public static void Aviso(string texto, Color color, float duracion = 1.6f)
+    {
+        if (string.IsNullOrEmpty(texto)) return;
+
+        if (_instancia == null || !_instancia._visible)
+        {
+            NotificacionesUI.Aviso(texto);
+            return;
+        }
+
+        _instancia._aviso.text        = texto;
+        _instancia._aviso.style.color = color;
+        _instancia._avisoHasta        = Time.unscaledTime + duracion;
     }
 
     static HudUI Instancia()
@@ -80,6 +103,14 @@ public class HudUI : MonoBehaviour
         _barra.AddToClassList("hud__progreso");
         pista.Add(_barra);
         centro.Add(pista);
+
+        // Los avisos de la partida ("Aligned x3", "Goal reached") viven AQUÍ,
+        // dentro de la cabecera. Antes eran texto suelto en medio de la
+        // pantalla, encima de la torre: tapaban justo lo que el jugador
+        // necesitaba mirar y no se leían sobre una mesa clara.
+        _aviso = new Label("") { pickingMode = PickingMode.Ignore };
+        _aviso.AddToClassList("hud__aviso");
+        centro.Add(_aviso);
 
         barraSup.Add(centro);
         _capa.Add(barraSup);
@@ -284,6 +315,12 @@ public class HudUI : MonoBehaviour
                 };
                 _comodines[i].EnableInClassList("comodin--activo", armado);
             }
+        }
+
+        if (_avisoHasta > 0f && Time.unscaledTime >= _avisoHasta)
+        {
+            _aviso.text  = "";
+            _avisoHasta  = 0f;
         }
 
         // El giro usa tiempo sin escalar: en pausa el juego se congela, pero el

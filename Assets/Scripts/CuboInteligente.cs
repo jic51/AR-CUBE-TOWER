@@ -326,6 +326,7 @@ public class CuboInteligente : MonoBehaviour
         // distancia en diagonal, que no coincide con lo que se ve.
         float overhangRatio = FraccionColgando(collision.transform);
 
+        _soporteAterrizaje = collision.transform;
         Aterrizar(overhangRatio, posSoporte, sobreOtroCubo);
     }
 
@@ -779,6 +780,24 @@ public class CuboInteligente : MonoBehaviour
 
     // ── Sistema de combo ──────────────────────────────────────────────────────
 
+    // Cuánto puede desviarse un cubo de su soporte y seguir contando como
+    // "bien puesto", en fracción de su propio ancho.
+    //
+    // Estaba en 0.12 y el jugador veía "x3" con la torre en escalera. Dos
+    // motivos, los dos arreglados aquí:
+    //
+    //   · Se medía en el instante del choque. Un cubo podía tocar centrado,
+    //     contar el combo y deslizarse después hasta quedar medio colgando.
+    //     Ahora se mide cuando ya se ha asentado.
+    //   · 0.12 de un cubo de 15 cm son casi 2 cm por cubo, y el error se
+    //     acumula piso a piso: diez cubos "buenos" seguidos dan una escalera
+    //     perfectamente visible. Con 0.07 hay que apuntar de verdad.
+    private const float ComboBueno = 0.07f;
+    private const float ComboRompe = 0.22f;   // antes 0.40: casi nada rompía la racha
+
+    // El soporte sobre el que aterrizó, para volver a medir ya asentado
+    private Transform _soporteAterrizaje;
+
     void EvaluarCombo(float overhangRatio, bool sobreOtroCubo)
     {
         // Primer cubo sobre la plataforma: nunca cuenta como "bien puesto"
@@ -789,26 +808,34 @@ public class CuboInteligente : MonoBehaviour
             return;
         }
 
-        // Criterio estricto: máximo 12% de overhang para ser "bien puesto"
-        // (anteriormente 20% — demasiado permisivo)
-        bool bueno = overhangRatio < 0.12f;
+        StartCoroutine(EvaluarComboAsentado());
+    }
+
+    System.Collections.IEnumerator EvaluarComboAsentado()
+    {
+        // Lo que se premia es dónde QUEDA el cubo, no dónde tocó
+        yield return new WaitForSeconds(0.45f);
+        if (this == null || yaExploto) yield break;
+
+        float ratio = _soporteAterrizaje != null
+            ? FraccionColgando(_soporteAterrizaje)
+            : 1f;
 
         // Reiniciar combo si pasó demasiado tiempo
         if (Time.time - ultimoBueno > tiempoLimiteCombo)
             comboConsecutivo = 0;
 
-        if (bueno)
+        if (ratio < ComboBueno)
         {
             comboConsecutivo++;
             ultimoBueno = Time.time;
             MostrarMensajeCombo();
         }
-        else if (overhangRatio >= 0.40f)
+        else if (ratio >= ComboRompe)
         {
-            // Claramente descentrado → romper combo
             comboConsecutivo = 0;
         }
-        // Entre 0.12 y 0.40: ni suma ni rompe (zona neutral)
+        // Entre los dos umbrales: ni suma ni rompe (zona neutral)
     }
 
     void MostrarMensajeCombo()

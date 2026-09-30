@@ -166,7 +166,10 @@ public class GruaController : MonoBehaviour
         colorCuboVolando = cfg?.colorEnVuelo ?? new Color(0.6f, 0.6f, 0.6f, 0.85f);
 
         // Toast para tipos especiales
-        if (tipoActual != TipoCubo.Normal) MostrarToastTipo(tipoActual);
+        // Ya no se anuncia el tipo con un cartel en medio de la pantalla: el
+        // panel NEXT del HUD lleva el nombre y lo que hace, de forma
+        // permanente y sin taparle la torre al jugador. Decirlo dos veces
+        // sobraba, y la que estorbaba era esta.
 
         // 1. Punto de inicio (fuera de cámara, derecha + arriba)
         Camera cam = camaraAR.GetComponent<Camera>();
@@ -598,11 +601,4 @@ public class GruaController : MonoBehaviour
         }
     }
 
-    /// <summary>Muestra un toast cuando aparece un cubo especial.</summary>
-    void MostrarToastTipo(TipoCubo t)
-    {
-        ConfigTipoCubo cfg = ObtenerConfig(t);
-        if (cfg == null) return;
-        MensajeFlotante.Mostrar(cfg.nombreMostrar + " Block", cfg.colorEnVuelo, 1.8f);
-    }
 }

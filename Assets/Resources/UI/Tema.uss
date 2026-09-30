@@ -333,34 +333,11 @@
     flex-direction: row;
 }
 
-/* ── Mensaje central ─────────────────────────────────────────────────────
-   Va al centro y sobre vidrio oscuro. El texto blanco suelto del HUD viejo
-   se cruzaba con los contadores y sobre una mesa clara no se leía. */
-
-.capa-mensaje {
-    align-items: center;
-    justify-content: flex-start;
-    padding-top: 780px;
-}
-
-.mensaje {
-    padding: 16px 40px;
-    background-color: var(--color-vidrio);
-    border-width: 2px;
-    border-color: var(--color-vidrio-borde);
-    border-radius: var(--radio-pildora);
-    opacity: 0;
-    translate: 0 26px;
-    transition: opacity 0.18s ease-out, translate 0.28s ease-out;
-}
-
-.mensaje--dentro {
-    opacity: 1;
-    translate: 0 0;
-}
-
-.mensaje__texto {
-    font-size: 46px;
+/* Aviso de partida dentro de la cabecera: combos, meta, cubo anclado. Antes
+   era texto suelto en medio de la pantalla, encima de la torre. */
+.hud__aviso {
+    margin-top: 8px;
+    font-size: 26px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
 }

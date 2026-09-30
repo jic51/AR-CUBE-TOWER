@@ -57,15 +57,18 @@ public class MensajeFlotante : MonoBehaviour
     /// <summary>Muestra un mensaje flotante. Puede llamarse desde cualquier script.</summary>
     public static void Mostrar(string texto, Color color, float duracionOverride = -1f)
     {
-        // Lo pinta MensajeUI (UI Toolkit). El texto de la escena estaba anclado
-        // en el tercio superior y se cruzaba con los contadores del HUD nuevo:
-        // en los vídeos "Well placed!" pisaba el saldo de monedas. Y al ser
-        // texto blanco suelto sobre la cámara, sobre una mesa clara no se leía.
+        // Va a la cabecera del HUD, no encima del juego.
+        //
+        // Este texto vivía suelto en medio de la pantalla, sobre la torre.
+        // Tapaba justo lo que hay que mirar para apuntar, se cruzaba con los
+        // contadores de monedas, y al ser blanco sobre la cámara desaparecía
+        // en cuanto la mesa era clara. Dentro de la cabecera se lee siempre y
+        // no estorba.
         //
         // Este método se conserva porque lo llaman quince sitios, y con él los
         // atajos de abajo (SnapPerfecto, GemasGanadas...) siguen funcionando
         // sin tocar a quien los usa.
-        MensajeUI.Mostrar(texto, color, duracionOverride > 0 ? duracionOverride : 2.0f);
+        HudUI.Aviso(texto, color, duracionOverride > 0 ? duracionOverride : 1.6f);
     }
 
     // ── Shortcuts ─────────────────────────────────────────────────────────────
@@ -81,8 +84,8 @@ public class MensajeFlotante : MonoBehaviour
 
     // ── Implementación ────────────────────────────────────────────────────────
 
-    // Queda sin uso desde que el mensaje lo pinta MensajeUI. Se conserva por si
-    // hubiera que volver al texto de la escena.
+    // Queda sin uso desde que el aviso lo pinta la cabecera del HUD. Se
+    // conserva por si hubiera que volver al texto de la escena.
     void MostrarInterno(string texto, Color color, float dur)
     {
         if (animacion != null) StopCoroutine(animacion);
