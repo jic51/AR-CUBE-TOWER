@@ -23,6 +23,24 @@ El objetivo de esta rutina es que la bitácora sea suficiente para retomar el pr
 
 ---
 
+## Decisiones abiertas — esperan al usuario
+
+Recopiladas el 2026-10-10 de cinco secciones distintas de esta bitácora. **Ninguna necesita código para resolverse, solo una respuesta**, y varias bloquean trabajo que ya está listo para empezar. Ordenadas por lo que desbloquean.
+
+| # | Decisión | Dónde está el detalle | Qué desbloquea |
+|---|---|---|---|
+| D1 | **Estado de EE. UU.** para la ley aplicable (`[STATE]` en `terms.html`) | Pendiente — Publicación | Cierra los documentos legales. Es el único bloqueante de lanzamiento que depende solo de una respuesta |
+| D2 | **Nivel de corte de las gemas de "primera vez"** (propuesta: hasta el nivel 10) | Propuestas del 2026-09-28, nº 3 | La economía entera. Hoy se llega a 31 gemas solo probando |
+| D3 | **Límite de cubos Lock por partida** (ninguno hoy; el natural sería 2) | Propuestas del 2026-09-28, nº 1-bis | Ya está implementado sin límite: hay que jugarlo y decidir |
+| D4 | **Modo sin fin:** ¿cuesta una vida? ¿hay tabla de récords? ¿cómo se desbloquea? | Modo sin fin | Es lo único que falta para poder construirlo — la derrota ya se decidió (3 cubos caídos) |
+| D5 | **Bajada de plataforma comprable** | Propuestas del 2026-09-28, nº 1 | Trabajo pequeño, pero toca `PlayerData` y exige migrar los guardados |
+| D6 | **Los 4 comodines nuevos** (Congelar, Deshacer, Cámara lenta, Pegamento) | Comodines nuevos propuestos | Cada uno necesita precio, icono y fila en la tienda |
+| D7 | **Orden de los cubos:** aleatorio por partida o secuencia con semilla por nivel | Ideas de cubos — final de la sección | Condiciona si algún día puede haber competición justa entre jugadores |
+| D8 | **Las mezclas de cubos de V2/V3** (agua+fuego, nube, gelatina…) | Ideas de cubos | Varias cambian el equilibrio; revisarlas en conjunto, no una a una |
+| D9 | **Cuándo se hace la grabación con fondo difuminado** | Propuestas del 2026-09-28, nº 4 | Recomendado dejarlo para después del lanzamiento |
+
+---
+
 ## Estado global del proyecto
 
 ### Completado
@@ -234,7 +252,7 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | Cambiar onClick del botón pausa a `PlayerHeaderUI.OnBotonAccionClick()` | Inspector |
 | Crear GameObjects hijos `IconoPausa` e `IconoCerrar` | Jerarquía del Canvas |
 | Asignar textura a `TestAdConfig.texturaImagen` | Inspector |
-| Asignar las **3 imágenes de estrella por separado** (hoy hay 1 sola, el gráfico entero: por eso siempre salen 3 estrellas aunque el resultado sea "Plata") | `GameManager` → `imagenesEstrellas` |
+| ~~Asignar las **3 imágenes de estrella por separado**~~ | ✅ Ya no aplica: desde `2f12ac2` las estrellas se dibujan con `Painter2D` en `ResultadoUI.cs` y no dependen del Inspector |
 | Asignar `textoPrecioVida1` y `textoPrecioVidaPack` (el pack muestra "50" pero cuesta 120) | Inspector de `TiendaManager` |
 
 ### Pendiente — Publicación (2 de 7)
@@ -297,6 +315,19 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 
 ## Sesiones
 
+### 2026-10-10 — Puesta al día tras diez días de pausa
+
+Revisión de estado, sin cambios de código. Último trabajo: 30 de septiembre.
+
+**Sincronización.** 34 commits nuevos desde la última revisión del 2026-09-21, todos hechos desde el Mac. Nada divergente.
+
+**Desfases encontrados entre la bitácora y el código.** El commit `2f12ac2` fue el único de los cuatro del 30 de septiembre que no actualizó la bitácora, y dejó dos entradas obsoletas, ya corregidas:
+
+- La pantalla de resultado **ya está migrada a UI Toolkit**. La bitácora seguía contándola entre las que faltaban: son tres, no cuatro.
+- La tarea de Editor de asignar tres sprites de estrella **ya no aplica**: se dibujan con `Painter2D`.
+
+**Lo que de verdad frena el proyecto ahora no es código, son nueve decisiones sin tomar** — repartidas por cinco secciones de esta bitácora, todas esperando al usuario. Ver *Decisiones abiertas* más abajo.
+
 ### 2026-09-30 (Mac) — Dos vídeos: el Lock flotante, los combos y los avisos
 
 **El Lock se quedaba flotando.** En el primer vídeo, un trozo de torre suspendido en el aire con un hueco enorme hasta la plataforma; el cubo de abajo del trozo era el Lock. Error de concepto mío: lo dejé quieto en coordenadas del mundo, y cuando la plataforma baja, la torre la sigue y él no. Ahora guarda su desplazamiento respecto a la **plataforma** y la sigue cada fotograma, la mueva el pozo, el botón o la corrección del ancla AR. Y si se queda sin nada debajo (cinco rayos hacia abajo, uno por esquina y otro al centro) se desancla y cae. Confirmado arreglado en el segundo vídeo.
@@ -312,6 +343,16 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 **El icono de gema se leía como un corazón** a 22 px en los chips y los botones de la tienda — y el corazón es el otro icono rosa. Tapa más ancha y plana, punta más marcada y tres tonos de faceta: a esa escala lo que distingue es el contorno, no el detalle.
 
 **Pendiente de este día:** el usuario pide rehacer el menú principal, el de pausa y el de niveles. Con la pantalla de resultado son las cuatro que siguen en uGUI.
+
+**Cerrado el mismo día, sin anotar entonces** (commit `2f12ac2`, detectado al revisar el 2026-10-10): **la pantalla de resultado ya está en UI Toolkit** (`Assets/Scripts/UI/ResultadoUI.cs`). Era la última pantalla grande de la interfaz vieja y la que más se ve.
+
+Tres cosas de fondo, además del aspecto:
+
+- **Las estrellas mentían.** Se pintaban las tres siempre y solo cambiaban de color, así que un "Bronze" enseñaba tres estrellas. Ahora se dibujan con `Painter2D` —las ganadas rellenas, las que faltan solo con el contorno— y de paso dejan de depender de que alguien asigne tres sprites en el Inspector, lo que cierra una tarea de Editor pendiente.
+- **Las monedas ganadas volaban al contador del header**, que en esta pantalla está oculto, y cruzaban por encima del botón RETRY tapándole el texto. Ahora la recompensa tiene su propia fila y es ahí donde aterrizan.
+- **El botón principal pasa a ser el que el jugador quiere pulsar:** seguir si ganó, reintentar si perdió. RETRY era el naranja grande incluso después de completar el nivel.
+
+**Quedan tres pantallas en uGUI:** menú principal, pausa y selección de niveles.
 
 ### 2026-09-28 (Mac) — Comodines usables, botón de bajar y el anuncio
 
