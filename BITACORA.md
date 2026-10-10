@@ -29,10 +29,10 @@ Recopiladas el 2026-10-10 de cinco secciones distintas de esta bitácora. **Ning
 
 | # | Decisión | Dónde está el detalle | Qué desbloquea |
 |---|---|---|---|
-| D1 | **Estado de EE. UU.** para la ley aplicable (`[STATE]` en `terms.html`) | Pendiente — Publicación | Cierra los documentos legales. Es el único bloqueante de lanzamiento que depende solo de una respuesta |
-| D2 | **Nivel de corte de las gemas de "primera vez"** (propuesta: hasta el nivel 10) | Propuestas del 2026-09-28, nº 3 | La economía entera. Hoy se llega a 31 gemas solo probando |
+| ~~D1~~ | ~~Estado de EE. UU. para la ley aplicable~~ | ✅ **Cerrada el 2026-10-10: Utah**, aplicado en `docs/terms.html`. No quedan marcadores sin rellenar en los documentos legales | |
+| D2 | **Nivel de corte de las gemas** — el usuario propone el 6, a falta de confirmar | Decisión en curso: las gemas | La economía entera |
 | D3 | **Límite de cubos Lock por partida** (ninguno hoy; el natural sería 2) | Propuestas del 2026-09-28, nº 1-bis | Ya está implementado sin límite: hay que jugarlo y decidir |
-| D4 | **Modo sin fin:** ¿cuesta una vida? ¿hay tabla de récords? ¿cómo se desbloquea? | Modo sin fin | Es lo único que falta para poder construirlo — la derrota ya se decidió (3 cubos caídos) |
+| D4 | **Modo sin fin** — falta solo confirmar el nivel de desbloqueo | Decisión en curso: el modo sin fin | Lo demás ya está decidido: se puede empezar a construir |
 | D5 | **Bajada de plataforma comprable** | Propuestas del 2026-09-28, nº 1 | Trabajo pequeño, pero toca `PlayerData` y exige migrar los guardados |
 | D6 | **Los 4 comodines nuevos** (Congelar, Deshacer, Cámara lenta, Pegamento) | Comodines nuevos propuestos | Cada uno necesita precio, icono y fila en la tienda |
 | D7 | **Orden de los cubos:** aleatorio por partida o secuencia con semilla por nivel | Ideas de cubos — final de la sección | Condiciona si algún día puede haber competición justa entre jugadores |
@@ -77,7 +77,9 @@ El modo existe como idea desde hace tiempo pero **nunca se definió cuándo pier
 | Dificultad | El reloj **cuenta hacia arriba** y cada 10 cubos la grúa entrega más rápido | Da una curva sin necesidad de niveles |
 | Recompensa | Monedas por altura; **gemas solo al batir tu propio récord** | Encaja con el plan de dar menos gemas y solo por metas |
 
-**Decidido el 2026-09-27:** se pierde **cuando caen 3 cubos** de la torre. Sin decidir todavía: si el modo cuesta una vida, si hay tabla de récords y si se desbloquea al terminar un bloque.
+**Decidido el 2026-09-27:** se pierde **cuando caen 3 cubos** de la torre.
+
+**Decidido el 2026-10-10:** cuesta **una vida por partida** y los récords son **marca personal en el teléfono**, sin tabla global. Detalle y motivos en *Decisiones en curso*. Falta solo fijar el nivel de desbloqueo (propuesto: 20).
 
 ### Cuentas de usuario — implicación legal (2026-09-27)
 
@@ -262,9 +264,65 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 - **Keystore de Android — urgente**, ya no es solo requisito de publicación: la firma de debug provocó el fallo de instalación del 2026-09-21. Crearla **y respaldarla fuera de la máquina**: perder la keystore de producción tras publicar significa no poder actualizar la app nunca más
 - Ícono de la app
 - Capturas de pantalla para la ficha
-- Política de privacidad y Terms: ✅ **borrador** en `docs/` (2026-09-22), pendiente de revisión por un abogado, del estado de EE. UU. para la ley aplicable (`[STATE]` en `terms.html`) y de activar GitHub Pages. Falta el formulario Data Safety en Play Console
+- Política de privacidad y Terms: ✅ **borrador** en `docs/` (2026-09-22), con la ley aplicable ya fijada en **Utah** (2026-10-10). Pendiente de revisión por un abogado y de activar GitHub Pages. Falta el formulario Data Safety en Play Console
 - Landing: ✅ `docs/index.html`, se publica con GitHub Pages en https://jic51.github.io/AR-CUBE-TOWER/
 - Optimización de build: R8 activo y target SDK fijo en lugar de Automatic
+
+---
+
+## Decisiones en curso — 2026-10-10
+
+Dos decisiones a medio cerrar. Lo acordado ya es firme; lo que falta está marcado.
+
+### Las gemas: cuánto se regala y hasta cuándo
+
+**Lo que el juego da hoy**, leído de `EconomiaManager.cs:33-39` y `GameManager.CalcularGemas()` — no de la bitácora, que tenía cifras viejas:
+
+| Motivo | Gemas | Veces en 40 niveles | Total |
+|---|---|---|---|
+| Completar un nivel por primera vez | +1 | 40 | **40** |
+| Hacerlo con 3 estrellas (solo la primera vez) | +1 | hasta 40 | **40** |
+| Último nivel de cada bloque de 5 | +2 | 8 | **16** |
+| Récord de altura | +1 | ilimitado | — |
+| Siete días seguidos jugando | +2 | recurrente | — |
+
+**Terminar el juego al 100 % da unas 96 gemas**, más récords y rachas. A 100 monedas por gema son 9.600 monedas, y una vida cuesta 50: el equivalente a 192 vidas. Confirma el diagnóstico del usuario, con números.
+
+**Su propuesta (2026-10-10): cortar en el nivel 6**, planteada como idea a validar.
+
+**Análisis.** La dirección es correcta y el 6 es defendible: cae justo después del primer bloque y antes de que el juego se ponga serio. Pero tiene dos problemas:
+
+1. **Es un acantilado, no una curva.** El jugador cobra seis niveles seguidos y luego nada durante treinta y cuatro. Contradice su propia formulación del 2026-09-28 — *"regalar mucho al principio y bajar la cantidad y la frecuencia con el tiempo"* —, que describe un descenso, no un corte.
+2. **No está dicho a qué reglas se aplica.** Si corta solo "primera vez", las 3 estrellas siguen dando 40 gemas y el recorte apenas se nota. Si corta las tres, el total baja de 96 a **14**, un 85 % menos, y las gemas dejan de significar nada.
+
+**Recomendación: el corte del usuario en el 6, pero dejando vivos los bloques.**
+
+| Niveles | Primera vez | 3 estrellas | Fin de bloque |
+|---|---|---|---|
+| 1–6 | +1 | +1 | +2 |
+| 7–40 | 0 | 0 | +2 |
+
+Total: **28 gemas** en los 40 niveles, más récords y rachas. El arranque sigue siendo generoso, y a partir del 7 queda una recompensa cada cinco niveles: menos cantidad y menos frecuencia, exactamente lo pedido, sin que el grifo se cierre del todo.
+
+**Falta:** que el usuario confirme esta variante o fije otra. Al tocarlo hay que revisar si `GEMAS_POR_RECORD` se mantiene, porque es la única fuente ilimitada que quedaría.
+
+### El modo sin fin
+
+**Decidido el 2026-10-10**
+
+| Regla | Decisión |
+|---|---|
+| Coste | **Una vida por partida**, igual que el resto del juego |
+| Derrota | Cuando caen **3 cubos** (decidido el 2026-09-27) |
+| Récords | **Marca personal, guardada en el teléfono.** Nada de tabla global por ahora |
+
+**Por qué no hay tabla global todavía** — responde a la pregunta del usuario, *"¿cómo la hacemos si no compartimos datos?"*: no se puede, y la respuesta ya estaba tomada. La decisión del 2026-09-27 de no tener cuentas es justo lo que lo impide: una tabla de récords necesita identificar a cada jugador en un servidor, y eso son datos saliendo del teléfono.
+
+Hay una vía que **no exige backend propio**: Google Play Games Services da tablas de clasificación gestionadas y gratuitas. Pero el jugador tendría que iniciar sesión con su cuenta de Play Games, su identificador saldría del dispositivo, habría que declararlo en Data Safety y reescribir la política de privacidad, que hoy dice que ningún dato sale del teléfono.
+
+Es exactamente el mismo paquete que ya se aplazó. **La tabla global va con las cuentas, en la v2**, y entonces sale casi gratis porque Play Games resuelve identidad y clasificación a la vez. Hasta entonces, marca personal.
+
+**Falta:** el nivel de desbloqueo. El usuario dice "15-20". **Recomendación: 20.** El cubo Lock aparece en el 16 (`GruaController.NivelMinimoBloqueo`), así que desbloquear en el 20 garantiza que el jugador ya ha visto todas las mecánicas antes de entrar; además el 20 cierra bloque.
 
 ---
 
