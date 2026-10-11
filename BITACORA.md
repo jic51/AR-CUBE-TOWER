@@ -245,6 +245,23 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 | **N5** | No existe ningún `AndroidManifest.xml` propio en el repo: Unity genera el suyo en cada build. No es un fallo, pero conviene saberlo antes de la ficha de Play, porque declarar permisos a mano exigirá crear uno en `Assets/Plugins/Android/` | — | Informativo |
 | **N6** | **El proyecto vive dentro de OneDrive** (`C:\Users\remod\OneDrive\Documents\JoseCastro\APPS\AR-CUBE-TOWER`), según la ruta del APK en el log del 2026-09-21. Unity y la sincronización en la nube se llevan mal: OneDrive intenta subir `Library/` y `Temp/` —decenas de miles de archivos que Unity reescribe constantemente—, lo que provoca bloqueos de archivo a media compilación, importaciones corruptas y builds más lentos. Que un build haya tardado 20 minutos encaja | Entorno de desarrollo | **En curso** — mudanza a `C:\Dev\AR-CUBE-TOWER` documentada en [`COMO-MOVER-EL-PROYECTO.md`](COMO-MOVER-EL-PROYECTO.md) |
 
+### Pendiente — Pruebas en dispositivo
+
+Recopilado el 2026-10-11. Mucho de lo construido desde el 2026-09-22 ya se ha visto en vídeo jugando, y de ahí salieron los arreglos del 27, 28 y 30 de septiembre. **Lo que sigue sin validar es otra cosa: flujos que no aparecen jugando normal y hay que provocar a propósito.** Casi todos tocan dinero o anuncios, que es donde un fallo cuesta caro.
+
+| # | Qué provocar | Qué debe pasar | Desde |
+|---|---|---|---|
+| P1 | Ver un anuncio **acostado o de cara a una pared**, sin apuntar nunca | A los 8 s el anuncio aparece igual frente a la cámara. El juego **no** se congela | 2026-09-20 |
+| P2 | Perder a propósito **dos veces seguidas** | No aparecen monedas gratis. La vida se cobra y el progreso se guarda | 2026-09-20 |
+| P3 | Quedarse **sin vidas** e intentar jugar | Bloquea, avisa "No lives left!" y abre la tienda | 2026-09-20 |
+| P4 | Ver **cuatro anuncios el mismo día** | La recompensa baja: 50 → 35 → 20 → 10 monedas | 2026-09-20 |
+| P5 | Comprar el **pack de 3 vidas teniendo 4** | El botón está deshabilitado y explica el motivo. No cobra 120 por una vida | 2026-09-21 |
+| P6 | Pulsar el **enlace del anunciante** en un anuncio | Abre el navegador; nada raro con esquemas que no sean http/https | 2026-09-21 |
+| P7 | Completar el **nivel 6 y luego el 7** por primera vez | El 6 da gema por "First clear"; el **7 ya no**. El 10 sí da "Block complete" | 2026-10-11 |
+| P8 | Dejar caer un cubo desde muy alto sobre la torre | No se destruye media torre en cascada (umbral de `CuboInteligente`) | pendiente desde el inicio |
+
+P1–P6 son los flujos de la auditoría de seguridad, confirmados leyendo el código pero nunca ejecutados. P7 es el corte de gemas de ayer.
+
 ### Pendiente — Trabajo en el Editor de Unity
 
 | Tarea | Dónde |
@@ -326,7 +343,31 @@ Es exactamente el mismo paquete que ya se aplazó. **La tabla global va con las 
 
 **Desbloqueo — decidido el 2026-10-11: al superar el nivel 20.** El cubo Lock aparece en el 16 (`GruaController.NivelMinimoBloqueo`), así que a esas alturas el jugador ya ha visto todas las mecánicas; además el 20 cierra bloque.
 
-**El modo queda completamente especificado y listo para construir.** Sin empezar: no existe ningún código del modo sin fin todavía.
+#### Contador de cubos caídos — pedido el 2026-10-11
+
+El jugador tiene que **ver cuántos cubos lleva perdidos**, y el contador es exclusivo de este modo: en los niveles normales no aparece.
+
+**Recomendación: tres iconos de cubo que se van apagando, mostrando lo que queda, no lo perdido.** Tres razones:
+
+- **Lo que queda crea tensión; lo perdido crea culpa.** "Te quedan 2" empuja a seguir; "has perdido 1" recuerda el error.
+- **Cubos, nunca corazones.** El HUD ya usa corazones para las vidas de la economía. Dos contadores de "te quedan N" con el mismo icono se confunden, y aquí son cosas distintas: las vidas se pagan al perder la partida, los cubos son la partida.
+- **Sin texto.** El HUD en AR ya va cargado y el jugador está mirando la torre. Tres iconos se leen de reojo; un "2/3" obliga a enfocar.
+
+Va en la cabecera del HUD, junto a los recursos, por la misma razón por la que el 2026-09-30 se sacaron de ahí los avisos: lo que tapa la torre estorba.
+
+**Además, cada caída necesita su aviso.** Si el contador baja en silencio, el jugador no sabe qué pasó. La línea de avisos de la cabecera ya existe desde el 2026-09-30 y sirve: *"Block lost — 2 left"*.
+
+**A definir antes de escribir código — qué cuenta como cubo caído.** Hoy un cubo puede desaparecer de tres formas distintas y no son lo mismo:
+
+| Caso | ¿Cuenta? | Comentario |
+|---|---|---|
+| Se cae de la torre ya colocado | **Sí**, es el caso que define la derrota | |
+| Se suelta al vacío y nunca llega a posarse | Por decidir | Castigarlo dos veces (pierde el cubo *y* una vida de las tres) puede ser duro |
+| Se destruye por el umbral de caída (`CuboInteligente`, caída > 3× su altura) | Por decidir | Técnicamente es el mismo evento que el primero, pero el cubo revienta en vez de rodar |
+
+Sin resolver esto, el contador bajará en situaciones que el jugador no entiende.
+
+**El modo queda especificado y listo para construir**, salvo los tres casos de la tabla. No existe ningún código del modo sin fin todavía.
 
 ---
 

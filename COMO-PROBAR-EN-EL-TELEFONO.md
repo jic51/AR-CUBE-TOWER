@@ -125,16 +125,11 @@ Si en lugar de eso sale una ventana de error en Unity: copia el texto completo y
 
 ## Qué probar una vez que arranque
 
-Estos cuatro arreglos se escribieron pero **nunca se han probado en un teléfono de verdad**. Son la razón por la que este build importa:
+La lista viva está en la bitácora, en **Pendiente — Pruebas en dispositivo**, y se actualiza según se va construyendo.
 
-| Qué probar | Qué debería pasar |
-|---|---|
-| Ver un anuncio **estando acostado o mirando a una pared** | El anuncio aparece igual a los 8 segundos. El juego **no** se queda congelado |
-| Perder una partida a propósito, dos veces seguidas | **No** regalan monedas gratis por perder |
-| Gastar las 5 vidas y tratar de jugar otra vez | Bloquea la entrada, avisa "No lives left!" y abre la tienda |
-| Ver varios anuncios seguidos el mismo día | La recompensa baja: 50, luego 35, luego 20, luego 10 monedas |
+Son flujos que **no aparecen jugando normal**: hay que provocarlos a propósito. Casi todos tocan dinero o anuncios, que es donde un fallo cuesta caro. Jugar un rato no los cubre, por eso siguen sin validar aunque el juego se haya probado mucho.
 
-Si alguno no se comporta así, anótalo y lo revisamos.
+Si alguno no se comporta como dice la bitácora, anótalo y lo revisamos.
 
 ---
 
