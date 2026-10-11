@@ -30,9 +30,9 @@ Recopiladas el 2026-10-10 de cinco secciones distintas de esta bitácora. **Ning
 | # | Decisión | Dónde está el detalle | Qué desbloquea |
 |---|---|---|---|
 | ~~D1~~ | ~~Estado de EE. UU. para la ley aplicable~~ | ✅ **Cerrada el 2026-10-10: Utah**, aplicado en `docs/terms.html`. No quedan marcadores sin rellenar en los documentos legales | |
-| D2 | **Nivel de corte de las gemas** — el usuario propone el 6, a falta de confirmar | Decisión en curso: las gemas | La economía entera |
+| ~~D2~~ | ~~Nivel de corte de las gemas~~ | ✅ **Cerrada el 2026-10-11: corte en el nivel 6, bloques vivos.** Implementada en código | |
 | D3 | **Límite de cubos Lock por partida** (ninguno hoy; el natural sería 2) | Propuestas del 2026-09-28, nº 1-bis | Ya está implementado sin límite: hay que jugarlo y decidir |
-| D4 | **Modo sin fin** — falta solo confirmar el nivel de desbloqueo | Decisión en curso: el modo sin fin | Lo demás ya está decidido: se puede empezar a construir |
+| ~~D4~~ | ~~Modo sin fin~~ | ✅ **Cerrada el 2026-10-11: desbloqueo al superar el nivel 20.** Reglas completas, listo para construir | |
 | D5 | **Bajada de plataforma comprable** | Propuestas del 2026-09-28, nº 1 | Trabajo pequeño, pero toca `PlayerData` y exige migrar los guardados |
 | D6 | **Los 4 comodines nuevos** (Congelar, Deshacer, Cámara lenta, Pegamento) | Comodines nuevos propuestos | Cada uno necesita precio, icono y fila en la tienda |
 | D7 | **Orden de los cubos:** aleatorio por partida o secuencia con semilla por nivel | Ideas de cubos — final de la sección | Condiciona si algún día puede haber competición justa entre jugadores |
@@ -270,9 +270,9 @@ Reverificado el 2026-09-21: las siete siguen en pie, ninguna se ha regresado.
 
 ---
 
-## Decisiones en curso — 2026-10-10
+## Decisiones cerradas — 2026-10-11
 
-Dos decisiones a medio cerrar. Lo acordado ya es firme; lo que falta está marcado.
+Planteadas el 10 de octubre, confirmadas el 11.
 
 ### Las gemas: cuánto se regala y hasta cuándo
 
@@ -295,16 +295,18 @@ Dos decisiones a medio cerrar. Lo acordado ya es firme; lo que falta está marca
 1. **Es un acantilado, no una curva.** El jugador cobra seis niveles seguidos y luego nada durante treinta y cuatro. Contradice su propia formulación del 2026-09-28 — *"regalar mucho al principio y bajar la cantidad y la frecuencia con el tiempo"* —, que describe un descenso, no un corte.
 2. **No está dicho a qué reglas se aplica.** Si corta solo "primera vez", las 3 estrellas siguen dando 40 gemas y el recorte apenas se nota. Si corta las tres, el total baja de 96 a **14**, un 85 % menos, y las gemas dejan de significar nada.
 
-**Recomendación: el corte del usuario en el 6, pero dejando vivos los bloques.**
+**DECIDIDO E IMPLEMENTADO el 2026-10-11: el corte del usuario en el 6, dejando vivos los bloques.**
 
 | Niveles | Primera vez | 3 estrellas | Fin de bloque |
 |---|---|---|---|
 | 1–6 | +1 | +1 | +2 |
 | 7–40 | 0 | 0 | +2 |
 
-Total: **28 gemas** en los 40 niveles, más récords y rachas. El arranque sigue siendo generoso, y a partir del 7 queda una recompensa cada cinco niveles: menos cantidad y menos frecuencia, exactamente lo pedido, sin que el grifo se cierre del todo.
+Total: **28 gemas** en los 40 niveles (6 + 6 + 16), más récords y rachas. Baja de 96 a 28, un 71 % menos. El arranque sigue siendo generoso y a partir del 7 queda una recompensa cada cinco niveles: menos cantidad y menos frecuencia, lo pedido, sin que el grifo se cierre del todo.
 
-**Falta:** que el usuario confirme esta variante o fije otra. Al tocarlo hay que revisar si `GEMAS_POR_RECORD` se mantiene, porque es la única fuente ilimitada que quedaría.
+**En código:** `EconomiaManager.NIVEL_FIN_GEMAS_PROGRESO = 6` y la guarda `pagaProgreso` en `GameManager.CalcularGemas()`. El fin de bloque queda fuera de esa guarda a propósito: sin él, a partir del 7 no habría ninguna gema por jugar y el descenso sería un muro.
+
+**Queda apuntado para la próxima revisión de economía:** `GEMAS_POR_RECORD` es ahora la única fuente ilimitada de gemas que sobrevive, porque el récord de altura se puede batir sin tope. Mientras el récord sea difícil de mover no es un problema, pero si el jugador encuentra la forma de subir un cubo cada partida, se convierte en un grifo abierto.
 
 ### El modo sin fin
 
@@ -322,7 +324,9 @@ Hay una vía que **no exige backend propio**: Google Play Games Services da tabl
 
 Es exactamente el mismo paquete que ya se aplazó. **La tabla global va con las cuentas, en la v2**, y entonces sale casi gratis porque Play Games resuelve identidad y clasificación a la vez. Hasta entonces, marca personal.
 
-**Falta:** el nivel de desbloqueo. El usuario dice "15-20". **Recomendación: 20.** El cubo Lock aparece en el 16 (`GruaController.NivelMinimoBloqueo`), así que desbloquear en el 20 garantiza que el jugador ya ha visto todas las mecánicas antes de entrar; además el 20 cierra bloque.
+**Desbloqueo — decidido el 2026-10-11: al superar el nivel 20.** El cubo Lock aparece en el 16 (`GruaController.NivelMinimoBloqueo`), así que a esas alturas el jugador ya ha visto todas las mecánicas; además el 20 cierra bloque.
+
+**El modo queda completamente especificado y listo para construir.** Sin empezar: no existe ningún código del modo sin fin todavía.
 
 ---
 
@@ -372,6 +376,16 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-10-11 — Corte de gemas implementado
+
+**El corte de gemas ya está en el código.** `NIVEL_FIN_GEMAS_PROGRESO = 6` en `EconomiaManager`, y una guarda `pagaProgreso` en `GameManager.CalcularGemas()` que apaga "primera vez" y "3 estrellas" a partir del nivel 7. El fin de bloque se deja fuera de la guarda a propósito. De 96 gemas a 28.
+
+Un detalle que podía salir mal: `LevelManager.NivelSeleccionado` **cuenta desde 0**, así que el nivel 6 del jugador es el índice 5. Se usa `nivel + 1 <= 6`, el mismo patrón que ya empleaba `GruaController` para el nivel mínimo del Lock. Confundirlo habría desplazado el corte un nivel sin que nadie lo notara.
+
+**El modo sin fin queda especificado al completo** (una vida por partida · derrota a los 3 cubos caídos · marca personal, sin tabla global · desbloqueo al superar el nivel 20) **pero sin una línea de código escrita.**
+
+Sin compilar en Unity ni probar.
 
 ### 2026-10-10 — Puesta al día tras diez días de pausa
 

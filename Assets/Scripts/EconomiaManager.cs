@@ -30,13 +30,20 @@ public class EconomiaManager : MonoBehaviour
     public const int MONEDAS_POR_GANAR       = 50;
     public const int MONEDAS_BONUS_RECORD     = 25;
 
-    // Gemas — reglas aprobadas el 2026-09-22
+    // Gemas — reglas del 2026-09-22, con el corte de progresión del 2026-10-11
     public const int GEMAS_PRIMERA_VEZ        = 1;   // completar un nivel por primera vez
     public const int GEMAS_TRES_ESTRELLAS     = 1;   // primera vez con 3 estrellas en un nivel
     public const int GEMAS_BLOQUE             = 2;   // completar el último nivel de un bloque de 5
     public const int GEMAS_POR_RECORD         = 1;   // nuevo récord de altura (en cubos)
     public const int GEMAS_RACHA              = 2;   // cada 7 días seguidos jugando
     public const int DIAS_RACHA               = 7;
+
+    // Último nivel (contando desde 1) que paga gemas por avanzar. A partir de
+    // aquí, "primera vez" y "3 estrellas" dejan de dar nada y en la progresión
+    // solo queda el fin de bloque: una recompensa cada cinco niveles en vez de
+    // una por nivel. Sin este tope, completar los 40 niveles al 100 % daba unas
+    // 96 gemas — a 100 monedas cada una, el equivalente a 192 vidas.
+    public const int NIVEL_FIN_GEMAS_PROGRESO = 6;
 
     // ── Propiedades acceso a datos (a través de GameManager) ─────────────────
     private PlayerData Datos => GameManager.Instance?.GetDatos();

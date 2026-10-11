@@ -735,7 +735,9 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Gemas del final de partida, con el motivo de cada una para enseñarlo.
-    /// Reglas aprobadas el 2026-09-22.
+    /// Reglas del 2026-09-22, con el corte de progresión del 2026-10-11: las
+    /// gemas por avanzar solo se pagan en los primeros niveles; después queda
+    /// el fin de bloque, el récord de altura y la racha diaria.
     /// </summary>
     int CalcularGemas(bool gano, bool primerVez, int estrellas, bool nuevoRecord,
                       System.Collections.Generic.List<string> motivos)
@@ -743,12 +745,21 @@ public class GameManager : MonoBehaviour
         int gemas  = 0;
         int nivel  = LevelManager.NivelSeleccionado;
 
+        // Tramo de arranque, generoso a propósito: enganchar antes de cerrar
+        // el grifo. Fuera de él, avanzar deja de pagar gemas.
+        bool pagaProgreso = nivel + 1 <= EconomiaManager.NIVEL_FIN_GEMAS_PROGRESO;
+
         if (gano && primerVez)
         {
-            gemas += EconomiaManager.GEMAS_PRIMERA_VEZ;
-            motivos.Add("First clear");
+            if (pagaProgreso)
+            {
+                gemas += EconomiaManager.GEMAS_PRIMERA_VEZ;
+                motivos.Add("First clear");
+            }
 
-            // Último nivel de un bloque de 5 (niveles 5, 10, 15…)
+            // El fin de bloque sobrevive al corte y se mantiene los 40 niveles:
+            // sin él, a partir del 7 no habría ninguna gema por jugar y el
+            // descenso se convertiría en un muro.
             if ((nivel + 1) % 5 == 0)
             {
                 gemas += EconomiaManager.GEMAS_BLOQUE;
@@ -756,8 +767,9 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // 3 estrellas: solo la primera vez que se consiguen en ese nivel
-        if (gano && estrellas == 3 && MejoresEstrellas(nivel) < 3)
+        // 3 estrellas: solo la primera vez que se consiguen en ese nivel, y
+        // solo dentro del tramo de arranque
+        if (gano && pagaProgreso && estrellas == 3 && MejoresEstrellas(nivel) < 3)
         {
             gemas += EconomiaManager.GEMAS_TRES_ESTRELLAS;
             motivos.Add("3 stars");
