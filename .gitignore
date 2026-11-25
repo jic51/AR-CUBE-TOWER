@@ -71,6 +71,17 @@ sysinfo.txt
 *.avi
 *.mkv
 
+# Firma de Android — NUNCA al repositorio
+# La keystore es la llave que demuestra que una actualizacion viene de
+# nosotros. Si se filtra, otro puede firmar apps haciendose pasar por el
+# proyecto; si se pierde, la app publicada no se puede actualizar jamas.
+# Va respaldada aparte, fuera de Git. Ver COMO-CREAR-LA-KEYSTORE.md
+*.keystore
+*.jks
+*.p12
+*.pepk
+keystore.properties
+
 # Carpetas generadas por Unity que no deben subirse
 ARTowerGame_BackUpThisFolder_ButDontShipItWithYourGame/
 *_BurstDebugInformation_DoNotShip/

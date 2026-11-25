@@ -6,6 +6,7 @@ Registro de trabajo del proyecto. Se actualiza al cierre de cada sesión.
 **Stack:** Unity 6.0.3 · ARFoundation 6.3.2 · URP 17.0 · Android
 **Guía de pruebas en dispositivo:** [`COMO-PROBAR-EN-EL-TELEFONO.md`](COMO-PROBAR-EN-EL-TELEFONO.md) — pasos concretos, sin consola
 **Guía de mudanza fuera de OneDrive:** [`COMO-MOVER-EL-PROYECTO.md`](COMO-MOVER-EL-PROYECTO.md)
+**Guía de la keystore de Android:** [`COMO-CREAR-LA-KEYSTORE.md`](COMO-CREAR-LA-KEYSTORE.md) — crearla y, sobre todo, respaldarla
 
 ---
 
@@ -278,7 +279,7 @@ P1–P6 son los flujos de la auditoría de seguridad, confirmados leyendo el có
 
 - ~~Decidir el `applicationIdentifier` definitivo~~ ✅ `io.github.jic51.arcubetower` — ver *Decisión: identificador de la aplicación*
 - ~~`companyName` real en lugar de `DefaultCompany`~~ ✅ `jic51`
-- **Keystore de Android — urgente**, ya no es solo requisito de publicación: la firma de debug provocó el fallo de instalación del 2026-09-21. Crearla **y respaldarla fuera de la máquina**: perder la keystore de producción tras publicar significa no poder actualizar la app nunca más
+- **Keystore de Android — urgente**, ya no es solo requisito de publicación: la firma de debug provocó el fallo de instalación del 2026-09-21. Crearla **y respaldarla fuera de la máquina**: perder la keystore de producción tras publicar significa no poder actualizar la app nunca más. **Pasos en [`COMO-CREAR-LA-KEYSTORE.md`](COMO-CREAR-LA-KEYSTORE.md) (2026-11-25)**, pendiente de ejecutar en Unity
 - Ícono de la app
 - Capturas de pantalla para la ficha
 - Política de privacidad y Terms: ✅ **borrador** en `docs/` (2026-09-22), con la ley aplicable ya fijada en **Utah** (2026-10-10). Pendiente de revisión por un abogado y de activar GitHub Pages. Falta el formulario Data Safety en Play Console
@@ -417,6 +418,23 @@ Mientras nada de eso pase, estos tres hallazgos **no son fallos pendientes** y n
 ---
 
 ## Sesiones
+
+### 2026-11-25 — Guía de la keystore, y un agujero en el `.gitignore`
+
+Sin cambios de código de juego. El proyecto estaba parado desde el 2026-10-11: cero commits nuevos.
+
+**Hallazgo, encontrado antes de escribir la guía: el `.gitignore` no excluía las keystores.** Si la keystore se hubiera creado dentro de la carpeta del proyecto —que es lo que Unity propone por defecto— el primer `git add -A` la habría subido a GitHub. La llave de firma del juego, pública. Corregido: ahora se ignoran `*.keystore`, `*.jks`, `*.p12`, `*.pepk` y `keystore.properties`.
+
+Esa red de seguridad no sustituye a guardarla fuera del proyecto, que es lo que la guía recomienda: si la carpeta se borra —y en septiembre estuvo a punto—, la keystore se va con ella.
+
+**Comprobado de paso:** `ProjectSettings.asset` tiene hoy `AndroidKeystoreName` y `AndroidKeyaliasName` vacíos, y **no** tiene `AndroidKeystorePass` ni `AndroidKeyaliasPass`. Unity 6 no serializa ahí las contraseñas, así que configurar la firma no las filtra al repositorio. La guía incluye la comprobación para hacerla una vez, porque ese archivo sí se sube.
+
+**Dos cosas que la guía resuelve y no son obvias**
+
+- **No hace falta la consola.** Unity trae un creador de keystore en `Player Settings → Publishing Settings`. Nada de `keytool`.
+- **Trabajar en dos computadoras rompe la ruta.** Unity guarda en `ProjectSettings.asset` la ruta absoluta de la keystore, y ese archivo va a Git. En la segunda máquina esa ruta no existe y la compilación falla. No se arregla en Git: se copia la keystore y se vuelve a seleccionar allí.
+
+Pendiente: ejecutar los pasos en Unity y hacer el respaldo.
 
 ### 2026-10-11 — Corte de gemas implementado
 
