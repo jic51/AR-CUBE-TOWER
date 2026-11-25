@@ -436,6 +436,10 @@ Esa red de seguridad no sustituye a guardarla fuera del proyecto, que es lo que 
 
 Pendiente: ejecutar los pasos en Unity y hacer el respaldo.
 
+**Segundo caso del `Everything up-to-date` engañoso.** El push de esta sesión imprimió ese mensaje con éxito aparente, y `git ls-remote` reveló que el remoto seguía en el commit anterior. La causa no fue la de 2026-09-19 (un archivo demasiado grande): **el contenedor se había reiniciado y arrancó en la rama `claude/admiring-bohr-b3kxbc`**, así que el commit fue a parar allí y `git push origin main` empujaba una rama `main` que efectivamente no tenía nada nuevo. Git no mentía; respondía sobre otra rama.
+
+Resuelto con `git checkout main` y `git merge --ff-only`. Refuerza la regla de 2026-09-19 con un matiz: la verificación válida no es solo `git ls-remote`, es **comparar `git ls-remote` contra `git rev-parse HEAD` y mirar en qué rama se está**. Dos commits iguales no bastan si la rama es otra.
+
 ### 2026-10-11 — Corte de gemas implementado
 
 **El corte de gemas ya está en el código.** `NIVEL_FIN_GEMAS_PROGRESO = 6` en `EconomiaManager`, y una guarda `pagaProgreso` en `GameManager.CalcularGemas()` que apaga "primera vez" y "3 estrellas" a partir del nivel 7. El fin de bloque se deja fuera de la guarda a propósito. De 96 gemas a 28.
